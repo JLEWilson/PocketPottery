@@ -106,3 +106,10 @@ export const deletePotteryItemById = async (db: SQLiteDatabase, id: number) => {
 		tx.executeSql(deleteQuery)
 	})
 }
+
+export const deleteTable = async (db: SQLiteDatabase) => {
+	const query = `DROP TABLE ${TABLE_NAME}`
+	await db.transaction((tx) => {
+		tx.executeSql(query)
+	})
+}
