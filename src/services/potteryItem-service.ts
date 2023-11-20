@@ -50,7 +50,6 @@ export const getPotteryItems = async (db: SQLiteDatabase): Promise<PotteryItem[]
 	})
 }
 
-
 export const getPotteryItemById = async (
 	db: SQLiteDatabase,
 	id: number
@@ -99,6 +98,27 @@ export const addPotteryItem =  async (db: SQLiteDatabase, potteryItem: PotteryIt
 		)
 	})
 }
+
+export const updatePotteryItem = async (db: SQLiteDatabase, potteryItem: PotteryItem) => {
+  const updateQuery = `
+    UPDATE ${TABLE_NAME}
+    SET dateEdited = ?, projectTitle = ?, projectNotes = ?, displayPicturePath = ?
+    WHERE potteryItemId = ?
+  `;
+
+  db.transaction((tx) => {
+    tx.executeSql(
+      updateQuery,
+      [
+        potteryItem.dateEdited,
+        potteryItem.projectTitle,
+        potteryItem.projectNotes,
+        potteryItem.displayPicturePath,
+        potteryItem.potteryItemId,
+      ],
+    );
+  });
+};
 
 export const deletePotteryItemById = async (db: SQLiteDatabase, id: number) => {
 	const deleteQuery = `DELETE FROM ${TABLE_NAME} WHERE potteryItemId = ${id}`
