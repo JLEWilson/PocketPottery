@@ -99,3 +99,10 @@ export const addPotteryItem =  async (db: SQLiteDatabase, potteryItem: PotteryIt
 		)
 	})
 }
+
+export const deletePotteryItemById = async (db: SQLiteDatabase, id: number) => {
+	const deleteQuery = `DELETE FROM ${TABLE_NAME} WHERE potteryItemId = ${id}`
+	await db.transaction((tx) => {
+		tx.executeSql(deleteQuery)
+	})
+}
