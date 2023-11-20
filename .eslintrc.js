@@ -1,57 +1,53 @@
 module.exports = {
-    'env': {
-        'browser': true,
-        'es2021': true
-    },
-    'extends': [
-        'eslint:recommended',
-        'plugin:react/recommended',
-        'plugin:react-hooks/recommended',
-        'plugin:@typescript-eslint/eslint-recommended',
-        'plugin:@typescript-eslint/recommended',
-        'plugin:@typescript-eslint/recommended-requiring-type-checking',
-    ],
-    'overrides': [
-        {
-            'env': {
-                'node': true
-            },
-            'files': [
-                '.eslintrc.{js,cjs}'
-            ],
-            'parserOptions': {
-                'sourceType': 'script'
-            }
-        }
-    ],
-    'parser': '@typescript-eslint/parser',
-    'parserOptions': {
-        'ecmaVersion': 'latest',
-        'sourceType': 'module'
-    },
-    'plugins': [
-        '@typescript-eslint',
-        'react',
-        'react-hooks',
-        'prettier'
-    ],
-    'rules': {
-        'indent': [
-            'error',
-            2
-        ],
-        'linebreak-style': [
-            'error',
-            'windows'
-        ],
-        'quotes': [
-            'error',
-            'single'
-        ],
-        'semi': [
-            'error',
-            'never'
-        ],
-        'prettier/prettier':'error',
-    }
+	'env': {
+		'browser': true,
+		'es2021': true,
+		'amd': true,
+		'node': true
+	},
+	'extends': [
+		'eslint:recommended',
+		'plugin:@typescript-eslint/recommended',
+		'plugin:react/recommended'
+	],
+	'overrides': [
+		{
+			'env': {
+				'node': true
+			},
+			'files': [
+				'.eslintrc.{*ts,*tsx}'
+			],
+			'parserOptions': {
+				'sourceType': 'script'
+			}
+		}
+	],
+	'parser': '@typescript-eslint/parser',
+	'parserOptions': {
+		'ecmaVersion': 'latest',
+		'sourceType': 'module'
+	},
+	'plugins': [
+		'@typescript-eslint',
+		'react'
+	],
+	'rules': {
+		'indent': [
+			'error',
+			'tab'
+		],
+		'linebreak-style': [
+			'error',
+			'any'
+		],
+		'quotes': [
+			'error',
+			'single'
+		],
+		'semi': [
+			'error',
+			'never'
+		]
+	}
 }
