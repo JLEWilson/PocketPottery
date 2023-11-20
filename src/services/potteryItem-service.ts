@@ -22,7 +22,6 @@ export const createPotteryItemTable = async (db: SQLiteDatabase) => {
 	)
 }
 
-
 export const getPotteryItems = async (db: SQLiteDatabase): Promise<PotteryItem[]> => {
 	const getAllQueryy = `SELECT * FROM ${TABLE_NAME}`
 	return new Promise((resolve, reject) => {
@@ -37,6 +36,40 @@ export const getPotteryItems = async (db: SQLiteDatabase): Promise<PotteryItem[]
 							potteryItems.push(results.rows.item(i) as PotteryItem)
 						}
 						resolve(potteryItems)
+					},
+					(_, error) => {
+						console.log(`Error executing SELECT query: ${error.message}`)
+						return true
+					}
+				)
+			},
+			(error) => {
+				reject(new Error(`Transaction error: ${error.message}`))
+			}
+		)
+	})
+}
+
+
+export const getPotteryItemById = async (
+	db: SQLiteDatabase,
+	id: number
+): Promise<PotteryItem | null> => {
+	const getQuery = `SELECT * FROM ${TABLE_NAME} WHERE potteryItemId = ?`
+	return new Promise((resolve, reject) => {
+		db.transaction(
+			(tx) => {
+				tx.executeSql(
+					getQuery,
+					[id],
+					(_, results: SQLResultSet) => {
+						if (results.rows.length === 1) {
+							// Assuming potteryItemId is unique, so there should be at most one result
+							const potteryItem = results.rows.item(0) as PotteryItem
+							resolve(potteryItem)
+						} else {
+							resolve(null) // Return null if no matching item is found
+						}
 					},
 					(_, error) => {
 						console.log(`Error executing SELECT query: ${error.message}`)
