@@ -83,3 +83,19 @@ export const getPotteryItemById = async (
 		)
 	})
 }
+
+export const addPotteryItem =  async (db: SQLiteDatabase, potteryItem: PotteryItem) => {
+	const addQuery = `INSERT INTO ${TABLE_NAME} (dateCreated, dateEdited, projectTitle, projectNotes, displayPicturePath) VALUES (?, ?, ?, ?, ?)`
+	db.transaction(tx => {
+		tx.executeSql(
+			addQuery,
+			[
+				potteryItem.dateCreated,
+				potteryItem.dateEdited,
+				potteryItem.projectTitle,
+				potteryItem.projectNotes,
+				potteryItem.displayPicturePath,
+			],
+		)
+	})
+}
