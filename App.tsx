@@ -1,12 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import {
 	Button,
-	SafeAreaView,
 	ScrollView,
 	StatusBar,
 	StyleSheet,
 	Text,
-	TextInput,
 	useColorScheme,
 	View,
 } from 'react-native'
@@ -18,30 +16,46 @@ const App = () => {
 	const isDarkMode = useColorScheme() === 'dark'
 	const [potteryItems, setPotteryItems] = useState<PotteryItem[]>([])
 	const [newPotteryItem, setNewPotteryItem] = useState('')
-	
+	const [openForm, setOpenForm] = useState(false)
+
+	const loadDataCallback = useCallback(async () => {
+		try {
+			const db = await getDBConnection()
+			await createPotteryItemTable(db)
+			const storedPotteryItems = await getPotteryItems(db)
+			if (storedPotteryItems.length) {
+				setPotteryItems(storedPotteryItems)
+			} 
+		} catch (error) {
+			console.error(error)
+		}
+	}, [])
+	useEffect(() => {
+		loadDataCallback()
+	}, [loadDataCallback])
+
 	return (
-		<View>
+		<>
 			<StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-			<ScrollView>
-				<View style={[styles.appTitleView]}>
+			<ScrollView contentContainerStyle={styles.scrollView}>
+				<View style={styles.appTitleView}>
 					<Text style={styles.appTitleText}> Pocket Pottery </Text>
 				</View>
-				<View>
+				<View style={styles.potteryItemsContainer}>
 					{potteryItems.map((p) => (
 						<PotteryItemComponent key={p.potteryItemId} potteryItem={p} />
 					))}
 				</View>
-				<View style={styles.textInputContainer}>
-					<TextInput style={styles.textInput} value={newPotteryItem} onChangeText={text => setNewPotteryItem(text)} />
+				<View style={styles.formButtonContainer}>
 					<Button
-						onPress={openForm}
-						title="Add ToDo"
+						onPress={() => setOpenForm(true)}
+						title="Add New Piece"
 						color="#841584"
 						accessibilityLabel="open pottery project form"
 					/>
 				</View>
 			</ScrollView>
-		</View>
+		</>
 	)
 }
 const styles = StyleSheet.create({
@@ -54,21 +68,20 @@ const styles = StyleSheet.create({
 		fontSize: 24,
 		fontWeight: '800'
 	},
-	textInputContainer: {
-		marginTop: 30,
-		marginLeft: 20,
-		marginRight: 20,
-		borderRadius: 10,
-		borderColor: 'black',
-		borderWidth: 1,
-		justifyContent: 'flex-end'
+	scrollView: {
+		flex: 1,
+        flexDirection: 'column',
+        justifyContent: 'space-between',
 	},
-	textInput: {
-		borderWidth: 1,
-		borderRadius: 5,
-		height: 30,
-		margin: 10,
-		backgroundColor: 'pink'
+	potteryItemsContainer: {
+		flexGrow: 1
 	},
+	formButtonContainer: {
+		position: 'absolute',
+		bottom: 20,
+		alignSelf: 'center',
+		flex: 1
+	},
+	
 })
 export default App
