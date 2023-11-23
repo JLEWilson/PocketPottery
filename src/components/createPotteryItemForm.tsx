@@ -7,8 +7,10 @@ const CreatePotteryItemForm: React.FC = () => {
     const [formVisible, setFormVisible] = useState(false)
     const [pieceName, setPieceName] = useState('Piece Name')
     const [image, setImage] = useState<string | null>(null)
-
+    const [imageModalVisible, setImageModalVisible] = useState(false)
+    
     const pickImage = async () => {
+        setImageModalVisible(false)
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
@@ -22,7 +24,7 @@ const CreatePotteryItemForm: React.FC = () => {
     }
 
     const openCamera = async () => {
-        // Ask the user for the permission to access the camera
+        setImageModalVisible(false)
         const permissionResult = await ImagePicker.requestCameraPermissionsAsync()
         if (permissionResult.granted === false) {
             console.log("You've refused to allow this appp to access your camera!")
@@ -58,9 +60,19 @@ const CreatePotteryItemForm: React.FC = () => {
                         value={pieceName}
                     />
                     <View style={styles.imageContainer}>
-                        <Button title="Pick an image from camera roll" onPress={pickImage} />
+                        <Button title="Add Image" onPress={() => setImageModalVisible(true)} />
                         {image && <Image source={{ uri: image }} style={styles.image} />}
                     </View>
+                </View>
+            </Modal>
+            <Modal
+                isVisible={imageModalVisible}
+                animationIn={"bounceIn"}
+                animationOut={"bounceOut"}
+            >
+                <View style={styles.imageModalContainer}>
+                    <Button title="Camera roll" onPress={pickImage} />
+                    <Button title="Pick an image from camera roll" onPress={pickImage} />
                 </View>
             </Modal>
         </View>
@@ -93,6 +105,10 @@ const styles = StyleSheet.create({
     image: {
         height: 30,
         width: 30
+    },
+    imageModalContainer: {
+        height: 50,
+        width: 50
     }
 })
 
