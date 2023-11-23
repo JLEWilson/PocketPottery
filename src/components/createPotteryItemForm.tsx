@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, Button, Text, StyleSheet} from 'react-native';
+import { View, Button, Text, TextInput, StyleSheet} from 'react-native';
 import Modal from "react-native-modal"
 
 const CreatePotteryItemForm: React.FC = () => {
     const [formVisible, setFormVisible] = useState(false)
-
+    const [pieceName, setPieceName] = useState('Piece Name')
+    
     return (
         <View>
             <View style={styles.modalOpenButton}>
@@ -22,6 +23,11 @@ const CreatePotteryItemForm: React.FC = () => {
             >
                 <View style={styles.innerContainer}>
                     <Text style={styles.title}>New Piece</Text>
+                    <TextInput 
+                        style={styles.nameInput}
+                        onChangeText={setPieceName}
+                        value={pieceName}
+                    />
                 </View>
             </Modal>
         </View>
@@ -42,6 +48,10 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         fontSize: 24,
         marginVertical: 8
+    },
+     nameInput: {
+        alignSelf: 'center',
+        fontSize: 24
     },
 })
 
