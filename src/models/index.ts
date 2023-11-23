@@ -13,20 +13,28 @@ export type PotteryItemPictures = {
   picturePath: string
 }
 
-export type PotteryItemClays = {
+export type Clay = {
   clayId: number
+  name: string
+  manufacturer: string
+  notes: string
+}
+
+export type PotteryItemClays = {
   potteryItemId: number
+  clayId: number
+}
+
+export type Glaze = {
+  clayId: number
   name: string
   manufacturer: string
   notes: string
 }
 
 export type PotteryItemGlazes = {
-  clayId: number
+  glazeId: number
   potteryItemId: number
-  name: string
-  manufacturer: string
-  notes: string
 }
 
 export type PotteryItemtMeasurements = {
