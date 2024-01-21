@@ -13,12 +13,14 @@
   "dependencies": {
     "@react-native-picker/picker": "^2.5.1",
     "expo": "~49.0.15",
+    "expo-image-picker": "~14.3.2",
     "expo-sqlite": "~11.3.3",
     "expo-status-bar": "~1.6.0",
     "react": "18.2.0",
     "react-native": "0.72.6",
+    "react-native-get-random-values": "^1.10.0",
     "react-native-modal": "^13.0.1",
-    "expo-image-picker": "~14.3.2"
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
@@ -26,6 +28,7 @@
     "@types/jest": "^29.5.8",
     "@types/react": "^18.2.37",
     "@types/react-test-renderer": "^18.0.6",
+    "@types/uuid": "^9.0.7",
     "@typescript-eslint/eslint-plugin": "^6.11.0",
     "@typescript-eslint/parser": "^6.11.0",
     "eslint": "^8.54.0",
