@@ -1,11 +1,11 @@
 export type PotteryItem = {
   potteryItemId: number
-  dateCreated: string 
+  dateCreated: string
   dateEdited: string
   projectTitle: string
   projectNotes: string
   displayPicturePath: string
-};
+}
 
 export type PotteryItemPictures = {
   pictureId: number
@@ -26,7 +26,7 @@ export type PotteryItemClays = {
 }
 
 export type Glaze = {
-  clayId: number
+  glazeId: number
   name: string
   manufacturer: string
   notes: string
@@ -37,12 +37,12 @@ export type PotteryItemGlazes = {
   potteryItemId: number
 }
 
-export type PotteryItemtMeasurements = {
+export type PotteryItemMeasurements = {
   measurementId: number
   projectID: number
   name: string
   scale: number
-  type : string
+  type: string
 }
 
 export type PotteryItemBisqueFireTemp = {
