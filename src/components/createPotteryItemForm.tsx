@@ -7,6 +7,47 @@ import { Picker } from '@react-native-picker/picker'
 import type { PotteryItem, Glaze, Clay } from '../models'
 import { v4 as uuidv4 } from 'uuid'
 
+const glazeOptions = [
+  {
+    glazeId: 'glaze1',
+    name: 'glaze1',
+    manufacturer: 'glaze1Maker',
+    notes: 'a nice glaze',
+  },
+  {
+    glazeId: 'glaze2',
+    name: 'glaze2',
+    manufacturer: 'glaze2Maker',
+    notes: 'a nice glaze',
+  },
+  {
+    glazeId: 'glaze3',
+    name: 'glaze3',
+    manufacturer: 'glaze3Maker',
+    notes: 'a nice glaze',
+  },
+]
+const clayOptions = [
+  {
+    clayId: 'clay1',
+    name: 'clay1',
+    manufacturer: 'clay1Maker',
+    notes: 'a nice clay',
+  },
+  {
+    clayId: 'clay2',
+    name: 'clay2',
+    manufacturer: 'clay2Maker',
+    notes: 'a nice clay',
+  },
+  {
+    clayId: 'clay3',
+    name: 'clay3',
+    manufacturer: 'clay3Maker',
+    notes: 'a nice clay',
+  },
+]
+
 const CreatePotteryItemForm: React.FC = () => {
   const [formVisible, setFormVisible] = useState(false)
   const [pieceName, setPieceName] = useState('Piece Name')
@@ -81,46 +122,18 @@ const CreatePotteryItemForm: React.FC = () => {
               onValueChange={(currentClay) => setClay(currentClay)}
               //Check this again after doing some more styling
             >
-              <Picker.Item
-                label="Clay1"
-                value={{
-                  clayId: 'clay1',
-                  name: 'clay1',
-                  manufacturer: 'clay1Maker',
-                  notes: 'a nice clay',
-                }}
-                key={uuidv4()}
-              />
-              <Picker.Item
-                label="Clay2"
-                value={{
-                  clayId: 'clay2',
-                  name: 'clay2',
-                  manufacturer: 'clay2Maker',
-                  notes: 'a cool clay',
-                }}
-                key={uuidv4()}
-              />
-              <Picker.Item
-                label="Clay3"
-                value={{
-                  clayId: 'clay3',
-                  name: 'clay3',
-                  manufacturer: 'clay3Maker',
-                  notes: 'a bad clay',
-                }}
-                key={uuidv4()}
-              />
-              <Picker.Item
-                label="Clay4"
-                value={{
-                  clayId: 'clay4',
-                  name: 'clay4',
-                  manufacturer: 'clay4Maker',
-                  notes: 'a clay',
-                }}
-                key={uuidv4()}
-              />
+              {clayOptions.map((clay) => (
+                <Picker.Item
+                  label={clay.name}
+                  value={{
+                    clayId: clay.clayId,
+                    name: clay.name,
+                    manufacturer: clay.manufacturer,
+                    notes: clay.notes,
+                  }}
+                  key={uuidv4()}
+                />
+              ))}
             </Picker>
           </View>
 
@@ -128,50 +141,21 @@ const CreatePotteryItemForm: React.FC = () => {
             <View style={styles.glazeDropdown}>
               <Picker
                 style={styles.glazeDropdown}
-                itemStyle={{ backgroundColor: 'blue' }}
                 selectedValue={currentGlaze}
                 onValueChange={(g) => setCurrentGlaze(g)}
               >
-                <Picker.Item
-                  label="Glaze1"
-                  value={{
-                    clayId: 'glaze1',
-                    name: 'glaze1',
-                    manufacturer: 'glaze1Maker',
-                    notes: 'a nice glaze',
-                  }}
-                  key={uuidv4()}
-                />
-                <Picker.Item
-                  label="Glaze2"
-                  value={{
-                    clayId: 'glaze2',
-                    name: 'glaze2',
-                    manufacturer: 'glaze2Maker',
-                    notes: 'a cool glaze',
-                  }}
-                  key={uuidv4()}
-                />
-                <Picker.Item
-                  label="Glaze3"
-                  value={{
-                    clayId: 'glaze3',
-                    name: 'glaze3',
-                    manufacturer: 'glaze3Maker',
-                    notes: 'a bad glaze',
-                  }}
-                  key={uuidv4()}
-                />
-                <Picker.Item
-                  label="Glaze4"
-                  value={{
-                    clayId: 'glaze4',
-                    name: 'glaze4',
-                    manufacturer: 'glaze4Maker',
-                    notes: 'a glaze',
-                  }}
-                  key={uuidv4()}
-                />
+                {glazeOptions.map((glaze) => (
+                  <Picker.Item
+                    label={glaze.name}
+                    value={{
+                      glazeId: glaze.glazeId,
+                      name: glaze.name,
+                      manufacturer: glaze.manufacturer,
+                      notes: glaze.notes,
+                    }}
+                    key={uuidv4()}
+                  />
+                ))}
               </Picker>
               {currentGlaze != null && (
                 <Button title="Add Glaze" onPress={() => addGlaze(currentGlaze)} />
@@ -185,7 +169,9 @@ const CreatePotteryItemForm: React.FC = () => {
                   <Text key={g.glazeId} style={styles.glazeName}>
                     {g.name}
                   </Text>
-                  <Button title="(X)" onPress={() => removeGlaze(g)} />
+                  <Pressable style={styles.removeGlazeButton} onPress={() => removeGlaze(g)}>
+                    <Text style={styles.removeGlazeButtonText}>X</Text>
+                  </Pressable>
                 </View>
               ))}
             </View>
@@ -280,15 +266,26 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   glazesLabel: {},
-  glazesList: { flex: 1 },
+  glazesList: { display: 'flex', flexDirection: 'row', flexWrap: 'wrap' },
   glazeContainer: {
-    flex: 1,
+    flexDirection: 'row',
   },
   glazeName: {
-    flex: 1,
+    margin: 5,
+    textAlign: 'center',
   },
-  glazeDropdown: {
-    flex: 1,
+  glazeDropdown: {},
+  removeGlazeButton: {
+    backgroundColor: 'green',
+    width: 20,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 5,
+    margin: 2,
+  },
+  removeGlazeButtonText: {
+    fontSize: 18,
   },
 })
 
