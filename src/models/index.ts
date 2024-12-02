@@ -1,5 +1,5 @@
 export type PotteryItem = {
-  potteryItemId: number
+  potteryItemId: string
   dateCreated: string
   dateEdited: string
   projectTitle: string
@@ -8,65 +8,65 @@ export type PotteryItem = {
 }
 
 export type PotteryItemPictures = {
-  pictureId: number
-  potteryItemID: number
+  pictureId: string
+  potteryItemId: string
   picturePath: string
 }
 
 export type Clay = {
-  clayId: number
+  // clayId: string
   name: string
   manufacturer: string
   notes: string
 }
 
 export type PotteryItemClays = {
-  potteryItemId: number
-  clayId: number
+  potteryItemId: string
+  clayId: string
 }
 
 export type Glaze = {
-  glazeId: number
+  glazeId: string
   name: string
   manufacturer: string
   notes: string
 }
 
 export type PotteryItemGlazes = {
-  glazeId: number
-  potteryItemId: number
+  glazeId: string
+  potteryItemId: string
 }
 
 export type PotteryItemMeasurements = {
-  measurementId: number
-  projectID: number
+  measurementId: string
+  projectID: string
   name: string
   scale: number
   type: string
 }
 
 export type PotteryItemBisqueFireTemp = {
-  bisqueFireTempID: number
-  potteryItemId: number
+  bisqueFireTempID: string
+  potteryItemId: string
   FireType: string // either Cone or Raku
   coneNumber: number
 }
 
 export type PotteryItemGlazeFireTemp = {
-  glazeFireTempID: number
-  potteryItemId: number
+  glazeFireTempID: string
+  potteryItemId: string
   FireType: string // either Cone or Raku
   coneNumber: number
 }
 
 export type PotteryItemTechniques = {
-  techniqueId: number
-  potteryItemId: number
+  techniqueId: string
+  potteryItemId: string
   techniqueName: string
 }
 
 export type commissionData = {
-  potteryItemId: number
+  potteryItemId: string
   dateOrdered: string
   dateDue: string
   clientNotes: string
