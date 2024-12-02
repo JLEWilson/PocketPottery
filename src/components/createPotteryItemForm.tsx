@@ -4,11 +4,12 @@ import { View, Button, Text, TextInput, Image, StyleSheet, Pressable, ImageBackg
 import Modal from 'react-native-modal'
 import * as ImagePicker from 'expo-image-picker'
 import { Picker } from '@react-native-picker/picker'
-import type { PotteryItem, Glaze, Clay, PotteryItemPictures } from '../models'
+import type { PotteryItem, Glaze, Clay, PotteryItemPictures, PotteryItemMeasurements } from '../models'
 import { v4 as uuidv4 } from 'uuid'
 import { addPotteryItem } from '../services/potteryItem-service'
 import type { SQLiteDatabase } from 'expo-sqlite'
 import { getDBConnection } from '../services/db-service'
+import { coneTemperatures } from '../constants/coneTemperatures'
 
 const glazeOptions = [
   {
@@ -62,6 +63,11 @@ const CreatePotteryItemForm: React.FC = () => {
   const [currentGlaze, setCurrentGlaze] = useState<Glaze | null>(null)
   const [glazes, setGlazes] = useState<Glaze[]>([])
   const [glazeFormVisible, setGlazeFormVisible] = useState(false)
+  const [measurementFormVisible, setMeasurementFormVisible] = useState(false)
+  const [measurementName, setMeasurementName] = useState('')
+  const [measurementValue, setMeasurementValue] = useState('')
+  const [measurements, setMeasurements] = useState<{name:string, value:number}[]>([])
+  const [fireType, setFireType] = useState('Cone')
 
   const pickImage = async () => {
     setImageModalVisible(false)
@@ -109,6 +115,14 @@ const CreatePotteryItemForm: React.FC = () => {
     setGlazes((prevGlazes) => prevGlazes.filter((glaze) => glaze !== g))
   }
 
+  const addMeasurement = () => {
+    const newMeasurement = {
+      name: measurementName, 
+      value: parseInt(measurementValue)
+    }
+    setMeasurements((prev) => [...prev, newMeasurement])
+  }
+
   const createPotteryItem = (db: SQLiteDatabase, newPotteryItemID: string) => {
     const now = new Date()
     const potteryItemToAdd: PotteryItem = {
@@ -132,7 +146,7 @@ const CreatePotteryItemForm: React.FC = () => {
   }
 
   const createPotteryItemClays = (db: SQLiteDatabase, newPotteryItemId: string) => {
-    //useService to submit
+    //use Service to submit
   }
 
   const createPotteryItemGlazes = (db: SQLiteDatabase, newPotteryItemId: string) => {
@@ -140,6 +154,10 @@ const CreatePotteryItemForm: React.FC = () => {
       //Use Service to Submit
       g.glazeId
     })
+  }
+
+  const createPotteryItemMeasurements = (db: SQLiteDatabase, newPotteryItemId: string) => {
+    //use Service to submit
   }
 
   const handleSubmitForm = async () => {
@@ -293,9 +311,58 @@ const CreatePotteryItemForm: React.FC = () => {
 
           {/*Measurements*/}
           <View style={styles.measurementsGroup}>
-            <Pressable style={styles.addMeasurementButton}>
+            <Text>Measurements:</Text>
+            <View>
+              {measurements.map((m) => (
+                <View>
+                  <Text>{m.name + ':'}</Text>
+                  <Text>{'  ' + m.value}</Text>
+                </View>
+              ))}
+            </View>
+            <Pressable style={styles.addGlazeButton} onPress={() => setMeasurementFormVisible(true)}>
               <Text style={styles.addMeasurementButtonText}>Add Measurement</Text>
             </Pressable>
+          </View>
+          
+          {/*Fire Temps*/}
+          <View>
+            <Text>Fire Type:</Text>
+            <Picker
+                style={{backgroundColor: 'green'}}
+                selectedValue={fireType}
+                onValueChange={setFireType}
+            >
+              <Picker.Item 
+                label='Cone'
+                value={"Cone"}
+                key={"fireType: Cone"}
+              />
+              <Picker.Item 
+                label='Raku'
+                value={"Raku"}
+                key={"fireType: Raku"}
+              />
+            </Picker>
+            {
+              fireType == "Cone" &&
+              <View>
+                <Text>Temperature:</Text>
+                <Picker
+                    style={{backgroundColor: 'green'}}
+                    selectedValue={fireType}
+                    onValueChange={setFireType}
+                >
+                  {Object.entries(coneTemperatures).map(([key, value]) => (
+                    <Picker.Item 
+                      label={key + ": " + value.fahrenheit + "f"}
+                      value={key}
+                      key={key}
+                    />
+                  ))}
+                </Picker>
+              </View>
+            }
           </View>
         </View>
       </Modal>
@@ -311,6 +378,33 @@ const CreatePotteryItemForm: React.FC = () => {
           </Pressable>
           <Pressable style={styles.imageModalButton} onPress={pickImage}>
             <Text style={styles.imageModalButtonText}>Camera Roll</Text>
+          </Pressable>
+        </View>
+      </Modal>
+      <Modal
+        isVisible={measurementFormVisible} 
+        animationIn={'bounceIn'}
+        animationOut={'bounceOut'}
+        onBackdropPress={() => setMeasurementFormVisible(false)} 
+      >
+        <View style={{backgroundColor: 'green', gap:5}}>
+          <View>
+            <Text style={{marginHorizontal: 5}}>Name</Text>
+            <TextInput 
+              style={{backgroundColor: 'white', margin:10, padding: 5}}
+              onChangeText={setMeasurementName}
+            />
+          </View>
+          <View>
+            <Text style={{marginHorizontal: 5}}>Value</Text>
+            <TextInput 
+              keyboardType='number-pad'
+              style={{backgroundColor: 'white', margin:10, padding: 5}}
+              onChangeText={setMeasurementValue}
+            />
+          </View>
+          <Pressable style={styles.addGlazeButton} onPress={addMeasurement}>
+            <Text>Add Measurement</Text>
           </Pressable>
         </View>
       </Modal>
