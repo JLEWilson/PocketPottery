@@ -13,6 +13,7 @@ import { PotteryItem } from './src/models'
 import { getDBConnection} from './src/services/db-service'
 import { createPotteryItemTable, getPotteryItems, getPotteryItemById, addPotteryItem, updatePotteryItem , deletePotteryItemById} from './src/services/potteryItem-service'
 import CreatePotteryItemForm from './src/components/createPotteryItemForm'
+
 const App = () => {
 	const isDarkMode = useColorScheme() === 'dark'
 	const [potteryItems, setPotteryItems] = useState<PotteryItem[]>([])
