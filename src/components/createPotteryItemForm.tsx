@@ -4,8 +4,11 @@ import { View, Button, Text, TextInput, Image, StyleSheet, Pressable } from 'rea
 import Modal from 'react-native-modal'
 import * as ImagePicker from 'expo-image-picker'
 import { Picker } from '@react-native-picker/picker'
-import type { PotteryItem, Glaze, Clay } from '../models'
+import type { PotteryItem, Glaze, Clay, PotteryItemPictures } from '../models'
 import { v4 as uuidv4 } from 'uuid'
+import { addPotteryItem } from '../services/potteryItem-service'
+import type { SQLiteDatabase } from 'expo-sqlite'
+import { getDBConnection } from '../services/db-service'
 
 const glazeOptions = [
   {
@@ -87,11 +90,69 @@ const CreatePotteryItemForm: React.FC = () => {
   }
 
   const addGlaze = (g: Glaze) => {
+    if(glazes.includes(g)) return
     setGlazes((prevGlazes) => [...prevGlazes, g])
   }
 
   const removeGlaze = (g: Glaze) => {
     setGlazes((prevGlazes) => prevGlazes.filter((glaze) => glaze !== g))
+  }
+
+  const createPotteryItem = (db: SQLiteDatabase, newPotteryItemID: string) => {
+    const now = new Date()
+    const potteryItemToAdd: PotteryItem = {
+      potteryItemId: newPotteryItemID,
+      dateCreated: now.toISOString(),
+      dateEdited: now.toISOString(),
+      projectTitle: pieceName,
+      projectNotes: "",
+      displayPicturePath: image ? image: ""  
+    }
+    addPotteryItem(db, potteryItemToAdd)
+  }
+
+  const createPotteryItemPicture = (db: SQLiteDatabase, newPotteryItemId: string) => {
+    const potteryItemPictureToAdd: PotteryItemPictures = {
+      pictureId: uuidv4(),
+      potteryItemId: newPotteryItemId,
+      picturePath: image ? image : "undefined",
+    }
+    //Use Service to Submit
+  }
+
+  const createPotteryItemClays = (db: SQLiteDatabase, newPotteryItemId: string) => {
+    //useService to submit
+  }
+
+  const createPotteryItemGlazes = (db: SQLiteDatabase, newPotteryItemId: string) => {
+    glazes.forEach((g) => {
+      //Use Service to Submit
+      g.glazeId
+    })
+  }
+
+  const handleSubmitForm = async () => {
+    const db = await getDBConnection()
+    const newPotteryItemId = uuidv4()
+    //PotteryItem
+    createPotteryItem(db, newPotteryItemId)
+
+    //Pictures
+    createPotteryItemPicture(db, newPotteryItemId)
+    //PotteryItemClays
+    createPotteryItemClays(db, newPotteryItemId)
+    //PotteryItemGlazes
+    createPotteryItemGlazes(db, newPotteryItemId)
+
+    //NEXT NEEDS FORM INPUTS
+    //PotteryItemMeasurements
+
+    //PotteryItemBisqueFireTemp
+
+    //PotteryItemGlazeFireTemp
+
+    //PotteryItemTechniques
+
   }
 
   return (
