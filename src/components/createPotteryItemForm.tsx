@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import 'react-native-get-random-values'
-import { View, Button, Text, TextInput, Image, StyleSheet, Pressable } from 'react-native'
+import { View, Button, Text, TextInput, Image, StyleSheet, Pressable, ImageBackground } from 'react-native'
 import Modal from 'react-native-modal'
 import * as ImagePicker from 'expo-image-picker'
 import { Picker } from '@react-native-picker/picker'
@@ -53,10 +53,12 @@ const clayOptions = [
 
 const CreatePotteryItemForm: React.FC = () => {
   const [formVisible, setFormVisible] = useState(false)
-  const [pieceName, setPieceName] = useState('Piece Name')
+  const [pieceName, setPieceName] = useState('New Piece')
   const [image, setImage] = useState<string | null>(null)
   const [imageModalVisible, setImageModalVisible] = useState(false)
-  const [clay, setClay] = useState<Clay>()
+  const [clay, setClay] = useState<Clay | null>(null)
+  const [clays, setClays] = useState<Clay[]>([])
+  const [clayFormVisible, setClayFormVisible] = useState(false)
   const [currentGlaze, setCurrentGlaze] = useState<Glaze | null>(null)
   const [glazes, setGlazes] = useState<Glaze[]>([])
   const [glazeFormVisible, setGlazeFormVisible] = useState(false)
@@ -87,6 +89,15 @@ const CreatePotteryItemForm: React.FC = () => {
       setImage(result.assets[0].uri)
       console.log(result.assets[0].uri)
     }
+  }
+
+  const addClay = (c: Clay) => {
+    if(clays.includes(c)) return
+    setClays((prevClays) => [...prevClays, c])
+  }
+
+  const removeClay = (c: Clay) => {
+    setClays((prevClays) => prevClays.filter((c) => clay !== c))
   }
 
   const addGlaze = (g: Glaze) => {
@@ -167,61 +178,103 @@ const CreatePotteryItemForm: React.FC = () => {
       </View>
       <Modal isVisible={formVisible} animationIn={'bounceIn'} animationOut={'bounceOut'}>
         <View style={styles.innerContainer}>
-          <Text style={styles.title}>New Piece</Text>
+          
+          {/*title*/}
           <TextInput style={styles.nameInput} onChangeText={setPieceName} value={pieceName} />
+          
+          {/*image*/}
           <View style={styles.imageContainer}>
-            <Pressable style={styles.addImage} onPress={() => setImageModalVisible(true)}>
-              <Text style={styles.addImageText}>Add Image</Text>
-            </Pressable>
-            {image && <Image source={{ uri: image }} style={styles.image} />}
+            {image ? 
+              <ImageBackground style={styles.addImage} imageStyle={styles.addImage} source={{uri: image}}>
+                <Pressable  onPress={() => setImageModalVisible(true)}>
+                  <Text style={styles.addImageText}>Change Image</Text>
+                </Pressable>
+              </ImageBackground>
+              :
+              <Pressable style={styles.addImage} onPress={() => setImageModalVisible(true)}>
+                <Text style={styles.addImageText}>Add Image</Text>
+              </Pressable>
+            }
           </View>
 
+          {/*clay*/}
           <View style={styles.clayGroup}>
             <Picker
               style={styles.clayDropdown}
-              selectedValue={clay}
-              onValueChange={(currentClay) => setClay(currentClay)}
-              //Check this again after doing some more styling
+              selectedValue={clay?.clayId || null}
+              onValueChange={(value) => {
+                const selectedClay = clayOptions.find((c) => c.clayId === value);
+                setClay(selectedClay || null);}
+              }
             >
+              <Picker.Item
+                label='Choose a Clay'
+                value='No Clay Chosen'
+                key='default'
+              />
               {clayOptions.map((clay) => (
                 <Picker.Item
                   label={clay.name}
-                  value={{
-                    clayId: clay.clayId,
-                    name: clay.name,
-                    manufacturer: clay.manufacturer,
-                    notes: clay.notes,
-                  }}
-                  key={uuidv4()}
+                  value={clay.clayId}
+                  key={clay.clayId}
                 />
               ))}
             </Picker>
+            <View style={styles.glazeButtonContainer}>
+              <Pressable style={styles.addGlazeButton}  onPress={() => clay && addClay(clay)} >
+                <Text>"Add Clay"</Text>  
+              </Pressable>
+              <Pressable style={styles.addGlazeButton}  onPress={() => setClayFormVisible(true)} >
+                <Text>"New Clay"</Text>  
+              </Pressable>
+            </View>
           </View>
-
+          
+          {/*glazes*/}
           <View style={styles.glazeGroup}>
             <View style={styles.glazeDropdown}>
               <Picker
                 style={styles.glazeDropdown}
-                selectedValue={currentGlaze}
-                onValueChange={(g) => setCurrentGlaze(g)}
+                selectedValue={currentGlaze?.glazeId || null}
+                onValueChange={(value) => {
+                  const selectedGlaze = glazeOptions.find((glaze) => glaze.glazeId === value);
+                  setCurrentGlaze(selectedGlaze || null);}
+                }
               >
+                <Picker.Item
+                label='Choose a Glaze'
+                value='No Glaze Chosen'
+                key='default'
+              />
                 {glazeOptions.map((glaze) => (
                   <Picker.Item
                     label={glaze.name}
-                    value={{
-                      glazeId: glaze.glazeId,
-                      name: glaze.name,
-                      manufacturer: glaze.manufacturer,
-                      notes: glaze.notes,
-                    }}
-                    key={uuidv4()}
+                    value={glaze.glazeId}
+                    key={glaze.glazeId}
                   />
                 ))}
               </Picker>
-              {currentGlaze != null && (
-                <Button title="Add Glaze" onPress={() => addGlaze(currentGlaze)} />
-              )}
-              <Button title="New Glaze" onPress={() => setGlazeFormVisible(true)} />
+            </View>
+            <View style={styles.glazeButtonContainer}>
+              <Pressable style={styles.addGlazeButton}  onPress={() => currentGlaze && addGlaze(currentGlaze)} >
+                <Text>"Add Glaze"</Text>  
+              </Pressable>
+              <Pressable style={styles.addGlazeButton}  onPress={() => setGlazeFormVisible(true)} >
+                <Text>"New Glaze"</Text>  
+              </Pressable>
+            </View>
+            <Text style={styles.glazesLabel}>Clays:</Text>
+            <View style={styles.glazesList}>
+              {clays.map((c: Clay) => (
+                <View key={c.clayId + ' view'} style={styles.glazeContainer}>
+                  <Text key={c.clayId + ' text'} style={styles.glazeName}>
+                    {c.name}
+                  </Text>
+                  <Pressable style={styles.removeGlazeButton} onPress={() => removeClay(c)}>
+                    <Text style={styles.removeGlazeButtonText}>X</Text>
+                  </Pressable>
+                </View>
+              ))}
             </View>
             <Text style={styles.glazesLabel}>Glazes:</Text>
             <View style={styles.glazesList}>
@@ -236,6 +289,13 @@ const CreatePotteryItemForm: React.FC = () => {
                 </View>
               ))}
             </View>
+          </View>
+
+          {/*Measurements*/}
+          <View style={styles.measurementsGroup}>
+            <Pressable style={styles.addMeasurementButton}>
+              <Text style={styles.addMeasurementButtonText}>Add Measurement</Text>
+            </Pressable>
           </View>
         </View>
       </Modal>
@@ -326,8 +386,31 @@ const styles = StyleSheet.create({
   glazeGroup: {
     flex: 1,
   },
-  glazesLabel: {},
-  glazesList: { display: 'flex', flexDirection: 'row', flexWrap: 'wrap' },
+  glazeButtonContainer: {
+    width:'auto',
+    backgroundColor:'red', 
+    flexDirection:'row-reverse'
+  },
+  addGlazeButton:{
+    borderRadius: 5,
+    elevation: 3,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 30,
+    padding: 4,
+    width: 100,
+    borderWidth: 1,
+    borderColor: 'black',
+    backgroundColor: 'green'
+  },
+  glazesLabel: {
+    fontSize: 15
+  },
+  glazesList: { 
+    display: 'flex', 
+    flexDirection: 'row', 
+    flexWrap: 'wrap' 
+  },
   glazeContainer: {
     flexDirection: 'row',
   },
@@ -348,6 +431,15 @@ const styles = StyleSheet.create({
   removeGlazeButtonText: {
     fontSize: 18,
   },
+  measurementsGroup: {
+    flex: 1
+  },
+  addMeasurementButton: {
+
+  },
+  addMeasurementButtonText: {
+    fontSize:15
+  }
 })
 
 export default CreatePotteryItemForm
