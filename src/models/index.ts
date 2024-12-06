@@ -14,7 +14,7 @@ export type PotteryItemPictures = {
 }
 
 export type Clay = {
-  // clayId: string
+  clayId: string
   name: string
   manufacturer: string
   notes: string
@@ -39,24 +39,18 @@ export type PotteryItemGlazes = {
 
 export type PotteryItemMeasurements = {
   measurementId: string
-  projectID: string
+  potteryItemId: string
   name: string
   scale: number
-  type: string
 }
 
-export type PotteryItemBisqueFireTemp = {
-  bisqueFireTempID: string
-  potteryItemId: string
-  FireType: string // either Cone or Raku
-  coneNumber: number
-}
 
-export type PotteryItemGlazeFireTemp = {
-  glazeFireTempID: string
+export type PotteryItemFireTemp = {
+  fireTempId: string
   potteryItemId: string
-  FireType: string // either Cone or Raku
-  coneNumber: number
+  fireStyle: string //Cone or Raku
+  fireType: string //bisque or glaze
+  cone: string
 }
 
 export type PotteryItemTechniques = {
