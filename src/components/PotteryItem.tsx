@@ -5,7 +5,7 @@ import {
 	Text,
 	View,
 } from 'react-native'
-import { PotteryItem } from '../models'
+import type { PotteryItem } from '../models'
 
 export const PotteryItemComponent: React.FC<{
   potteryItem: PotteryItem;
