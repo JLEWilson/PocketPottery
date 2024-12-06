@@ -7,7 +7,7 @@ const TABLE_NAME = 'potteryItem'
 export const createPotteryItemTable = async (db: SQLiteDatabase) => {
 	// create table if not exists
 	const query = `CREATE TABLE IF NOT EXISTS ${TABLE_NAME}(
-        potteryItemId INTEGER PRIMARY KEY AUTOINCREMENT,
+        potteryItemId TEXT PRIMARY KEY,
         dateCreated TEXT NOT NULL,
         dateEdited TEXT NOT NULL,
         projectTitle TEXT NOT NULL,
@@ -52,7 +52,7 @@ export const getPotteryItems = async (db: SQLiteDatabase): Promise<PotteryItem[]
 
 export const getPotteryItemById = async (
 	db: SQLiteDatabase,
-	id: number
+	id: string
 ): Promise<PotteryItem | null> => {
 	const getQuery = `SELECT * FROM ${TABLE_NAME} WHERE potteryItemId = ?`
 	return new Promise((resolve, reject) => {
@@ -84,11 +84,12 @@ export const getPotteryItemById = async (
 }
 
 export const addPotteryItem =  async (db: SQLiteDatabase, potteryItem: PotteryItem) => {
-	const addQuery = `INSERT INTO ${TABLE_NAME} (dateCreated, dateEdited, projectTitle, projectNotes, displayPicturePath) VALUES (?, ?, ?, ?, ?)`
+	const addQuery = `INSERT INTO ${TABLE_NAME} (potteryItemId, dateCreated, dateEdited, projectTitle, projectNotes, displayPicturePath) VALUES (?, ?, ?, ?, ?)`
 	db.transaction(tx => {
 		tx.executeSql(
 			addQuery,
 			[
+				potteryItem.potteryItemId,
 				potteryItem.dateCreated,
 				potteryItem.dateEdited,
 				potteryItem.projectTitle,
@@ -120,7 +121,7 @@ export const updatePotteryItem = async (db: SQLiteDatabase, potteryItem: Pottery
   });
 };
 
-export const deletePotteryItemById = async (db: SQLiteDatabase, id: number) => {
+export const deletePotteryItemById = async (db: SQLiteDatabase, id: string) => {
 	const deleteQuery = `DELETE FROM ${TABLE_NAME} WHERE potteryItemId = ${id}`
 	await db.transaction((tx) => {
 		tx.executeSql(deleteQuery)
