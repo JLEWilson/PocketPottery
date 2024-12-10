@@ -5,7 +5,6 @@ import {
   Button,
   Text,
   TextInput,
-  Image,
   StyleSheet,
   Pressable,
   ImageBackground,
@@ -15,21 +14,21 @@ import Modal from 'react-native-modal'
 import ClaysList from './ClaysList'
 import GlazesList from './GlazesList'
 import * as ImagePicker from 'expo-image-picker'
-import { Picker } from '@react-native-picker/picker'
 import {
   type PotteryItem,
   type Glaze,
   type Clay,
   type PotteryItemPictures,
   type PotteryItemMeasurements,
-  PotteryItemFireTemp,
+  PotteryItemFirings,
 } from '../models'
 import { v4 as uuidv4 } from 'uuid'
 import { addPotteryItem } from '../services/potteryItem-service'
 import type { SQLiteDatabase } from 'expo-sqlite'
-import { getDBConnection } from '../services/db-service'
-import { coneTemperatures } from '../constants/coneTemperatures'
 import { useDatabase } from '../services/db-context'
+import NewMeasurement from './NewMeasurement'
+import globalStyles from '../globalStyles/stylesheet'
+import NewFiring from './NewFiring'
 
 
 const NewPotteryItem: React.FC = () => {
@@ -46,15 +45,10 @@ const NewPotteryItem: React.FC = () => {
   const [glazes, setGlazes] = useState<Glaze[]>([])
   const [glazeFormVisible, setGlazeFormVisible] = useState(false)
   const [measurementFormVisible, setMeasurementFormVisible] = useState(false)
-  const [measurementName, setMeasurementName] = useState('')
-  const [measurementValue, setMeasurementValue] = useState('')
-  const [measurements, setMeasurements] = useState<{ name: string; value: number }[]>([])
-  const [fireType, setFireType] = useState('Bisque')
-  const [fireStyle, setFireStyle] = useState('Cone')
-  const [temperature, setTemperature] = useState('0')
-  const [temperatures, setTemperatures] = useState<
-    Pick<PotteryItemFireTemp, 'fireTempId' | 'fireType' | 'cone' | 'fireStyle'>[]
-  >([])
+  const [measurements, setMeasurements] = useState<Pick<PotteryItemMeasurements, "name" | "scale" | "system">[]>([])
+  const [firingFormVisible, setFiringFormVisible] = useState(false)
+  const [firings, setFirings] = useState<Pick<PotteryItemFirings,  | 'fireType' | 'cone' | 'fireStyle'>[]>([])
+  const [notes, setNotes] = useState('')
 
   const pickImage = async () => {
     setImageModalVisible(false)
@@ -74,13 +68,12 @@ const NewPotteryItem: React.FC = () => {
     setImageModalVisible(false)
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync()
     if (permissionResult.granted === false) {
-      console.log("You've refused to allow this app to access your camera!")
+      console.log("Change to warning? You've refused to allow this app to access your camera!")
       return
     }
     const result = await ImagePicker.launchCameraAsync()
     if (!result.canceled) {
       setImage(result.assets[0].uri)
-      console.log(result.assets[0].uri)
     }
   }
 
@@ -104,25 +97,31 @@ const NewPotteryItem: React.FC = () => {
     setGlazes((prevGlazes) => prevGlazes.filter((glaze) => glaze !== g))
   }
 
-  const addMeasurement = () => {
+  const addMeasurement = (measurement: Pick<PotteryItemMeasurements, "name" | "scale" | "system">) => {
+    setMeasurementFormVisible(false)
     const newMeasurement = {
-      name: measurementName,
-      value: parseInt(measurementValue),
+      name: measurement.name,
+      scale: measurement.scale,
+      system: measurement.system,
     }
+    if(measurements.includes(newMeasurement)) return
     setMeasurements((prev) => [...prev, newMeasurement])
   }
-  const addTemperature = () => {
-    const temp: Pick<PotteryItemFireTemp, 'fireTempId' | 'fireType' | 'fireStyle' | 'cone'> = {
-      fireTempId: uuidv4(),
-      fireStyle: fireStyle,
-      fireType: fireType,
-      cone: temperature,
-    }
-    setTemperatures((prev) => [...prev, temp])
-    setTemperature('0')
+  const removeMeasurement = (m: Pick<PotteryItemMeasurements, "name" | "scale" | "system">) => {
+    setMeasurements((prev) => prev.filter((measurement) => measurement !== m))
   }
-  const removeTemperature = (t: Pick<PotteryItemFireTemp, 'fireTempId' | 'fireType' | 'cone'>) => {
-    setTemperatures((p) => p.filter((f) => t.fireTempId !== f.fireTempId))
+  const addFiring = (firing: Pick<PotteryItemFirings, 'fireType' | 'fireStyle' | 'cone'> ) => {
+    setFiringFormVisible(false)
+    const newFiring = {
+      fireStyle: firing.fireStyle,
+      fireType: firing.fireType,
+      cone: firing.cone,
+    }
+    if(firings.includes(newFiring)) return
+    setFirings((prev) => [...prev, newFiring])
+  }
+  const removeFiring = (f: Pick<PotteryItemFirings,  'fireType' | 'fireStyle' | 'cone'>) => {
+    setFirings((prev) => prev.filter((firing) => firing !== f))
   }
 
   const createPotteryItem = (db: SQLiteDatabase, newPotteryItemID: string) => {
@@ -195,12 +194,11 @@ const NewPotteryItem: React.FC = () => {
       </View>
       <Modal isVisible={formVisible} animationIn={'bounceIn'} animationOut={'bounceOut'}>
         <View style={styles.innerContainer}>
-          {/*title*/}
+{/*title*/}
           <View style={[styles.group, {height: 70, width: 'auto'}]}>
             <Text style={styles.label}>Project Title</Text>
             <TextInput style={styles.nameInput} onChangeText={setPieceName} placeholder='Name' value={pieceName}/>
           </View>
-
           {/*image*/}
           <View style={styles.imageContainer}>
             {image ? (
@@ -221,129 +219,139 @@ const NewPotteryItem: React.FC = () => {
               </Pressable>
             )}
           </View>
-
-          {/*clay*/}
+{/*Clays*/}
           <View style={styles.group}>
-            <View style={{display: 'flex', flexDirection: 'row'}}>
-              <Text style={styles.label}>Clays:</Text>
-              {clays.length > 0 &&
-                <Text style={{ position: "absolute", right: 15, fontSize: 13, fontWeight: "500"}}>(tap to remove)</Text>
-              }
-            </View>
+            <Text style={styles.label}>Clays:</Text>
+            { 
+              clays.length > 0 ?
+              <Text style={styles.reminderText}>(Tap To Remove)</Text>
+              :
+              <Text style={styles.reminderText}>(Optional)</Text>
+            }
             <ScrollView style={styles.listOutput}>
               {clays.map((c: Clay) => (
-                <Pressable key={c.clayId + ' button'} style={styles.removeGlazeButton} onPress={() => removeClay(c)}>
-                  <Text key={c.clayId + ' text'} style={styles.glazeName}>
+                <Pressable key={c.clayId + ' button'} style={styles.deleteButton} onPress={() => removeClay(c)}>
+                  <Text key={c.clayId + ' text'} style={styles.deleteButtonText}>
                     {c.name}
                   </Text>
                 </Pressable>
               ))}
             </ScrollView>
-            <View style={[styles.glazeButtonContainer, { justifyContent: 'center'}]}>
+            <View style={[styles.buttonContainer, { justifyContent: 'center'}]}>
               <Pressable
-                style={[styles.button, { display: 'flex', paddingVertical: 4, paddingHorizontal: 15, marginTop: 4}]}
+                style={[globalStyles.button, styles.button, { display: 'flex', paddingVertical: 4, paddingHorizontal: 15, marginTop: 4}]}
                 onPress={() => setClayFormVisible(true)}
               >
-                <Text style={styles.buttonText}>Add Clay To Project</Text>
+                <Text style={styles.buttonText}>Add Clay</Text>
               </Pressable>
             </View>
           </View>
-
-          {/*glazes*/}
+{/*Glazes*/}
           <View style={styles.group}>
-            <View>
-              <Text style={styles.label}>Glazes:</Text>
-              {glazes.length > 0 &&
-                <Text style={{ position: "absolute", right: 15, fontSize: 13, fontWeight: "500"}}>(tap to remove)</Text>
-              }
-              <View style={styles.listOutput}>
-                {glazes.map((g: Glaze) => (
-                  <Pressable key={g.glazeId + ' button'} style={styles.removeGlazeButton} onPress={() => removeGlaze(g)}>
-                  <Text key={g.glazeId + ' text'} style={styles.glazeName}>
-                    {g.name}
-                  </Text>
-                </Pressable>
-                ))}
-              </View>
+            <Text style={styles.label}>Glazes:</Text>
+            { 
+              glazes.length > 0 ?
+              <Text style={styles.reminderText}>(Tap To Remove)</Text>
+              :
+              <Text style={styles.reminderText}>(Optional)</Text>
+            }
+            <View style={styles.listOutput}>
+              {glazes.map((g: Glaze) => (
+                <Pressable key={g.glazeId + ' button'} style={styles.deleteButton} onPress={() => removeGlaze(g)}>
+                <Text key={g.glazeId + ' text'} style={styles.deleteButtonText}>
+                  {g.name}
+                </Text>
+              </Pressable>
+              ))}
             </View>
-            <View style={[styles.glazeButtonContainer, { justifyContent: 'center', }]}>
+            <View style={[styles.buttonContainer, { justifyContent: 'center', }]}>
               <Pressable
-                style={[styles.button, { display: 'flex', paddingVertical: 4, paddingHorizontal: 15, marginTop: 4}]}
+                style={[globalStyles.button, styles.button, { display: 'flex', paddingVertical: 4, paddingHorizontal: 15, marginTop: 4}]}
                 onPress={() => setGlazeFormVisible(true)}
               >
                 <Text style={styles.buttonText}>Add Glaze</Text>
               </Pressable>
             </View>
           </View>
-
-          {/*Measurements*/}
+{/*Measurements*/}
           <View style={styles.group}>
-            <Text>Measurements:</Text>
-            <View>
+            <Text style={styles.label}>Measurements:</Text>
+            { 
+              measurements.length > 0 ?
+              <Text style={styles.reminderText}>(Tap To Remove)</Text>
+              :
+              <Text style={styles.reminderText}>(Optional)</Text>
+            }
+            <View style={styles.listOutput}>
               {measurements.map((m) => (
-                <View>
-                  <Text>{m.name + ':'}</Text>
-                  <Text>{'  ' + m.value}</Text>
-                </View>
+                <Pressable 
+                  key={m.name + 'Pressable'}
+                  style={[styles.deleteButton, {flexDirection: 'row'}]} 
+                  onPress={() => removeMeasurement(m)}
+                >
+                  <Text style={styles.deleteButtonText} key={m.name + 'name text'}>{m.name + ': ' + m.scale}</Text>
+                </Pressable>
               ))}
             </View>
-            <Pressable style={styles.button} onPress={() => setMeasurementFormVisible(true)}>
-              <Text style={styles.buttonText}>Add Measurement</Text>
-            </Pressable>
+            <View style={[styles.buttonContainer, {justifyContent: 'center'}]}>
+              <Pressable style={[globalStyles.button, styles.button, { display: 'flex', paddingVertical: 4, paddingHorizontal: 15, marginTop: 4}]} onPress={() => setMeasurementFormVisible(true)}>
+                <Text style={styles.buttonText}>Add Measurement</Text>
+              </Pressable>
+            </View>
           </View>
-
-          {/*Fire Temps*/}
-          <View>
-            <Text>Fire Type:</Text>
-            <Picker style={styles.dropdown} selectedValue={fireStyle} onValueChange={setFireStyle}>
-              <Picker.Item label="Bisque" value={'Bisque'} key={'FireType: Bisque'} />
-              <Picker.Item label="Glaze" value={'Glaze'} key={'fireType: Glaze'} />
-            </Picker>
-            <Picker style={styles.dropdown} selectedValue={fireStyle} onValueChange={setFireStyle}>
-              <Picker.Item label="Cone" value={'Cone'} key={'fireStyle: Cone'} />
-              <Picker.Item label="Raku" value={'Raku'} key={'fireStyle: Raku'} />
-            </Picker>
-            {fireStyle == 'Cone' && (
-              <View>
-                <Text>Temperature:</Text>
-                <Picker
-                  style={styles.dropdown}
-                  selectedValue={temperature}
-                  onValueChange={setTemperature}
-                >
-                  {Object.entries(coneTemperatures).map(([key, value]) => (
-                    <Picker.Item
-                      label={key + ': ' + value.fahrenheit + 'f'}
-                      value={key}
-                      key={key}
-                    />
-                  ))}
-                </Picker>
-              </View>
-            )}
-            <Pressable style={styles.button} onPress={addTemperature}>
-              <Text style={styles.buttonText}>Add Firing</Text>
-            </Pressable>
-          </View>
+{/*Firings*/}
           <View style={styles.group}>
-            <Text>Firings</Text>
-            <View>
-              {temperatures.map((f, index) => (
-                <View key={index + f.cone + f.fireType + 'view'} style={styles.glazeContainer}>
-                  <Text key={f.cone + f.fireType + 'text'} style={styles.glazeName}>
-                    {f.fireStyle == 'Cone'
-                      ? f.fireType + ': ' + f.fireStyle + f.cone
+            <Text style={styles.label}>Firings</Text>
+            { 
+              firings.length > 0 ?
+              <Text style={styles.reminderText}>(Tap To Remove)</Text>
+              :
+              <Text style={styles.reminderText}>(Optional)</Text>
+            }
+            <View style={styles.listOutput}>
+              {firings.map((f, index) => (
+                <Pressable 
+                  key={index + f.cone + f.fireType + 'view'} 
+                  style={[styles.deleteButton, {flexDirection: 'row'}]}
+                  onPress={() => removeFiring(f)}
+                >
+                  <Text key={f.cone + f.fireType + 'text'} style={styles.deleteButtonText}>
+                    {f.fireStyle != 'Environmental'
+                      ? f.fireType + ': ' + 'Cone ' + f.cone
                       : f.fireType + ': ' + f.fireStyle}
                   </Text>
-                  <Pressable style={styles.removeGlazeButton} onPress={() => removeTemperature(f)}>
-                    <Text style={styles.deleteButtonText}>X</Text>
-                  </Pressable>
-                </View>
+                </Pressable>
               ))}
             </View>
+            <View style={[styles.buttonContainer, {justifyContent: 'center'}]}>
+              <Pressable style={[globalStyles.button, styles.button,  { display: 'flex', paddingVertical: 4, paddingHorizontal: 15, marginTop: 4}]} 
+                onPress={() => setFiringFormVisible(true)}
+              >
+                <Text style={styles.buttonText}>Add Firing</Text>
+              </Pressable>
+            </View>
+          </View>
+          {/* Notes*/}
+          <View style={[styles.group, {height: 120, width: 'auto'}]}>
+            <Text style={styles.label}>Notes</Text>
+            <Text style={styles.reminderText}>(Optional)</Text>
+            <TextInput 
+              textAlignVertical='center'
+              textAlign='center'
+              style={[styles.notesInput]} 
+              multiline={true} 
+              blurOnSubmit={true} 
+              onChangeText={setNotes} 
+              value={notes}/>
+          </View>
+          <View style={styles.buttonContainer}>
+            <Pressable style={[globalStyles.button, styles.button, {padding: 8}]}>
+              <Text style={{fontWeight: 'bold', fontSize: 20}}>Add New Project</Text>
+            </Pressable>
           </View>
         </View>
       </Modal>
+{/*Image Modal*/}
       <Modal
         isVisible={imageModalVisible}
         animationIn={'bounceIn'}
@@ -365,28 +373,9 @@ const NewPotteryItem: React.FC = () => {
         animationOut={'bounceOut'}
         onBackdropPress={() => setMeasurementFormVisible(false)}
       >
-        <View style={{ backgroundColor: 'green', gap: 5 }}>
-          <View>
-            <Text style={{ marginHorizontal: 5 }}>Name</Text>
-            <TextInput
-              style={{ backgroundColor: 'white', margin: 10, padding: 5 }}
-              onChangeText={setMeasurementName}
-            />
-          </View>
-          <View>
-            <Text style={{ marginHorizontal: 5 }}>Value</Text>
-            <TextInput
-              keyboardType="number-pad"
-              style={{ backgroundColor: 'white', margin: 10, padding: 5 }}
-              onChangeText={setMeasurementValue}
-            />
-          </View>
-          <Pressable style={styles.button} onPress={addMeasurement}>
-            <Text style={styles.buttonText}>Add Measurement</Text>
-          </Pressable>
-        </View>
+        <NewMeasurement callbackFunction={addMeasurement}/> 
       </Modal>
-      {/*Clays Modal*/}
+{/*Clays Modal*/}
       <Modal  
         isVisible={clayFormVisible}
         animationIn={'bounceIn'}
@@ -396,21 +385,17 @@ const NewPotteryItem: React.FC = () => {
         onBackdropPress={() => setClayFormVisible(false)}
       > 
         <View style={{flex: 1}}>
-          <ClaysList onSubmit={setCurrentClay} />
-          <View style={{height: 50, justifyContent: 'center', alignItems:'center', backgroundColor:'blue'}}>
-            {/*This might need to be re done because you cant open a modal within a modal, Mayb
-            we switch views? can we come back to a filled out form?*/}
-            
-            <Pressable 
-              onPress={() => {currentClay && addClay(currentClay)}}
-              style={[styles.button, { flex: 2, paddingVertical: 5, paddingHorizontal: 15}]}
-              >
-              <Text style={[styles.buttonText, {fontWeight: 'bold'}]}>Add Clay To Project</Text>
-            </Pressable>
-          </View>
+          <ClaysList onClaySelect={setCurrentClay} >
+              <Pressable 
+                onPress={() => {currentClay && addClay(currentClay)}}
+                style={[styles.button, globalStyles.button, {padding: 8}]}
+                >
+                <Text style={[globalStyles.buttonText, {fontWeight: 'bold'}]}>Add Clay To Project</Text>
+              </Pressable>
+          </ClaysList>
         </View>
       </Modal>
-      {/*Clays Modal*/}
+{/*Glaze Modal*/}
       <Modal  
         isVisible={glazeFormVisible}
         animationIn={'bounceIn'}
@@ -420,21 +405,24 @@ const NewPotteryItem: React.FC = () => {
         onBackdropPress={() => setGlazeFormVisible(false)}
       > 
         <View style={{flex: 1}}>
-          <GlazesList onSubmit={setCurrentGlaze} />
-          <View style={{height: 50, justifyContent: 'center', alignItems:'center', backgroundColor:'blue'}}>
-            {/*This might need to be re done because you cant open a modal within a modal, Mayb
-            we switch views? can we come back to a filled out form?*/}
-            
+          <GlazesList onGlazeSelect={setCurrentGlaze} >
             <Pressable 
-              onPress={() => {currentGlaze && addGlaze(currentGlaze); console.log(currentGlaze)}}
-              style={[styles.button, { flex: 2, paddingVertical: 5, paddingHorizontal: 15}]}
+              onPress={() => {currentGlaze && addGlaze(currentGlaze)}}
+              style={[styles.button, globalStyles.button, {padding: 8}]}
               >
-              <Text style={[styles.buttonText, {fontWeight: 'bold'}]}>Add Glaze To Project</Text>
+              <Text style={[globalStyles.buttonText, {fontWeight: 'bold'}]}>Add Glaze To Project</Text>
             </Pressable>
-          </View>
+          </GlazesList>
         </View>
       </Modal>
-      {/*Glaze Form Modal will go here, will be used in other parts of app add later*/}
+{/*Firings Modal*/}
+      <Modal 
+        isVisible={firingFormVisible}
+        onBackButtonPress={() => setFiringFormVisible(false)}
+        onBackdropPress={() => setFiringFormVisible(false)}
+      >
+        <NewFiring callbackFunction={addFiring}/>
+      </Modal>
     </View>
   )
 }
@@ -493,16 +481,11 @@ const styles = StyleSheet.create({
   group: {
   
   },
-  glazeButtonContainer: {
+  buttonContainer: {
     flexDirection: 'row',
+    justifyContent: 'center'
   },
   button: {
-    padding: 4,
-    elevation: 3,
-    borderWidth: 1,
-    borderRadius: 5,
-    justifyContent: 'center',
-    alignItems: 'center',
     borderColor: 'black',
     backgroundColor: 'green',
   },
@@ -523,16 +506,7 @@ const styles = StyleSheet.create({
   glazeContainer: {
     flexDirection: 'row',
   },
-  glazeName: {
-    margin: 5,
-    textAlign: 'center',
-  },
-  dropdown: {
-    backgroundColor: 'teal',
-    marginHorizontal: 5,
-  },
-  addMeasurementButton: {},
-  removeGlazeButton: {
+  deleteButton: {
     backgroundColor: 'red',
     justifyContent: 'center',
     alignItems: 'center',
@@ -543,11 +517,27 @@ const styles = StyleSheet.create({
     margin: 2,
   },
   deleteButtonText: {
-    fontSize: 12,
+    margin: 5,
+    textAlign: 'center',
   },
   buttonText: {
     fontSize: 15,
   },
+  notesInput: {
+    flex: 1,
+    marginBottom: 5,
+    marginHorizontal: 15,
+    fontSize: 14,
+    textAlign: 'center',
+    backgroundColor: "white",
+    borderColor: "black",
+    borderWidth: 1,
+  },
+  reminderText: { 
+    position: "absolute", 
+    right: 15, 
+    fontSize: 12, 
+    fontWeight: "400"}
 })
 
 export default NewPotteryItem
