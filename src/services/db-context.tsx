@@ -11,9 +11,8 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     const initializeDB = async () => {
       try {
-        const database = await getDBConnection(); // Get the database connection
-        setDb(database); // Set the database in state
-        console.log('Database initialized');
+        const database = await getDBConnection();
+        setDb(database);
       } catch (error) {
         console.error('Failed to initialize the database:', (error as Error).message);
       }
@@ -23,7 +22,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, []);
 
   if (!db) {
-    // Show a loading spinner or fallback UI until the database is ready
+    // loading
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor:'green' }}>
         <ActivityIndicator size="large" color="#0000ff" />
