@@ -1,15 +1,15 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import type { Clay, PotteryItemClays } from '../models'
+import type { Clay } from '../models'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import Modal, { ReactNativeModal } from 'react-native-modal'
+import Modal from 'react-native-modal'
 import NewClay from './NewClay';
 import { useDatabase } from '../services/db-context';
 import { createClayTable, getClays } from '../services/clay-service';
 import globalStyles from '../globalStyles/stylesheet';
 
 type claysListProps = {
-    onSubmit?: (c: Clay) => void;
-    potteryItemId?: string
+    onClaySelect?: (c: Clay) => void;
+    children?: React.ReactNode;
 }
 
 /*needs way to remove clays
@@ -17,131 +17,10 @@ type claysListProps = {
     missclick the modal will close
 */
 
-const clays = [
-    {
-        clayId: 'clay1',
-        name: 'clay1',
-        manufacturer: 'clay1Maker',
-        notes: 'a nice clay',
-    },
-    {
-        clayId: 'clay2',
-        name: 'clay2',
-        manufacturer: 'clay2Maker',
-        notes: 'a nice clay',
-    },
-    {
-        clayId: 'clay3',
-        name: 'clay3',
-        manufacturer: 'clay3Maker',
-        notes: 'a nice clay',
-    },
-    {
-        clayId: 'clay4',
-        name: 'clay4',
-        manufacturer: 'clay4Maker',
-        notes: 'a nice clay',
-    },
-    {
-        clayId: 'clay5',
-        name: 'clay5',
-        manufacturer: 'clay5Maker',
-        notes: 'a nice clay',
-    },
-    {
-        clayId: 'clay6',
-        name: 'clay6',
-        manufacturer: 'clay6Maker',
-        notes: 'a nice clay',
-    },
-    {
-        clayId: 'clay7',
-        name: 'clay7',
-        manufacturer: 'clay7Maker',
-        notes: 'a nice clay',
-    },
-    {
-        clayId: 'clay8',
-        name: 'clay8',
-        manufacturer: 'clay8Maker',
-        notes: 'a nice clay',
-    },
-    {
-        clayId: 'clay9',
-        name: 'clay9',
-        manufacturer: 'clay9Maker',
-        notes: 'a nice clay',
-    },
-    {
-        clayId: 'clay10',
-        name: 'clay10',
-        manufacturer: 'clay10Maker',
-        notes: 'a nice clay',
-    },
-    {
-        clayId: 'clay11',
-        name: 'clay11',
-        manufacturer: 'clay11Maker',
-        notes: 'a nice clay',
-    },
-    {
-        clayId: 'clay12',
-        name: 'clay12',
-        manufacturer: 'clay12Maker',
-        notes: 'a nice clay',
-    },
-    {
-        clayId: 'clay13',
-        name: 'clay13',
-        manufacturer: 'clay13Maker',
-        notes: 'a nice clay',
-    },
-    {
-        clayId: 'clay14',
-        name: 'clay14',
-        manufacturer: 'clay14Maker',
-        notes: 'a nice clay',
-    },
-    {
-        clayId: 'clay15',
-        name: 'clay15',
-        manufacturer: 'clay15Maker',
-        notes: 'a nice clay',
-    },
-    {
-        clayId: 'clay16',
-        name: 'clay16',
-        manufacturer: 'clay16Maker',
-        notes: 'a nice clay',
-    },
-    {
-        clayId: 'clay17',
-        name: 'clay17',
-        manufacturer: 'clay17Maker',
-        notes: 'a nice clay',
-    },
-    {
-        clayId: 'clay18',
-        name: 'clay18',
-        manufacturer: 'clay18Maker',
-        notes: 'a nice clay',
-    },
-    {
-        clayId: 'clay19',
-        name: 'clay19',
-        manufacturer: 'clay19Maker',
-        notes: 'a nice clay',
-    },
-    {
-        clayId: 'clay20',
-        name: 'clay20',
-        manufacturer: 'clay20Maker',
-        notes: 'a nice clay',
-    },
-];
 
 
-function ClaysList({potteryItemId, onSubmit}:claysListProps) {
+
+function ClaysList({onClaySelect, children}:claysListProps) {
     const DB = useDatabase()
     
     const [selectedClay, setSelectedClay] = useState<Clay>()
@@ -153,7 +32,6 @@ function ClaysList({potteryItemId, onSubmit}:claysListProps) {
         try {
             await createClayTable(DB);
             const storedClays = await getClays(DB);
-            console.log(storedClays)
             setAllClays(storedClays);
         } catch (error) {
             if (error instanceof Error) {
@@ -172,7 +50,7 @@ function ClaysList({potteryItemId, onSubmit}:claysListProps) {
 
     const handleClaySelect = (c: Clay) => {
         setSelectedClay(c)
-        onSubmit?.(c)
+        onClaySelect?.(c)
     }
 
     const handleModalSubmission = () => {
@@ -195,13 +73,14 @@ function ClaysList({potteryItemId, onSubmit}:claysListProps) {
                     </Pressable>
                 ))}
             </ScrollView>
-            <View style={{position: 'absolute', right: 0, left: 0, alignItems: 'center', bottom: 2}}>
+            <View style={{position: 'absolute', right: 0, left: 0, bottom: 10, alignItems: 'center'}}>
                 <Pressable 
                     onPress={() => setNewClayFormVisible(true)}
-                    style={styles.newClayButton}
+                    style={[globalStyles.button, styles.newClayButton]}
                 >
                     <Text style={styles.buttonText}>New Clay</Text>
                 </Pressable>
+                {children}
             </View>
             <Modal
                 isVisible={newClayFormVisible}
@@ -224,28 +103,23 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 15,
-        paddingBottom: 40,
         backgroundColor: 'green'
     },
     scrollContainer: {
-
+        marginBottom: 100
     },
     newClayButton: {
-        padding: 4,
-        elevation: 3,
-        borderWidth: 1,
-        borderRadius: 5,
-        justifyContent: 'center',
-        alignItems: 'center',
         borderColor: 'black',
         backgroundColor: 'green',
+        width: 100,
+        marginBottom: 5
       },
     button: {
         flex: 1,
         padding: 10,
         justifyContent: "center",
         alignItems: 'center',
-        elevation: 15,
+        elevation: 8,
         marginBottom: 30,
         borderRadius: 30,
         borderWidth: 1,
