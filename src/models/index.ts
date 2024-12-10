@@ -41,12 +41,13 @@ export type PotteryItemMeasurements = {
   measurementId: string
   potteryItemId: string
   name: string
+  system: string
   scale: number
 }
 
 
-export type PotteryItemFireTemp = {
-  fireTempId: string
+export type PotteryItemFirings = {
+  firingId: string
   potteryItemId: string
   fireStyle: string //Cone or Raku
   fireType: string //bisque or glaze
