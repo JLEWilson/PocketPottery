@@ -31,34 +31,36 @@ const NewGlaze = (props: NewGlazeProps) => {
 
   return (
     <View style={styles.container}>
-        <View style={{display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+        <View style={styles.content}>
             <Text style={styles.title}>New Glaze</Text>
-        </View>
-        <View style={styles.textInputGroup}>
-            <Text style={styles.label}>Name</Text>
-            <TextInput 
-                style={[styles.textInput, {fontSize: 24,}]} 
-                onChangeText={setName}
-                maxLength={25}   
-            />
-        </View>
-        <View style={styles.textInputGroup}>
-            <Text style={styles.label}>Manufacturer</Text>
-            <TextInput 
-                style={[styles.textInput, {fontSize: 24,}]} 
-                onChangeText={setManufacturer}
-                maxLength={25}
-            />
-        </View>
-        <View style={styles.textInputGroup}>
-            <Text style={styles.label}>Notes</Text>
-            <TextInput 
-                style={[styles.textInput, {height: 100, fontSize: 12}]} 
-                onChangeText={setNotes}
-                maxLength={500}    
-            />
-        </View>
-        <View style={styles.textInputGroup}>
+            <View  style={[styles.textInputGroup, {flex: 1}]}>
+                <Text style={styles.label}>Name</Text>
+                <TextInput 
+                    style={[styles.textInput, {fontSize: 24,}]} 
+                    onChangeText={setName}
+                    maxLength={25}  
+                    blurOnSubmit={true} 
+                />
+            </View>
+            <View style={[styles.textInputGroup, {flex: 1}]}>
+                <Text style={styles.label}>Manufacturer</Text>
+                <TextInput 
+                    style={[styles.textInput, {fontSize: 24,}]} 
+                    onChangeText={setManufacturer}
+                    maxLength={25}
+                    blurOnSubmit={true}
+                />
+            </View>
+            <View style={[styles.textInputGroup, {flex: 2}]}>
+                <Text style={styles.label}>Notes</Text>
+                <TextInput 
+                    style={[styles.textInput, {height: 100, fontSize: 12}]} 
+                    onChangeText={setNotes}
+                    maxLength={500}   
+                    multiline={true} 
+                    blurOnSubmit={true} 
+                />
+            </View>
             <Pressable style={styles.button} onPress={handleAddNewGlaze}>
                 <Text style={{fontSize: 20, paddingVertical: 4}}>Add New Glaze</Text>
             </Pressable>
@@ -72,10 +74,14 @@ export default NewGlaze
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "blue",
         justifyContent: 'center',
         marginHorizontal: 30,
-        marginVertical: 50,
+    },
+    content: {
+        flex:1,
+        backgroundColor: "blue",
+        maxHeight: 400,
+        minHeight: 400,
         borderColor: 'black',
         borderWidth: 1
     },
@@ -86,11 +92,13 @@ const styles = StyleSheet.create({
       },
     title: {
         fontSize: 24,
-        fontWeight: 'bold'
+        fontWeight: 'bold',
+        alignSelf: 'center',
+        position: 'relative',
+        top: 5,
     },
     textInputGroup: {
         marginHorizontal: 15,
-        flex: 1,
         justifyContent: 'center',
         alignContent: 'center'
     },
@@ -101,10 +109,13 @@ const styles = StyleSheet.create({
         borderWidth: 1,
     },
     button: {
+        position: 'relative',
+        bottom: 4,
         padding: 4,
         elevation: 3,
         borderWidth: 1,
         borderRadius: 5,
+        alignSelf: 'center',
         justifyContent: 'center',
         alignItems: 'center',
         borderColor: 'black',
