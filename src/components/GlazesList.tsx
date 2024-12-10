@@ -5,10 +5,11 @@ import Modal from 'react-native-modal'
 import NewGlaze from './NewGlaze';
 import { useDatabase } from '../services/db-context';
 import { createGlazeTable, getGlazes } from '../services/glaze-service';
+import globalStyles from '../globalStyles/stylesheet';
 
 type GlazesListProps = {
-    onSubmit?: (c: Glaze) => void;
-    potteryItemId?: string
+    onGlazeSelect?: (c: Glaze) => void;
+    children?: React.ReactNode;
 }
 
 /*needs way to remove Glazes
@@ -16,131 +17,8 @@ type GlazesListProps = {
     missclick the modal will close
 */
 
-const Glazes = [
-    {
-        GlazeId: 'Glaze1',
-        name: 'Glaze1',
-        manufacturer: 'Glaze1Maker',
-        notes: 'a nice Glaze',
-    },
-    {
-        GlazeId: 'Glaze2',
-        name: 'Glaze2',
-        manufacturer: 'Glaze2Maker',
-        notes: 'a nice Glaze',
-    },
-    {
-        GlazeId: 'Glaze3',
-        name: 'Glaze3',
-        manufacturer: 'Glaze3Maker',
-        notes: 'a nice Glaze',
-    },
-    {
-        GlazeId: 'Glaze4',
-        name: 'Glaze4',
-        manufacturer: 'Glaze4Maker',
-        notes: 'a nice Glaze',
-    },
-    {
-        GlazeId: 'Glaze5',
-        name: 'Glaze5',
-        manufacturer: 'Glaze5Maker',
-        notes: 'a nice Glaze',
-    },
-    {
-        GlazeId: 'Glaze6',
-        name: 'Glaze6',
-        manufacturer: 'Glaze6Maker',
-        notes: 'a nice Glaze',
-    },
-    {
-        GlazeId: 'Glaze7',
-        name: 'Glaze7',
-        manufacturer: 'Glaze7Maker',
-        notes: 'a nice Glaze',
-    },
-    {
-        GlazeId: 'Glaze8',
-        name: 'Glaze8',
-        manufacturer: 'Glaze8Maker',
-        notes: 'a nice Glaze',
-    },
-    {
-        GlazeId: 'Glaze9',
-        name: 'Glaze9',
-        manufacturer: 'Glaze9Maker',
-        notes: 'a nice Glaze',
-    },
-    {
-        GlazeId: 'Glaze10',
-        name: 'Glaze10',
-        manufacturer: 'Glaze10Maker',
-        notes: 'a nice Glaze',
-    },
-    {
-        GlazeId: 'Glaze11',
-        name: 'Glaze11',
-        manufacturer: 'Glaze11Maker',
-        notes: 'a nice Glaze',
-    },
-    {
-        GlazeId: 'Glaze12',
-        name: 'Glaze12',
-        manufacturer: 'Glaze12Maker',
-        notes: 'a nice Glaze',
-    },
-    {
-        GlazeId: 'Glaze13',
-        name: 'Glaze13',
-        manufacturer: 'Glaze13Maker',
-        notes: 'a nice Glaze',
-    },
-    {
-        GlazeId: 'Glaze14',
-        name: 'Glaze14',
-        manufacturer: 'Glaze14Maker',
-        notes: 'a nice Glaze',
-    },
-    {
-        GlazeId: 'Glaze15',
-        name: 'Glaze15',
-        manufacturer: 'Glaze15Maker',
-        notes: 'a nice Glaze',
-    },
-    {
-        GlazeId: 'Glaze16',
-        name: 'Glaze16',
-        manufacturer: 'Glaze16Maker',
-        notes: 'a nice Glaze',
-    },
-    {
-        GlazeId: 'Glaze17',
-        name: 'Glaze17',
-        manufacturer: 'Glaze17Maker',
-        notes: 'a nice Glaze',
-    },
-    {
-        GlazeId: 'Glaze18',
-        name: 'Glaze18',
-        manufacturer: 'Glaze18Maker',
-        notes: 'a nice Glaze',
-    },
-    {
-        GlazeId: 'Glaze19',
-        name: 'Glaze19',
-        manufacturer: 'Glaze19Maker',
-        notes: 'a nice Glaze',
-    },
-    {
-        GlazeId: 'Glaze20',
-        name: 'Glaze20',
-        manufacturer: 'Glaze20Maker',
-        notes: 'a nice Glaze',
-    },
-];
 
-
-function GlazesList({potteryItemId, onSubmit}:GlazesListProps) {
+function GlazesList({children, onGlazeSelect}:GlazesListProps) {
     const DB = useDatabase()
     
     const [selectedGlaze, setSelectedGlaze] = useState<Glaze>()
@@ -171,7 +49,7 @@ function GlazesList({potteryItemId, onSubmit}:GlazesListProps) {
 
     const handleGlazeSelect = (g: Glaze) => {
         setSelectedGlaze(g)
-        onSubmit?.(g)
+        onGlazeSelect?.(g)
     }
 
     const handleModalSubmission = () => {
@@ -194,13 +72,14 @@ function GlazesList({potteryItemId, onSubmit}:GlazesListProps) {
                     </Pressable>
                 ))}
             </ScrollView>
-            <View style={{position: 'absolute', right: 0, left: 0, alignItems: 'center', bottom: 2}}>
+            <View style={{position: 'absolute', right: 0, left: 0, bottom: 10, alignItems: 'center'}}>
                 <Pressable 
                     onPress={() => setNewGlazeFormVisible(true)}
-                    style={styles.newGlazeButton}
+                    style={[globalStyles.button, styles.newGlazeButton]}
                 >
-                    <Text style={styles.buttonText}>New Glaze</Text>
+                    <Text style={styles.buttonText}>New Clay</Text>
                 </Pressable>
+                {children}
             </View>
             <Modal
                 isVisible={newGlazeFormVisible}
@@ -227,17 +106,13 @@ const styles = StyleSheet.create({
         backgroundColor: 'green'
     },
     scrollContainer: {
-
+        marginBottom: 100
     },
     newGlazeButton: {
-        padding: 4,
-        elevation: 3,
-        borderWidth: 1,
-        borderRadius: 5,
-        justifyContent: 'center',
-        alignItems: 'center',
         borderColor: 'black',
         backgroundColor: 'green',
+        width: 100,
+        marginBottom: 5
       },
     button: {
         flex: 1,
