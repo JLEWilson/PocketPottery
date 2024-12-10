@@ -5,6 +5,7 @@ import Modal, { ReactNativeModal } from 'react-native-modal'
 import NewClay from './NewClay';
 import { useDatabase } from '../services/db-context';
 import { createClayTable, getClays } from '../services/clay-service';
+import globalStyles from '../globalStyles/stylesheet';
 
 type claysListProps = {
     onSubmit?: (c: Clay) => void;
