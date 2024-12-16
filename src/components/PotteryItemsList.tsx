@@ -4,6 +4,7 @@ import {
   StyleSheet,
   Text,
   View,
+  Button
 } from 'react-native';
 import { PotteryItemComponent } from './PotteryItem';
 import { PotteryItem } from '../models';
@@ -11,13 +12,16 @@ import { useDatabase } from '../services/db-context';
 import {
   createPotteryItemTable,
   getPotteryItems,
+  resetPotteryItemTable,
 } from '../services/potteryItem-service';
 import NewPotteryItem from '../components/NewPotteryItem';
+import { useTheme } from '@react-navigation/native';
 
 const PotteryItemList = () => {
-
-  const [potteryItems, setPotteryItems] = useState<PotteryItem[]>([]);
-  const DB = useDatabase(); // Access the shared database instance
+  const DB = useDatabase();
+  const {colors} = useTheme()
+  const [potteryItems, setPotteryItems] = useState<PotteryItem[]>([]); 
+  const [reload, setReload] = useState(false)
 
   const loadDataCallback = useCallback(async () => {
     try {
@@ -37,22 +41,27 @@ const PotteryItemList = () => {
 
   useEffect(() => {
     loadDataCallback();
-  }, [loadDataCallback]);
+  }, [loadDataCallback, reload]);
+
+  const handleFormSubmission = () => {
+    setReload((prev) => !prev);
+  }
 
   return (
-    <>
-      <ScrollView contentContainerStyle={styles.scrollView}>
-        <View style={styles.appTitleView}>
-          <Text style={styles.appTitleText}>Pocket Pottery</Text>
-        </View>
-        <View style={styles.potteryItemsContainer}>
+    <View style={{backgroundColor: colors.background, flex: 1}}>
+      <View style={styles.appTitleView}>
+        <Text style={[styles.appTitleText, {color: colors.text}]}>Pocket Pottery</Text>
+      </View>
+      <ScrollView  contentContainerStyle={styles.scrollView}>
           {potteryItems.map((p) => (
             <PotteryItemComponent key={p.potteryItemId} potteryItem={p} />
           ))}
-        </View>
       </ScrollView>
-      <NewPotteryItem />
-    </>
+      <NewPotteryItem callBackFunction={handleFormSubmission} />
+      <View style={{position:'absolute', bottom: 0, right: 0}}>
+        <Button title='resetdata' onPress={() => resetPotteryItemTable(DB)}/>
+      </View>
+    </View>
   );
 };
 
@@ -68,8 +77,10 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    flexDirection: 'column',
-    justifyContent: 'space-between',
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    flexWrap: 'wrap',
+    padding: 30,
   },
   potteryItemsContainer: {
     flexGrow: 1,
