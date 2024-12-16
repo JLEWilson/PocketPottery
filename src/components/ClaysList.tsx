@@ -7,7 +7,7 @@ import { useDatabase } from '../services/db-context';
 import { createClayTable, getClays } from '../services/clay-service';
 import globalStyles from '../globalStyles/stylesheet';
 
-type claysListProps = {
+export type claysListProps = {
     onClaySelect?: (c: Clay) => void;
     children?: React.ReactNode;
 }
