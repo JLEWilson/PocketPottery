@@ -10,11 +10,10 @@ const globalStyles = StyleSheet.create({
     },
     label: {
         marginLeft: 8,
-        fontSize: 15,
+        fontSize: 14,
     },
     button: {
         padding: 4,
-        elevation: 5,
         borderWidth: 1,
         borderRadius: 5,
         justifyContent: 'center',
