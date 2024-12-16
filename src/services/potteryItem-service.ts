@@ -84,20 +84,29 @@ export const getPotteryItemById = async (
 }
 
 export const addPotteryItem =  async (db: SQLiteDatabase, potteryItem: PotteryItem) => {
-	const addQuery = `INSERT INTO ${TABLE_NAME} (potteryItemId, dateCreated, dateEdited, projectTitle, projectNotes, displayPicturePath) VALUES (?, ?, ?, ?, ?)`
+	console.log(potteryItem)
+	const addQuery = `INSERT INTO ${TABLE_NAME} (potteryItemId, dateCreated, dateEdited, projectTitle, projectNotes, displayPicturePath) VALUES (?, ?, ?, ?, ?, ?)`
 	db.transaction(tx => {
 		tx.executeSql(
 			addQuery,
 			[
-				potteryItem.potteryItemId,
-				potteryItem.dateCreated,
-				potteryItem.dateEdited,
-				potteryItem.projectTitle,
-				potteryItem.projectNotes,
-				potteryItem.displayPicturePath,
+			potteryItem.potteryItemId,
+			potteryItem.dateCreated,
+			potteryItem.dateEdited,
+			potteryItem.projectTitle,
+			potteryItem.projectNotes,
+			potteryItem.displayPicturePath,
 			],
-		)
-	})
+			() => {
+			console.log("Pottery item added successfully!");
+			},
+			(_, error) => {
+			console.log("Error adding pottery item:", error.message);
+			return true;
+			}
+		);
+	});
+
 }
 
 export const updatePotteryItem = async (db: SQLiteDatabase, potteryItem: PotteryItem) => {
@@ -134,3 +143,20 @@ export const deleteTable = async (db: SQLiteDatabase) => {
 		tx.executeSql(query)
 	})
 }
+export const resetPotteryItemTable = async (db: SQLiteDatabase) => {
+	const dropQuery = `DROP TABLE IF EXISTS potteryItem`;
+	const createQuery = `CREATE TABLE IF NOT EXISTS potteryItem (
+	  potteryItemId TEXT PRIMARY KEY,
+	  dateCreated TEXT NOT NULL,
+	  dateEdited TEXT NOT NULL,
+	  projectTitle TEXT NOT NULL,
+	  projectNotes TEXT,
+	  displayPicturePath TEXT
+	);`;
+  
+	db.transaction(tx => {
+	  tx.executeSql(dropQuery, [], () => console.log("Table dropped."));
+	  tx.executeSql(createQuery, [], () => console.log("Table recreated."));
+	});
+  };
+  
