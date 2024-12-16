@@ -36,19 +36,21 @@ const NewClay = (props: NewClayProps) => {
             <View style={[styles.textInputGroup, {flex: 1}]}>
                 <Text style={styles.label}>Name</Text>
                 <TextInput 
-                    style={[styles.textInput, {fontSize: 24,}]} 
+                    style={[styles.textInput, {fontSize: 22,}]} 
                     onChangeText={setName}
-                    maxLength={25}   
+                    maxLength={24}   
                     blurOnSubmit={true}
+                    selectTextOnFocus={true}
                 />
             </View>
             <View style={[styles.textInputGroup, {flex: 1}]}>
                 <Text style={styles.label}>Manufacturer</Text>
                 <TextInput 
-                    style={[styles.textInput, {fontSize: 24,}]} 
+                    style={[styles.textInput, {fontSize: 22,}]} 
                     onChangeText={setManufacturer}
-                    maxLength={25}
+                    maxLength={24}
                     blurOnSubmit={true}
+                    selectTextOnFocus={true}
                 />
             </View>
             <View style={[styles.textInputGroup, {flex: 2}]}>
@@ -56,7 +58,7 @@ const NewClay = (props: NewClayProps) => {
                 <TextInput 
                     style={[styles.textInput, {height: 100, fontSize: 14}]} 
                     onChangeText={setNotes}
-                    maxLength={500}   
+                    maxLength={250}   
                     multiline={true} 
                     blurOnSubmit={true}
                 />
@@ -107,6 +109,7 @@ const styles = StyleSheet.create({
         backgroundColor: "white",
         borderColor: "black",
         borderWidth: 1,
+        paddingVertical: 2
     },
     button: {
         position: 'relative',
