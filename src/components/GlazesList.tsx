@@ -7,7 +7,7 @@ import { useDatabase } from '../services/db-context';
 import { createGlazeTable, getGlazes } from '../services/glaze-service';
 import globalStyles from '../globalStyles/stylesheet';
 
-type GlazesListProps = {
+export type GlazesListProps = {
     onGlazeSelect?: (c: Glaze) => void;
     children?: React.ReactNode;
 }
