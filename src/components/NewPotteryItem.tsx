@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import 'react-native-get-random-values'
 import {
   View,
@@ -9,6 +9,9 @@ import {
   Pressable,
   ImageBackground,
   ScrollView,
+  Animated,
+  Keyboard,
+  Alert
 } from 'react-native'
 import Modal from 'react-native-modal'
 import ClaysList from './ClaysList'
@@ -29,11 +32,17 @@ import { useDatabase } from '../services/db-context'
 import NewMeasurement from './NewMeasurement'
 import globalStyles from '../globalStyles/stylesheet'
 import NewFiring from './NewFiring'
+import CollapsibleSection from './CollapsibleSection'
+import { useTheme } from '@react-navigation/native';
 
+type NewPotteryItemProps = {
+  callBackFunction?: () => void;
+}
 
-const NewPotteryItem: React.FC = () => {
+const NewPotteryItem = (props: NewPotteryItemProps) => {
   const DB = useDatabase();
-  
+  const {colors} = useTheme()
+  const {callBackFunction} = props
   const [formVisible, setFormVisible] = useState(false)
   const [pieceName, setPieceName] = useState('')
   const [image, setImage] = useState<string | null>(null)
@@ -49,6 +58,56 @@ const NewPotteryItem: React.FC = () => {
   const [firingFormVisible, setFiringFormVisible] = useState(false)
   const [firings, setFirings] = useState<Pick<PotteryItemFirings,  | 'fireType' | 'cone' | 'fireStyle'>[]>([])
   const [notes, setNotes] = useState('')
+  const [isKeyboardOpen, setKeyboardOpen] = useState(false);
+  const [isContentExpanded, setContentExpanded] = useState(false);
+  const minHeight = 260;
+  const maxHeight = 700;
+  const [clayViewHeight, setClayViewHeight] = useState(50)
+  const animatedHeight = useRef(new Animated.Value(minHeight)).current;
+
+  const animateHeight = (toValue: number, speed: number) => {
+    Animated.timing(animatedHeight, {
+      toValue,
+      duration: speed, // Duration in milliseconds
+      useNativeDriver: false,
+    }).start();
+  };
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => {
+        setKeyboardOpen(true)
+        isContentExpanded ?  animateHeight(maxHeight - 250, 300) : animateHeight(minHeight + clayViewHeight, 0)
+      }
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        setKeyboardOpen(false)
+        isContentExpanded ?  animateHeight(maxHeight, 0) :  animateHeight(minHeight + clayViewHeight, 0)
+      }
+    );
+
+    // Cleanup function
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    if(isContentExpanded) {
+      isKeyboardOpen ? animateHeight(maxHeight - 250, 300) : animateHeight(maxHeight, 300)
+    } else {
+      animateHeight(minHeight + clayViewHeight, 100)
+    }
+  }, [isContentExpanded])
+
+  const handleClayOutputResize = (height: number) => {
+    setClayViewHeight(height)
+    animateHeight(minHeight + height, 100)
+  }
 
   const pickImage = async () => {
     setImageModalVisible(false)
@@ -84,7 +143,7 @@ const NewPotteryItem: React.FC = () => {
   }
 
   const removeClay = (c: Clay) => {
-    setClays((prevClays) => prevClays.filter((c) => currentClay !== c))
+    setClays((prevClays) => prevClays.filter((clay) => clay !== c))
   }
 
   const addGlaze = (g: Glaze) => {
@@ -107,9 +166,11 @@ const NewPotteryItem: React.FC = () => {
     if(measurements.includes(newMeasurement)) return
     setMeasurements((prev) => [...prev, newMeasurement])
   }
+
   const removeMeasurement = (m: Pick<PotteryItemMeasurements, "name" | "scale" | "system">) => {
     setMeasurements((prev) => prev.filter((measurement) => measurement !== m))
   }
+
   const addFiring = (firing: Pick<PotteryItemFirings, 'fireType' | 'fireStyle' | 'cone'> ) => {
     setFiringFormVisible(false)
     const newFiring = {
@@ -147,7 +208,7 @@ const NewPotteryItem: React.FC = () => {
   }
 
   const createPotteryItemClays = (db: SQLiteDatabase, newPotteryItemId: string) => {
-    //use Service to submit
+      //use Service to submit
   }
 
   const createPotteryItemGlazes = (db: SQLiteDatabase, newPotteryItemId: string) => {
@@ -162,13 +223,22 @@ const NewPotteryItem: React.FC = () => {
   }
 
   const handleSubmitForm = async () => {
+    if(pieceName.length < 1) {
+      Alert.alert('Missing Name', 'Please add a name for your project',)
+      return
+    }
+    if(clays.length < 1) {
+      Alert.alert('Missing Clay', 'Please add at least one clay to your project.')
+      return
+    }
+    
     const newPotteryItemId = uuidv4()
     //PotteryItem
     createPotteryItem(DB, newPotteryItemId)
-    //Pictures
-    createPotteryItemPicture(DB, newPotteryItemId)
     //PotteryItemClays
     createPotteryItemClays(DB, newPotteryItemId)
+    //Pictures
+    createPotteryItemPicture(DB, newPotteryItemId)
     //PotteryItemGlazes
     createPotteryItemGlazes(DB, newPotteryItemId)
 
@@ -180,10 +250,34 @@ const NewPotteryItem: React.FC = () => {
     //PotteryItemGlazeFireTemp
 
     //PotteryItemTechniques
+
+    handleFormClosure()
+    callBackFunction?.()
+  }
+
+  const handleFormClosure = () => {
+    setFormVisible(false)
+    setPieceName('')
+    setImage(null)
+    setImageModalVisible(false)
+    setCurrentClay(null)
+    setClays([])
+    setClayFormVisible(false)
+    setCurrentGlaze(null)
+    setGlazes([])
+    setGlazeFormVisible(false)
+    setMeasurementFormVisible(false)
+    setMeasurements([])
+    setFiringFormVisible(false)
+    setFirings([])
+    setNotes('')
+    setKeyboardOpen(false);
+    setContentExpanded(false);
+    setClayViewHeight(50)
   }
 
   return (
-    <View>
+    <View style={{ backgroundColor: colors.background}}>
       <View style={styles.modalOpenButton}>
         <Button
           onPress={() => setFormVisible(true)}
@@ -192,164 +286,175 @@ const NewPotteryItem: React.FC = () => {
           accessibilityLabel="open pottery project form"
         />
       </View>
-      <Modal isVisible={formVisible} animationIn={'bounceIn'} animationOut={'bounceOut'}>
-        <View style={styles.innerContainer}>
+      <Modal 
+        isVisible={formVisible}
+        animationIn={'bounceIn'} 
+        animationOut={'bounceOut'}
+        
+        onBackdropPress={handleFormClosure}
+        onBackButtonPress={handleFormClosure}
+      >
+        <Animated.View  style={[styles.innerContainer, {height: animatedHeight, backgroundColor: colors.background}]}>
 {/*title*/}
-          <View style={[styles.group, {height: 70, width: 'auto'}]}>
-            <Text style={styles.label}>Project Title</Text>
-            <TextInput style={styles.nameInput} onChangeText={setPieceName} placeholder='Name' value={pieceName}/>
-          </View>
-          {/*image*/}
-          <View style={styles.imageContainer}>
-            {image ? (
-              <View style={{ flex:1 , justifyContent: 'center', alignItems: 'center' }}>
-                <ImageBackground
-                  style={[styles.addImage]}
-                  resizeMode='cover'
-                  source={{ uri: image }}
-                  >
-                  <Pressable onPress={() => setImageModalVisible(true)}>
-                    <Text style={styles.addImageText}>Change Image</Text>
-                  </Pressable>
-                </ImageBackground>
-              </View>
-            ) : (
-              <Pressable style={styles.addImage} onPress={() => setImageModalVisible(true)}>
-                <Text style={styles.addImageText}>Add Image</Text>
-              </Pressable>
-            )}
-          </View>
+            <View style={[styles.group, {height: 70, width: 'auto'}]}>
+              <Text style={[globalStyles.label, {color: colors.text}]}>Project Title</Text>
+              <TextInput maxLength={25} style={[styles.nameInput, {backgroundColor: colors.card, borderColor: colors.border, color: colors.text}]} onChangeText={setPieceName} placeholder='Name' value={pieceName}/>
+            </View>
 {/*Clays*/}
-          <View style={styles.group}>
-            <Text style={styles.label}>Clays:</Text>
-            { 
-              clays.length > 0 ?
-              <Text style={styles.reminderText}>(Tap To Remove)</Text>
-              :
-              <Text style={styles.reminderText}>(Optional)</Text>
-            }
-            <ScrollView style={styles.listOutput}>
-              {clays.map((c: Clay) => (
-                <Pressable key={c.clayId + ' button'} style={styles.deleteButton} onPress={() => removeClay(c)}>
-                  <Text key={c.clayId + ' text'} style={styles.deleteButtonText}>
-                    {c.name}
-                  </Text>
+            <View style={styles.group}>
+              <Text style={[globalStyles.label, {color: colors.text}]}>Clays:</Text>
+              { 
+                clays.length > 0 ?
+                <Text style={[styles.reminderText, {color: colors.text}]}>(Tap To Remove)</Text>
+                :
+                <Text style={[styles.reminderText, {color: colors.text}]}>(Must Have At Least 1)</Text>
+              }
+              <ScrollView onContentSizeChange={(width, height) => handleClayOutputResize(height)} style={[styles.listOutput, {backgroundColor: colors.card, borderColor: colors.border}]} contentContainerStyle={styles.listOutputContent}>
+                {clays.map((c: Clay) => (
+                  <Pressable key={c.clayId + ' button'} style={styles.deleteButton} onPress={() => removeClay(c)}>
+                    <Text key={c.clayId + ' text'} style={styles.deleteButtonText}>
+                      {c.name}
+                    </Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+              <View style={[styles.buttonContainer, { justifyContent: 'center'}]}>
+                <Pressable
+                  style={[globalStyles.button, styles.button, {backgroundColor: colors.primary}]}
+                  onPress={() => setClayFormVisible(true)}
+                >
+                  <Text style={[styles.buttonText, {color: colors.text}]}>Add Clay</Text>
                 </Pressable>
-              ))}
-            </ScrollView>
-            <View style={[styles.buttonContainer, { justifyContent: 'center'}]}>
-              <Pressable
-                style={[globalStyles.button, styles.button, { display: 'flex', paddingVertical: 4, paddingHorizontal: 15, marginTop: 4}]}
-                onPress={() => setClayFormVisible(true)}
-              >
-                <Text style={styles.buttonText}>Add Clay</Text>
-              </Pressable>
+              </View>
             </View>
-          </View>
+            <CollapsibleSection 
+              showText='Show Optional Fields' 
+              hideText='Hide Optional Fields'
+              onExpand={() => setContentExpanded(true)}
+              onCollapse={() => setContentExpanded(false)}
+              >
+{/*image*/}
+            <View style={styles.imageContainer}>
+              {image ? (
+                <View style={{ flex:1 , justifyContent: 'center', alignItems: 'center' }}>
+                  <ImageBackground
+                    style={[styles.addImage]}
+                    resizeMode='cover'
+                    source={{ uri: image }}
+                    >
+                    <Pressable onPress={() => setImageModalVisible(true)}>
+                      <Text style={styles.addImageText}>Change Image</Text>
+                    </Pressable>
+                  </ImageBackground>
+                </View>
+              ) : (
+                <Pressable style={[styles.addImage, {backgroundColor: colors.card, borderColor: colors.border}]} onPress={() => setImageModalVisible(true)}>
+                  <Text style={[styles.addImageText, {color: colors.text}]}>Add Image</Text>
+                </Pressable>
+              )}
+            </View>
+{/* Notes*/}
+            <View style={[styles.group, {height: 120, width: 'auto'}]}>
+              <Text style={globalStyles.label}>Notes</Text>
+              <TextInput 
+                textAlignVertical='center'
+                textAlign='center'
+                style={[styles.notesInput, {backgroundColor: colors.card, borderColor: colors.border, color: colors.text}]} 
+                multiline={true} 
+                blurOnSubmit={true} 
+                onChangeText={setNotes} 
+                value={notes}/>
+            </View>
 {/*Glazes*/}
-          <View style={styles.group}>
-            <Text style={styles.label}>Glazes:</Text>
-            { 
-              glazes.length > 0 ?
-              <Text style={styles.reminderText}>(Tap To Remove)</Text>
-              :
-              <Text style={styles.reminderText}>(Optional)</Text>
-            }
-            <View style={styles.listOutput}>
-              {glazes.map((g: Glaze) => (
-                <Pressable key={g.glazeId + ' button'} style={styles.deleteButton} onPress={() => removeGlaze(g)}>
-                <Text key={g.glazeId + ' text'} style={styles.deleteButtonText}>
-                  {g.name}
-                </Text>
-              </Pressable>
-              ))}
-            </View>
-            <View style={[styles.buttonContainer, { justifyContent: 'center', }]}>
-              <Pressable
-                style={[globalStyles.button, styles.button, { display: 'flex', paddingVertical: 4, paddingHorizontal: 15, marginTop: 4}]}
-                onPress={() => setGlazeFormVisible(true)}
-              >
-                <Text style={styles.buttonText}>Add Glaze</Text>
-              </Pressable>
-            </View>
-          </View>
-{/*Measurements*/}
-          <View style={styles.group}>
-            <Text style={styles.label}>Measurements:</Text>
-            { 
-              measurements.length > 0 ?
-              <Text style={styles.reminderText}>(Tap To Remove)</Text>
-              :
-              <Text style={styles.reminderText}>(Optional)</Text>
-            }
-            <View style={styles.listOutput}>
-              {measurements.map((m) => (
-                <Pressable 
-                  key={m.name + 'Pressable'}
-                  style={[styles.deleteButton, {flexDirection: 'row'}]} 
-                  onPress={() => removeMeasurement(m)}
-                >
-                  <Text style={styles.deleteButtonText} key={m.name + 'name text'}>{m.name + ': ' + m.scale}</Text>
-                </Pressable>
-              ))}
-            </View>
-            <View style={[styles.buttonContainer, {justifyContent: 'center'}]}>
-              <Pressable style={[globalStyles.button, styles.button, { display: 'flex', paddingVertical: 4, paddingHorizontal: 15, marginTop: 4}]} onPress={() => setMeasurementFormVisible(true)}>
-                <Text style={styles.buttonText}>Add Measurement</Text>
-              </Pressable>
-            </View>
-          </View>
-{/*Firings*/}
-          <View style={styles.group}>
-            <Text style={styles.label}>Firings</Text>
-            { 
-              firings.length > 0 ?
-              <Text style={styles.reminderText}>(Tap To Remove)</Text>
-              :
-              <Text style={styles.reminderText}>(Optional)</Text>
-            }
-            <View style={styles.listOutput}>
-              {firings.map((f, index) => (
-                <Pressable 
-                  key={index + f.cone + f.fireType + 'view'} 
-                  style={[styles.deleteButton, {flexDirection: 'row'}]}
-                  onPress={() => removeFiring(f)}
-                >
-                  <Text key={f.cone + f.fireType + 'text'} style={styles.deleteButtonText}>
-                    {f.fireStyle != 'Environmental'
-                      ? f.fireType + ': ' + 'Cone ' + f.cone
-                      : f.fireType + ': ' + f.fireStyle}
+            <View style={styles.group}>
+              <Text style={globalStyles.label}>Glazes:</Text>
+              { 
+                glazes.length > 0 &&
+                <Text style={styles.reminderText}>(Tap To Remove)</Text>
+              }
+              <View style={[styles.listOutput, {backgroundColor: colors.card, borderColor: colors.border}]}>
+                {glazes.map((g: Glaze) => (
+                  <Pressable key={g.glazeId + ' button'} style={styles.deleteButton} onPress={() => removeGlaze(g)}>
+                  <Text key={g.glazeId + ' text'} style={styles.deleteButtonText}>
+                    {g.name}
                   </Text>
                 </Pressable>
-              ))}
+                ))}
+              </View>
+              <View style={[styles.buttonContainer, { justifyContent: 'center', }]}>
+                <Pressable
+                  style={[globalStyles.button, styles.button, {backgroundColor: colors.primary}]}
+                  onPress={() => setGlazeFormVisible(true)}
+                >
+                  <Text style={[styles.buttonText, {color: colors.text}]}>Add Glaze</Text>
+                </Pressable>
+              </View>
             </View>
-            <View style={[styles.buttonContainer, {justifyContent: 'center'}]}>
-              <Pressable style={[globalStyles.button, styles.button,  { display: 'flex', paddingVertical: 4, paddingHorizontal: 15, marginTop: 4}]} 
-                onPress={() => setFiringFormVisible(true)}
+{/*Measurements*/}
+            <View style={styles.group}>
+              <Text style={globalStyles.label}>Measurements:</Text>
+              { 
+                measurements.length > 0 &&
+                <Text style={styles.reminderText}>(Tap To Remove)</Text>
+                
+              }
+              <View style={[styles.listOutput, {backgroundColor: colors.card, borderColor: colors.border}]}>
+                {measurements.map((m) => (
+                  <Pressable 
+                    key={m.name + 'Pressable'}
+                    style={[styles.deleteButton, {flexDirection: 'row'}]} 
+                    onPress={() => removeMeasurement(m)}
+                  >
+                    <Text style={styles.deleteButtonText} key={m.name + 'name text'}>{m.name + ': ' + m.scale}</Text>
+                  </Pressable>
+                ))}
+              </View>
+              <View style={[styles.buttonContainer, {justifyContent: 'center'}]}>
+                <Pressable style={[globalStyles.button, styles.button, {backgroundColor: colors.primary}]} onPress={() => setMeasurementFormVisible(true)}>
+                  <Text style={[styles.buttonText, {color: colors.text}]}>Add Measurement</Text>
+                </Pressable>
+              </View>
+            </View>
+{/*Firings*/}
+            <View style={styles.group}>
+              <Text style={globalStyles.label}>Firings</Text>
+              { 
+                firings.length > 0 &&
+                <Text style={styles.reminderText}>(Tap To Remove)</Text>
+              }
+              <View style={[styles.listOutput, {backgroundColor: colors.card, borderColor: colors.border}]}>
+                {firings.map((f, index) => (
+                  <Pressable 
+                    key={index + f.cone + f.fireType + 'view'} 
+                    style={[styles.deleteButton, {flexDirection: 'row'}]}
+                    onPress={() => removeFiring(f)}
+                  >
+                    <Text key={f.cone + f.fireType + 'text'} style={styles.deleteButtonText}>
+                      {f.fireStyle != 'Environmental'
+                        ? f.fireType + ': ' + 'Cone ' + f.cone
+                        : f.fireType + ': ' + f.fireStyle}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+              <View style={[styles.buttonContainer, {justifyContent: 'center'}]}>
+                <Pressable style={[globalStyles.button, styles.button, {backgroundColor: colors.primary}]} 
+                  onPress={() => setFiringFormVisible(true)}
+                >
+                  <Text style={[styles.buttonText, {color: colors.text}]}>Add Firing</Text>
+                </Pressable>
+              </View>
+            </View>
+            </CollapsibleSection>
+{/*Submit Button*/}
+            <View style={[{position: 'relative', right: 0, left: 0, bottom: 5},isContentExpanded ? {marginTop: 5} : {marginTop: 0}]}>
+              <Pressable style={[globalStyles.button, styles.button, {alignSelf: 'center', padding: 10, backgroundColor: colors.primary}]}
+                onPress={handleSubmitForm}
               >
-                <Text style={styles.buttonText}>Add Firing</Text>
+                <Text style={{fontWeight: 'bold', fontSize: 20}}>Add New Project</Text>
               </Pressable>
             </View>
-          </View>
-          {/* Notes*/}
-          <View style={[styles.group, {height: 120, width: 'auto'}]}>
-            <Text style={styles.label}>Notes</Text>
-            <Text style={styles.reminderText}>(Optional)</Text>
-            <TextInput 
-              textAlignVertical='center'
-              textAlign='center'
-              style={[styles.notesInput]} 
-              multiline={true} 
-              blurOnSubmit={true} 
-              onChangeText={setNotes} 
-              value={notes}/>
-          </View>
-          <View style={styles.buttonContainer}>
-            <Pressable style={[globalStyles.button, styles.button, {padding: 8}]}>
-              <Text style={{fontWeight: 'bold', fontSize: 20}}>Add New Project</Text>
-            </Pressable>
-          </View>
-        </View>
+        </Animated.View>
       </Modal>
 {/*Image Modal*/}
       <Modal
@@ -358,12 +463,12 @@ const NewPotteryItem: React.FC = () => {
         animationOut={'bounceOut'}
         onBackdropPress={() => setImageModalVisible(false)}
       >
-        <View style={styles.imageModalContainer}>
-          <Pressable style={styles.button} onPress={openCamera}>
-            <Text style={styles.buttonText}>New Image</Text>
+        <View style={[styles.imageModalContainer, {backgroundColor: colors.background}]}>
+          <Pressable style={[globalStyles.button, styles.button, {backgroundColor: colors.primary}]} onPress={openCamera}>
+            <Text style={[styles.buttonText, {color: colors.text}]}>New Image</Text>
           </Pressable>
-          <Pressable style={styles.button} onPress={pickImage}>
-            <Text style={styles.buttonText}>Camera Roll</Text>
+          <Pressable style={[globalStyles.button,styles.button, {backgroundColor: colors.primary}]} onPress={pickImage}>
+            <Text style={[styles.buttonText, {color: colors.text}]}>Camera Roll</Text>
           </Pressable>
         </View>
       </Modal>
@@ -380,7 +485,6 @@ const NewPotteryItem: React.FC = () => {
         isVisible={clayFormVisible}
         animationIn={'bounceIn'}
         animationOut={'bounceOut'}
-        backdropOpacity={.9}
         onBackButtonPress={() => setClayFormVisible(false)}
         onBackdropPress={() => setClayFormVisible(false)}
       > 
@@ -390,7 +494,7 @@ const NewPotteryItem: React.FC = () => {
                 onPress={() => {currentClay && addClay(currentClay)}}
                 style={[styles.button, globalStyles.button, {padding: 8}]}
                 >
-                <Text style={[globalStyles.buttonText, {fontWeight: 'bold'}]}>Add Clay To Project</Text>
+                <Text style={[[styles.buttonText, {color: colors.text}], {fontWeight: 'bold'}]}>Add Clay To Project</Text>
               </Pressable>
           </ClaysList>
         </View>
@@ -400,7 +504,6 @@ const NewPotteryItem: React.FC = () => {
         isVisible={glazeFormVisible}
         animationIn={'bounceIn'}
         animationOut={'bounceOut'}
-        backdropOpacity={.9}
         onBackButtonPress={() => setGlazeFormVisible(false)}
         onBackdropPress={() => setGlazeFormVisible(false)}
       > 
@@ -434,8 +537,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   innerContainer: {
-    backgroundColor: 'white',
-    flex: 1,
+    borderWidth: 1,
   },
   nameInput: {
     flex: 1,
@@ -443,8 +545,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 15,
     fontSize: 24,
     textAlign: 'center',
-    backgroundColor: "white",
-    borderColor: "black",
     borderWidth: 1,
   },
   imageContainer: {
@@ -458,10 +558,8 @@ const styles = StyleSheet.create({
     width: 80,
     borderRadius: 5,
     borderWidth: 1,
-    borderColor: 'black',
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 3
   },
   addImageText: {
     fontSize: 14,
@@ -474,33 +572,36 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   imageModalContainer: {
-    flex: 1,
+    alignSelf: 'center',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-evenly',
+    width: 200,
+    height: 200,
   },
   group: {
-  
+    marginVertical: 5
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'center'
   },
   button: {
-    borderColor: 'black',
-    backgroundColor: 'green',
+    marginTop: 4
   },
-  label: {
-    paddingLeft: 8,
-    fontSize: 15,
+  buttonText: {
+    fontSize: 18,
+    fontWeight: 'bold'
   },
-  listOutput: {
-    display: 'flex',
+  listOutputContent: {  
     flexDirection: 'row',
     flexWrap: 'wrap',
+    justifyContent: 'flex-start',
+    minHeight: 50
+  },
+  listOutput: {
     borderColor: "black",
     borderWidth: 1,
-    minHeight: 45,
-    maxHeight: 135,
+    minHeight: 55,
     marginHorizontal: 15,
   },
   glazeContainer: {
@@ -508,20 +609,18 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     backgroundColor: 'red',
-    justifyContent: 'center',
-    alignItems: 'center',
+    alignSelf: 'flex-start',
     borderRadius: 15,
     borderWidth: 1, 
     borderColor: "black",
-    padding: 4,
-    margin: 2,
+    paddingVertical: 3,
+    paddingHorizontal: 5,
+    margin: 5,
   },
   deleteButtonText: {
     margin: 5,
+    fontSize: 16,
     textAlign: 'center',
-  },
-  buttonText: {
-    fontSize: 15,
   },
   notesInput: {
     flex: 1,
