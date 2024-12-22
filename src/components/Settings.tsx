@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons'
 import PotteryItemList from './PotteryItemsList'
 import { useTheme } from '@react-navigation/native'
 import Modal from 'react-native-modal'
+import AnimatedPressable from './AnimatedPressable'
 
 type SettingsModalProps = {
     isDarkMode: boolean,
@@ -17,9 +18,9 @@ const SettingsModal = ({isDarkMode, setDarkMode}: SettingsModalProps) => {
     return (
         <View>
             <View style={{marginRight: 10}}>
-                <Pressable style={{padding: 5}} onPress={() => setModalVisible(true)}>
+                <AnimatedPressable style={{padding: 5}} onPress={() => setModalVisible(true)}>
                     <Ionicons name='settings' size={20} color={colors.text}/>
-                </Pressable>
+                </AnimatedPressable>
             </View>
             <Modal
                 isVisible={isModalVisible}
@@ -34,9 +35,9 @@ const SettingsModal = ({isDarkMode, setDarkMode}: SettingsModalProps) => {
                 backdropTransitionOutTiming={0}
             >
                 <View style={[styles.modal,{backgroundColor: colors.background, borderColor: colors.border}]}>
-                    <Pressable style={{backgroundColor: colors.primary, padding: 5}} onPress={() => setDarkMode(!isDarkMode)}>
+                    <AnimatedPressable style={{backgroundColor: colors.primary, padding: 5}} onPress={() => setDarkMode(!isDarkMode)}>
                         <Text>Settings</Text>
-                    </Pressable>
+                    </AnimatedPressable>
                 </View>
             </Modal>
         </View>

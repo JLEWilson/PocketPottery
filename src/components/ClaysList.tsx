@@ -8,6 +8,7 @@ import { createClayTable, getClays } from '../services/clay-service';
 import globalStyles from '../globalStyles/stylesheet';
 import { useTheme } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import AnimatedPressable from './AnimatedPressable';
 
 export type ClaysListProps = {
     onClaySelect?: (c: Clay) => void;
@@ -56,7 +57,7 @@ function ClaysList({onClaySelect, children}:ClaysListProps) {
         <View style={[styles.container]}>
             <ScrollView style={styles.scrollContainer} indicatorStyle='white'>
                 {allClays.map((c) => (
-                    <Pressable key={"Button: " + c.clayId}
+                    <AnimatedPressable key={"Button: " + c.clayId}
                         onPress={() => handleClaySelect(c)}
                         style={[styles.button, {borderColor: colors.border}, selectedClay === c ? {backgroundColor: colors.primary} : {backgroundColor: colors.card}]}
                     >
@@ -64,16 +65,16 @@ function ClaysList({onClaySelect, children}:ClaysListProps) {
                             key={"Name: " + c.clayId}
                             style={[styles.buttonText, {color: colors.text}]}
                             >{c.name}</Text>
-                    </Pressable>
+                    </AnimatedPressable>
                 ))}
             </ScrollView>
             <View style={{position: 'absolute', right: 0, left: 0, bottom: 10, alignItems: 'center'}}>
-                <Pressable 
+                <AnimatedPressable 
                     onPress={() => setNewClayFormVisible(true)}
                     style={[globalStyles.button, styles.newClayButton, {backgroundColor: colors.primary, borderColor: colors.border}]}
                 >
                     <Text style={[styles.buttonText, {color: colors.text}]}>New Clay</Text>
-                </Pressable>
+                </AnimatedPressable>
                 {children}
             </View>
             <Modal
@@ -90,12 +91,12 @@ function ClaysList({onClaySelect, children}:ClaysListProps) {
             >
                 <View style={{flex: 1}}>
                     <NewClay callBackFunction={handleModalSubmission}>
-                    <Pressable
+                    <AnimatedPressable
                             onPress={() => setNewClayFormVisible(false)}
                             style={{position: 'absolute', top: 10, right: 20, zIndex:2}}
                         >
                             <Ionicons name='close-circle-outline' size={30} color={colors.text}/>
-                        </Pressable>
+                        </AnimatedPressable>
                     </NewClay>
                 </View>
             </Modal>

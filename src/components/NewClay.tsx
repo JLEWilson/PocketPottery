@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { addClay } from '../services/clay-service'
 import { useDatabase } from '../services/db-context'
 import {useTheme} from '@react-navigation/native'
+import AnimatedPressable from './AnimatedPressable'
 
 type NewClayProps = {
     callBackFunction?: () => void;
@@ -71,9 +72,9 @@ const NewClay = (props: NewClayProps) => {
                     blurOnSubmit={true}
                 />
             </View>
-            <Pressable style={[styles.button, {backgroundColor: colors.primary, borderColor: colors.border}]} onPress={handleAddNewClay}>
-                <Text style={{fontSize: 20, paddingVertical: 4, color: colors.text}}>Add New Clay</Text>
-            </Pressable>
+            <AnimatedPressable style={[styles.button, {backgroundColor: colors.primary, borderColor: colors.border}]} onPress={handleAddNewClay}>
+                <Text style={{fontSize: 20, paddingVertical: 4, color: colors.text, fontWeight: 'bold'}}>Add New Clay</Text>
+            </AnimatedPressable>
         {children}
         </View>
     </View>

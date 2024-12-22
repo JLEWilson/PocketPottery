@@ -8,6 +8,7 @@ import { createGlazeTable, getGlazes } from '../services/glaze-service';
 import globalStyles from '../globalStyles/stylesheet';
 import { useTheme } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import AnimatedPressable from './AnimatedPressable';
 
 export type GlazesListProps = {
     onGlazeSelect?: (c: Glaze) => void;
@@ -57,7 +58,7 @@ function GlazesList({children, onGlazeSelect}:GlazesListProps) {
          <View style={[styles.container]}>
             <ScrollView style={styles.scrollContainer} indicatorStyle='white'>
                 {allGlazes.map((g) => (
-                    <Pressable key={"Button: " + g.glazeId}
+                    <AnimatedPressable key={"Button: " + g.glazeId}
                         onPress={() => handleGlazeSelect(g)}
                         style={[styles.button, {borderColor: colors.border}, selectedGlaze === g ? {backgroundColor: colors.primary} : {backgroundColor: colors.card}]}
                     >
@@ -65,16 +66,16 @@ function GlazesList({children, onGlazeSelect}:GlazesListProps) {
                             key={"Name: " + g.glazeId}
                             style={[styles.buttonText, {color: colors.text}]}
                             >{g.name}</Text>
-                    </Pressable>
+                    </AnimatedPressable>
                 ))}
             </ScrollView>
             <View style={{position: 'absolute', right: 0, left: 0, bottom: 10, alignItems: 'center'}}>
-                <Pressable 
+                <AnimatedPressable 
                     onPress={() => setNewGlazeFormVisible(true)}
                     style={[globalStyles.button, styles.newGlazeButton, {backgroundColor: colors.primary, borderColor: colors.border}]}
                 >
                     <Text style={[styles.buttonText, {color: colors.text}]}>New Glaze</Text>
-                </Pressable>
+                </AnimatedPressable>
                 {children}
             </View>
             <Modal
@@ -91,12 +92,12 @@ function GlazesList({children, onGlazeSelect}:GlazesListProps) {
             >
                 <View style={{flex: 1}}>
                     <NewGlaze callBackFunction={handleModalSubmission}>
-                        <Pressable
+                        <AnimatedPressable
                             onPress={() => setNewGlazeFormVisible(false)}
                             style={{position: 'absolute', top: 10, right: 20, zIndex:3}}
                         >
                             <Ionicons name='close-circle-outline' size={30} color={colors.text}/>
-                        </Pressable>
+                        </AnimatedPressable>
                     </NewGlaze>
                 </View>
             </Modal>

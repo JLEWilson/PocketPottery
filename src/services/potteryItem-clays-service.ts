@@ -14,7 +14,7 @@ export const createPotteryItemClaysTable = async (db: SQLiteDatabase): Promise<v
     );
   `;
   await db.execAsync(createTableQuery);
-  console.log('potteryItem Clays Join created')
+  console.log('potteryItem Clays Join created');
 };
 
 export const addPotteryItemClayLink = async (
@@ -24,9 +24,9 @@ export const addPotteryItemClayLink = async (
 ): Promise<void> => {
   const query = `
     INSERT INTO ${POTTERY_ITEM_CLAYS_TABLE} (potteryItemId, clayId)
-    VALUES (${potteryItemId}, ${clayId}]);
+    VALUES (${potteryItemId}, ${clayId});
   `;
-  await db.execAsync(query);
+  await db.execAsync(query,); // Pass parameters securely
 };
 
 export const removePotteryItemClayLink = async (
@@ -36,9 +36,9 @@ export const removePotteryItemClayLink = async (
 ): Promise<void> => {
   const query = `
     DELETE FROM ${POTTERY_ITEM_CLAYS_TABLE}
-    WHERE potteryItemId = ${potteryItemId} AND clayId = ${clayId};
+    WHERE potteryItemId = ${potteryItemId} AND clayId = ${potteryItemId};  // Parameterized query
   `;
-  await db.execAsync(query);
+  await db.execAsync(query); // Pass parameters securely
 };
 
 export const getClaysByPotteryItemId = async (
@@ -49,9 +49,9 @@ export const getClaysByPotteryItemId = async (
     SELECT c.*
     FROM Clays c
     INNER JOIN ${POTTERY_ITEM_CLAYS_TABLE} pc ON c.clayId = pc.clayId
-    WHERE pc.potteryItemId = ${potteryItemId};
+    WHERE pc.potteryItemId = ?;  // Parameterized query
   `;
-  const result = await db.getAllAsync(query);
+  const result = await db.getAllAsync(query, [potteryItemId]); // Pass potteryItemId as a parameter
   return result ? (result as Clay[]) : null;
 };
 
@@ -63,9 +63,9 @@ export const getPotteryItemsByClayId = async (
     SELECT p.*
     FROM PotteryItems p
     INNER JOIN ${POTTERY_ITEM_CLAYS_TABLE} pc ON p.potteryItemId = pc.potteryItemId
-    WHERE pc.clayId = ${clayId};
+    WHERE pc.clayId = ?;  // Parameterized query
   `;
-  const result = await db.getAllAsync(query);
+  const result = await db.getAllAsync(query, [clayId]); // Pass clayId as a parameter
   return result ? (result as PotteryItem[]) : null;
 };
 
@@ -76,5 +76,5 @@ export const getAllPotteryItemClayLinks = async (
     SELECT * FROM ${POTTERY_ITEM_CLAYS_TABLE};
   `;
   const result = await db.getAllAsync(query);
-  return result ? (result as PotteryItemClays[]) : null // Returns all links between PotteryItems and Clays
+  return result ? (result as PotteryItemClays[]) : null; // Returns all links between PotteryItems and Clays
 };

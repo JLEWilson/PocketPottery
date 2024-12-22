@@ -3,6 +3,7 @@ import React, {useState} from 'react'
 import type { PotteryItemMeasurements } from '../models'
 import globalStyles from '../globalStyles/stylesheet'
 import {useTheme} from '@react-navigation/native'
+import AnimatedPressable from './AnimatedPressable'
 
 type NewMeasurementProps = {
     callbackFunction: (measurement: Pick<PotteryItemMeasurements, 'name' | 'scale' | 'system'>) => void;
@@ -41,13 +42,13 @@ export default function NewMeasurement({callbackFunction}: NewMeasurementProps) 
                 <View style={[globalStyles.radio, {borderColor: colors.border}]}>
                     <Pressable 
                         onPress={() => setSystem('Imperial')}
-                        style={[globalStyles.radioButton, {borderColor: colors.border}, system === 'Imperial' ? {backgroundColor: colors.primary} : {backgroundColor: colors.border}]}
+                        style={[globalStyles.radioButton, {borderColor: colors.border}, system === 'Imperial' ? {backgroundColor: colors.primary} : {backgroundColor: colors.card}]}
                     >
                         <Text>Imperial</Text>
                     </Pressable>
                     <Pressable 
                         onPress={() => setSystem('Metric')}
-                        style={[globalStyles.radioButton,{borderColor: colors.border},  system === 'Metric' ? {backgroundColor: colors.primary} : {backgroundColor: colors.border}]}
+                        style={[globalStyles.radioButton,{borderColor: colors.border},  system === 'Metric' ? {backgroundColor: colors.primary} : {backgroundColor: colors.card}]}
                         >
                         <Text>Metric</Text>
                     </Pressable>
@@ -62,9 +63,9 @@ export default function NewMeasurement({callbackFunction}: NewMeasurementProps) 
                 />
             </View>
             <View style={{position: 'absolute', right: 0, left: 0, bottom: 10, alignItems: 'center'}}>         
-                <Pressable style={[globalStyles.button, styles.button, {backgroundColor: colors.primary, borderColor: colors.border}]} onPress={handleSubmitMeasurement}>
+                <AnimatedPressable style={[globalStyles.button, styles.button, {backgroundColor: colors.primary, borderColor: colors.border}]} onPress={handleSubmitMeasurement}>
                     <Text style={[styles.buttonText, {color: colors.text}]}>Add Measurement</Text>
-                </Pressable>
+                </AnimatedPressable>
             </View>
         </View>
     )

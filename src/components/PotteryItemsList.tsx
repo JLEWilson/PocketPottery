@@ -15,17 +15,30 @@ import {
   resetPotteryItemTable,
 } from '../services/potteryItem-service';
 import NewPotteryItem from '../components/NewPotteryItem';
-import { useTheme } from '@react-navigation/native';
+import { useNavigation, useTheme } from '@react-navigation/native';
+import { createPotteryItemFiringsTable } from '../services/potteryItem-firing-service';
+import { createPotteryItemGlazesTable } from '../services/potteryItem-glaze-service';
+import { createPotteryItemClaysTable } from '../services/potteryItem-clays-service';
+import { createPotteryItemMeasurementsTable } from '../services/potteryItem-measurements-service';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from './MyTabBar';
+
+type PotteryItemsListNavigationProp = StackNavigationProp<RootStackParamList, 'PotteryItemView'>;
 
 const PotteryItemList = () => {
   const DB = useDatabase();
   const {colors} = useTheme()
+  const nav = useNavigation<PotteryItemsListNavigationProp>()
   const [potteryItems, setPotteryItems] = useState<PotteryItem[]>([]); 
   const [reload, setReload] = useState(false)
 
   const loadDataCallback = useCallback(async () => {
     try {
       await createPotteryItemTable(DB);
+      await createPotteryItemClaysTable(DB);
+      await createPotteryItemGlazesTable(DB);
+      await createPotteryItemFiringsTable(DB);
+      await createPotteryItemMeasurementsTable(DB);
       const storedPotteryItems = await getPotteryItems(DB);
       if (storedPotteryItems.length) {
         setPotteryItems(storedPotteryItems);
@@ -46,12 +59,15 @@ const PotteryItemList = () => {
   const handleFormSubmission = () => {
     setReload((prev) => !prev);
   }
+  const handlePress = (id: string) => {
+    nav.navigate('PotteryItemView', { id });
+  };
 
   return (
     <View style={{backgroundColor: colors.background, flex: 1}}>
       <ScrollView  contentContainerStyle={styles.scrollView}>
           {potteryItems.map((p) => (
-            <PotteryItemComponent key={p.potteryItemId} potteryItem={p} />
+            <PotteryItemComponent key={p.potteryItemId} potteryItem={p} handlePress={handlePress}/>
           ))}
       </ScrollView>
       <NewPotteryItem callBackFunction={handleFormSubmission} />

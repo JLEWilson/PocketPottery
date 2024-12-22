@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid'
 import {useTheme} from '@react-navigation/native'
 import { addGlaze } from '../services/glaze-service'
 import { useDatabase } from '../services/db-context'
+import AnimatedPressable from './AnimatedPressable'
 
 type NewGlazeProps = {
     callBackFunction?: () => void;
@@ -71,9 +72,9 @@ const NewGlaze = (props: NewGlazeProps) => {
                     blurOnSubmit={true} 
                 />
             </View>
-            <Pressable style={[styles.button, {backgroundColor: colors.primary, borderColor: colors.border}]}  onPress={handleAddNewGlaze}>
-                <Text style={{fontSize: 20, paddingVertical: 4, color: colors.text}}>Add New Glaze</Text>
-            </Pressable>
+            <AnimatedPressable style={[styles.button, {backgroundColor: colors.primary, borderColor: colors.border}]}  onPress={handleAddNewGlaze}>
+                <Text style={{fontSize: 20, paddingVertical: 4, color: colors.text, fontWeight: 'bold'}}>Add New Glaze</Text>
+            </AnimatedPressable>
         {children}
         </View>
     </View>

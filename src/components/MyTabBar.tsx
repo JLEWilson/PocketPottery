@@ -10,6 +10,10 @@ export type RootTabParamList = {
     ClaysList: ClaysListProps
     GlazesList: GlazesListProps
 }
+export type RootStackParamList = {
+  Tabs: undefined; 
+  PotteryItemView: { id: string }; 
+};
 
 export default function MyTabBar({ state, descriptors, navigation }:BottomTabBarProps) {
     const {colors} = useTheme()
@@ -63,7 +67,7 @@ export default function MyTabBar({ state, descriptors, navigation }:BottomTabBar
               onPress={onPress}
               onLongPress={onLongPress}
               key={`NavButton: ${index}`}
-              style={[styles.button, {backgroundColor: isFocused ? colors.background : colors.primary}]}
+              style={[styles.button]}
               >
                 {IconComponent}
               <Text key={`NavButtonText: ${index}`} style={{ color: isFocused ? colors.text : colors.background, marginTop: -2}}>

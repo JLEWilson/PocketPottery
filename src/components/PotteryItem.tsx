@@ -8,15 +8,20 @@ import {
 } from 'react-native'
 import type { PotteryItem } from '../models'
 import { useTheme } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
+import AnimatedPressable from './AnimatedPressable';
 
 export const PotteryItemComponent: React.FC<{
   potteryItem: PotteryItem;
-}> = ({ potteryItem }) => {
+  handlePress: (id:string) => void
+}> = ({ potteryItem, handlePress }) => {
 	const {colors} = useTheme()
-
 	return (
 		<View style={[styles.cardContainer]}>
-			<View  style={[styles.innerContainer, {backgroundColor: colors.primary, borderColor: colors.border}]}>
+			<AnimatedPressable  
+				onPress={() => handlePress(potteryItem.potteryItemId)}
+				style={[styles.innerContainer, {backgroundColor: colors.primary, borderColor: colors.border}]}
+			>
 				{potteryItem.displayPicturePath.length > 1? 
 					<ImageBackground 
 						source={{ uri: potteryItem.displayPicturePath}} 
@@ -39,7 +44,7 @@ export const PotteryItemComponent: React.FC<{
 						</Text>
 					</View>
 				}
-			</View>
+			</AnimatedPressable>
 		</View>
 	)
 }

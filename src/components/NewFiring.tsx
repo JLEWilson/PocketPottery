@@ -6,6 +6,7 @@ import globalStyles from '../globalStyles/stylesheet'
 import Modal from 'react-native-modal'
 import { useTheme } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
+import AnimatedPressable from './AnimatedPressable'
 
 type NewFiringProps = {
     callbackFunction?: ( firing: Pick<PotteryItemFirings, | 'fireType' | 'fireStyle' | 'cone'>) => void;
@@ -42,13 +43,13 @@ const NewFiring = ({callbackFunction}: NewFiringProps) => {
             <View style={[globalStyles.radio, {borderColor: colors.border}]}>
                 <Pressable 
                     onPress={() => setFireType('Bisque')}
-                    style={[globalStyles.radioButton, {borderColor: colors.border}, fireType === 'Bisque' ? {backgroundColor: colors.primary} : {backgroundColor: colors.border}]}
+                    style={[globalStyles.radioButton, {borderColor: colors.border}, fireType === 'Bisque' ? {backgroundColor: colors.primary} : {backgroundColor: colors.card}]}
                     >
                     <Text style={{color: colors.text}}>Bisque</Text>
                 </Pressable>
                 <Pressable 
                     onPress={() => setFireType('Glaze')}
-                    style={[globalStyles.radioButton, {borderColor: colors.border}, fireType === 'Glaze' ? {backgroundColor: colors.primary} : {backgroundColor: colors.border}]}
+                    style={[globalStyles.radioButton, {borderColor: colors.border}, fireType === 'Glaze' ? {backgroundColor: colors.primary} : {backgroundColor: colors.card}]}
                     >
                     <Text style={{color: colors.text}}>Glaze</Text>
                 </Pressable>
@@ -59,19 +60,19 @@ const NewFiring = ({callbackFunction}: NewFiringProps) => {
             <View style={[globalStyles.radio, {borderColor: colors.border}]}>
                 <Pressable 
                     onPress={() => setFireStyle('Oxidation')}
-                    style={[globalStyles.radioButton, {borderColor: colors.border}, fireStyle === 'Oxidation' ? {backgroundColor: colors.primary} : {backgroundColor: colors.border}]}
+                    style={[globalStyles.radioButton, {borderColor: colors.border}, fireStyle === 'Oxidation' ? {backgroundColor: colors.primary} : {backgroundColor: colors.card}]}
                     >
                     <Text style={{color: colors.text}}>Oxidation</Text>
                 </Pressable>
                 <Pressable 
                     onPress={() => setFireStyle('Reduction')}
-                    style={[globalStyles.radioButton, {borderColor: colors.border}, fireStyle === 'Reduction' ? {backgroundColor: colors.primary} : {backgroundColor: colors.border}]}
+                    style={[globalStyles.radioButton, {borderColor: colors.border}, fireStyle === 'Reduction' ? {backgroundColor: colors.primary} : {backgroundColor: colors.card}]}
                     >
                     <Text style={{color: colors.text}}>Reduction</Text>
                 </Pressable>
                 <Pressable 
                     onPress={() => setFireStyle('Environmental')}
-                    style={[globalStyles.radioButton, {borderColor: colors.border}, fireStyle === 'Environmental' ? {backgroundColor: colors.primary} : {backgroundColor: colors.border}]}
+                    style={[globalStyles.radioButton, {borderColor: colors.border}, fireStyle === 'Environmental' ? {backgroundColor: colors.primary} : {backgroundColor: colors.card}]}
                     >
                     <Text style={{color: colors.text}} >Environmental</Text>
                 </Pressable>
@@ -79,18 +80,18 @@ const NewFiring = ({callbackFunction}: NewFiringProps) => {
         </View>
         <View style={styles.group}>
             <Text style={[globalStyles.label, {color: colors.text}]}>Temperature</Text>
-            <Pressable style={[styles.dropdown, {borderColor: colors.border, backgroundColor: colors.card}]} onPress={()=> setConeSelectVisible(true)}>
+            <AnimatedPressable style={[styles.dropdown, {borderColor: colors.border, backgroundColor: colors.card}]} onPress={()=> setConeSelectVisible(true)}>
                 <Text style={{color: colors.text}}>{'Cone: ' + CONE_TEMPERATURES[cone].cone + ' (' + CONE_TEMPERATURES[cone].fahrenheit + 'F / ' + CONE_TEMPERATURES[cone].celsius + 'C)'}</Text>
                 <Text style={{position: 'absolute', right: 15, color: colors.text}}>
                     <Ionicons color={colors.text} size={20} name='caret-down'/>
                     </Text>
                 
-            </Pressable>
+            </AnimatedPressable>
         </View>
         <View style={{position: 'absolute', right: 0, left: 0, bottom: 10, alignItems: 'center'}}>         
-                <Pressable style={[globalStyles.button, styles.button, {backgroundColor: colors.primary, borderColor: colors.border}]} onPress={handleSubmitFiring}>
+                <AnimatedPressable style={[globalStyles.button, styles.button, {backgroundColor: colors.primary, borderColor: colors.border}]} onPress={handleSubmitFiring}>
                     <Text style={[styles.buttonText, {color: colors.text}]}>Add Measurement</Text>
-                </Pressable>
+                </AnimatedPressable>
             </View>
         <Modal 
             isVisible={isConeSelectVisible}

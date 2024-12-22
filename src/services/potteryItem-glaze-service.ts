@@ -24,7 +24,7 @@ export const addPotteryItemGlazeLink = async (
 ): Promise<void> => {
   const query = `
     INSERT INTO ${POTTERY_ITEM_GLAZES_TABLE} (potteryItemId, glazeId)
-    VALUES (${potteryItemId}, ${glazeId}]);
+    VALUES (${potteryItemId}, ${glazeId});
   `;
   await db.execAsync(query);
 };
@@ -49,9 +49,9 @@ export const getGlazessByPotteryItemId = async (
     SELECT g.*
     FROM Glazes g
     INNER JOIN ${POTTERY_ITEM_GLAZES_TABLE} pg ON g.glazeId = pg.glazeId
-    WHERE pg.potteryItemId = ${potteryItemId};
+    WHERE pg.potteryItemId = ?;
   `;
-  const result = await db.getAllAsync(query);
+  const result = await db.getAllAsync(query, [potteryItemId]);
   return result ? (result as Glaze[]) : null;
 };
 
@@ -63,9 +63,9 @@ export const getPotteryItemsByGlazeId = async (
     SELECT p.*
     FROM PotteryItems p
     INNER JOIN ${POTTERY_ITEM_GLAZES_TABLE} pg ON p.potteryItemId = pg.potteryItemId
-    WHERE pg.glazeId = ${glazeId};
+    WHERE pg.glazeId = ?;
   `;
-  const result = await db.getAllAsync(query);
+  const result = await db.getAllAsync(query, [glazeId]);
   return result ? (result as PotteryItem[]) : null;
 };
 
