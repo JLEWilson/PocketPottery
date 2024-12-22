@@ -1,8 +1,8 @@
 import type { SQLiteDatabase } from 'expo-sqlite'
-import { openDatabase } from 'expo-sqlite'
+import { openDatabaseSync } from 'expo-sqlite'
 
 
 export const getDBConnection = async ():Promise<SQLiteDatabase> => {
-	const db = openDatabase( 'pocket-pottery.db') 
+	const db = openDatabaseSync( 'pocket-pottery.db') 
 	return db
 }
