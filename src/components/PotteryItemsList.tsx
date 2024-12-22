@@ -49,9 +49,6 @@ const PotteryItemList = () => {
 
   return (
     <View style={{backgroundColor: colors.background, flex: 1}}>
-      <View style={styles.appTitleView}>
-        <Text style={[styles.appTitleText, {color: colors.text}]}>Pocket Pottery</Text>
-      </View>
       <ScrollView  contentContainerStyle={styles.scrollView}>
           {potteryItems.map((p) => (
             <PotteryItemComponent key={p.potteryItemId} potteryItem={p} />
@@ -66,15 +63,6 @@ const PotteryItemList = () => {
 };
 
 const styles = StyleSheet.create({
-  appTitleView: {
-    marginTop: 20,
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  appTitleText: {
-    fontSize: 24,
-    fontWeight: '800',
-  },
   scrollView: {
     flex: 1,
     flexDirection: 'row',

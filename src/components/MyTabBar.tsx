@@ -2,12 +2,12 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { StyleSheet } from 'react-native';
 import { useTheme } from '@react-navigation/native';
-import type { claysListProps } from './ClaysList';
+import type { ClaysListProps } from './ClaysList';
 import { GlazesListProps } from './GlazesList';
 
 export type RootTabParamList = {
     PotteryItemsList: undefined,
-    ClaysList: claysListProps
+    ClaysList: ClaysListProps
     GlazesList: GlazesListProps
 }
 
@@ -15,7 +15,7 @@ export default function MyTabBar({ state, descriptors, navigation }:BottomTabBar
     const {colors} = useTheme()
 
   return (
-    <View style={[styles.container, {backgroundColor: colors.border, borderColor: colors.primary}]}>
+    <View style={[styles.container, {backgroundColor: colors.primary}]}>
       {state.routes.map((route, index) => {
         const { options } = descriptors[route.key];
         const label =
@@ -25,6 +25,8 @@ export default function MyTabBar({ state, descriptors, navigation }:BottomTabBar
             ? options.title
             : route.name;
 
+        
+        
         const isFocused = state.index === index;
 
         const onPress = () => {
@@ -46,8 +48,13 @@ export default function MyTabBar({ state, descriptors, navigation }:BottomTabBar
           });
         };
 
+        const IconComponent =
+          options.tabBarIcon &&
+          options.tabBarIcon({ focused: isFocused , color: isFocused ? colors.text : colors.background, size: 24 });
+
+
         return (
-          <View key={'NavButtonWrapper'}>
+          <View key={`NavButtonWrapper: ${index}`}>
             <TouchableOpacity
               accessibilityRole="button"
               accessibilityState={isFocused ? { selected: true } : {}}
@@ -56,9 +63,10 @@ export default function MyTabBar({ state, descriptors, navigation }:BottomTabBar
               onPress={onPress}
               onLongPress={onLongPress}
               key={`NavButton: ${index}`}
-              style={[styles.button, {backgroundColor: isFocused ? colors.background : colors.border}]}
+              style={[styles.button, {backgroundColor: isFocused ? colors.background : colors.primary}]}
               >
-              <Text key={`NavButtonText: ${index}`} style={{ color: isFocused ? colors.text : colors.primary }}>
+                {IconComponent}
+              <Text key={`NavButtonText: ${index}`} style={{ color: isFocused ? colors.text : colors.background, marginTop: -2}}>
                 {label}
               </Text>
             </TouchableOpacity>
@@ -75,13 +83,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingHorizontal: 5,
     height: 50,
-    justifyContent: 'center',
-    borderTopWidth: 1,
+    justifyContent: 'space-evenly',
   },
   button: {
     flex: 1,
     marginVertical: 4,
-    padding: 5,
+    padding: 8,
+    borderRadius: 5,
     alignSelf: 'center',
     marginHorizontal: 'auto',
     justifyContent: "center",

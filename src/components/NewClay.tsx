@@ -2,18 +2,19 @@ import { View, Text, StyleSheet, TextInput, Pressable } from 'react-native'
 import React, {useState} from 'react'
 import type { Clay } from '../models'
 import { v4 as uuidv4 } from 'uuid'
-
 import { addClay } from '../services/clay-service'
 import { useDatabase } from '../services/db-context'
+import {useTheme} from '@react-navigation/native'
 
 type NewClayProps = {
     callBackFunction?: () => void;
+    children?: React.ReactNode
 }
 
 const NewClay = (props: NewClayProps) => {
-    const {callBackFunction} = props
+    const {callBackFunction, children} = props
     const DB = useDatabase()
-
+    const {colors} = useTheme()
     const [name, setName] = useState('')
     const [manufacturer, setManufacturer] = useState('')
     const [notes, setNotes] = useState('')
@@ -31,41 +32,49 @@ const NewClay = (props: NewClayProps) => {
 
   return (
     <View style={styles.container}>
-        <View style={styles.content}>
-            <Text style={styles.title}>New Clay</Text>
+        <View style={[styles.content, {backgroundColor: colors.background, borderColor: colors.border}]}>
+            <Text style={[styles.title, {color: colors.text}]}>New Clay</Text>
             <View style={[styles.textInputGroup, {flex: 1}]}>
-                <Text style={styles.label}>Name</Text>
+                <Text style={[styles.label, {color: colors.text}]}>Name</Text>
                 <TextInput 
-                    style={[styles.textInput, {fontSize: 22,}]} 
+                    style={[styles.textInput, {fontSize: 22, 
+                        backgroundColor: colors.card, color: colors.text, borderColor: colors.border
+                    }]} 
                     onChangeText={setName}
-                    maxLength={24}   
+                    maxLength={20}   
                     blurOnSubmit={true}
                     selectTextOnFocus={true}
                 />
             </View>
             <View style={[styles.textInputGroup, {flex: 1}]}>
-                <Text style={styles.label}>Manufacturer</Text>
+                <Text style={[styles.label, {color: colors.text}]}>Manufacturer</Text>
                 <TextInput 
-                    style={[styles.textInput, {fontSize: 22,}]} 
+                    style={[styles.textInput, {fontSize: 22, 
+                        backgroundColor: colors.card, color: colors.text, borderColor: colors.border
+                    }]}
                     onChangeText={setManufacturer}
-                    maxLength={24}
+                    maxLength={20}
                     blurOnSubmit={true}
                     selectTextOnFocus={true}
                 />
             </View>
             <View style={[styles.textInputGroup, {flex: 2}]}>
-                <Text style={styles.label}>Notes</Text>
+                <Text style={[styles.label, {color: colors.text}]}>Notes</Text>
                 <TextInput 
-                    style={[styles.textInput, {height: 100, fontSize: 14}]} 
+                    style={[styles.textInput, {
+                        height: 100, fontSize: 14, 
+                        backgroundColor: colors.card, color: colors.text, borderColor: colors.border
+                    }]}
                     onChangeText={setNotes}
                     maxLength={250}   
                     multiline={true} 
                     blurOnSubmit={true}
                 />
             </View>
-            <Pressable style={styles.button} onPress={handleAddNewClay}>
-                <Text style={{fontSize: 20, paddingVertical: 4}}>Add New Clay</Text>
+            <Pressable style={[styles.button, {backgroundColor: colors.primary, borderColor: colors.border}]} onPress={handleAddNewClay}>
+                <Text style={{fontSize: 20, paddingVertical: 4, color: colors.text}}>Add New Clay</Text>
             </Pressable>
+        {children}
         </View>
     </View>
   )
@@ -80,12 +89,9 @@ const styles = StyleSheet.create({
         marginHorizontal: 30,
     },
     content: {
-        flex:1,
-        backgroundColor: "blue",
-        maxHeight: 400,
-        minHeight: 400,
-        borderColor: 'black',
-        borderWidth: 1
+        height: 400,
+        borderWidth: 1,
+        borderRadius: 10
     },
     label: {
         paddingLeft: 4,
@@ -106,8 +112,6 @@ const styles = StyleSheet.create({
     },
     textInput: {
         textAlign: 'center',
-        backgroundColor: "white",
-        borderColor: "black",
         borderWidth: 1,
         paddingVertical: 2
     },
@@ -121,7 +125,5 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         justifyContent: 'center',
         alignItems: 'center',
-        borderColor: 'black',
-        backgroundColor: 'green',
     }
 })

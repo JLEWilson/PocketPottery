@@ -27,7 +27,6 @@ const globalStyles = StyleSheet.create({
         marginHorizontal: 15,
         borderTopWidth: 1, 
         borderBottomWidth: 1,
-        borderColor: 'black'
     },
     radioButton: {
         paddingVertical: 5,

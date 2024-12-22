@@ -2,18 +2,19 @@ import { View, Text, StyleSheet, TextInput, Pressable } from 'react-native'
 import React, {useState} from 'react'
 import type { Glaze } from '../models'
 import { v4 as uuidv4 } from 'uuid'
-
+import {useTheme} from '@react-navigation/native'
 import { addGlaze } from '../services/glaze-service'
 import { useDatabase } from '../services/db-context'
 
 type NewGlazeProps = {
     callBackFunction?: () => void;
+    children?: React.ReactNode
 }
 
 const NewGlaze = (props: NewGlazeProps) => {
-    const {callBackFunction} = props
+    const {callBackFunction, children} = props
     const DB = useDatabase()
-
+    const {colors} = useTheme()
     const [name, setName] = useState('')
     const [manufacturer, setManufacturer] = useState('')
     const [notes, setNotes] = useState('')
@@ -31,39 +32,49 @@ const NewGlaze = (props: NewGlazeProps) => {
 
   return (
     <View style={styles.container}>
-        <View style={styles.content}>
-            <Text style={styles.title}>New Glaze</Text>
-            <View  style={[styles.textInputGroup, {flex: 1}]}>
-                <Text style={styles.label}>Name</Text>
+        <View style={[styles.content, {backgroundColor: colors.background, borderColor: colors.border}]}>
+            <Text style={[styles.title, {color: colors.text}]}>New Glaze</Text>
+            <View style={[styles.textInputGroup, {flex: 1}]}>
+                <Text style={[styles.label, {color: colors.text}]}>Name</Text>
                 <TextInput 
-                    style={[styles.textInput, {fontSize: 24,}]} 
+                     style={[styles.textInput, {fontSize: 22, 
+                        backgroundColor: colors.card, color: colors.text, borderColor: colors.border
+                    }]}
                     onChangeText={setName}
-                    maxLength={25}  
-                    blurOnSubmit={true} 
+                    maxLength={20}  
+                    blurOnSubmit={true}
+                    selectTextOnFocus={true} 
                 />
             </View>
             <View style={[styles.textInputGroup, {flex: 1}]}>
-                <Text style={styles.label}>Manufacturer</Text>
+                <Text style={[styles.label, {color: colors.text}]}>Manufacturer</Text>
                 <TextInput 
-                    style={[styles.textInput, {fontSize: 24,}]} 
+                    style={[styles.textInput, {fontSize: 22, 
+                        backgroundColor: colors.card, color: colors.text, borderColor: colors.border
+                    }]}
                     onChangeText={setManufacturer}
-                    maxLength={25}
+                    maxLength={20}
                     blurOnSubmit={true}
+                    selectTextOnFocus={true}
                 />
             </View>
             <View style={[styles.textInputGroup, {flex: 2}]}>
-                <Text style={styles.label}>Notes</Text>
+                <Text style={[styles.label, {color: colors.text}]}>Notes</Text>
                 <TextInput 
-                    style={[styles.textInput, {height: 100, fontSize: 12}]} 
+                    style={[styles.textInput, {
+                        height: 100, fontSize: 14, 
+                        backgroundColor: colors.card, color: colors.text, borderColor: colors.border
+                    }]}                   
                     onChangeText={setNotes}
-                    maxLength={500}   
+                    maxLength={250}   
                     multiline={true} 
                     blurOnSubmit={true} 
                 />
             </View>
-            <Pressable style={styles.button} onPress={handleAddNewGlaze}>
-                <Text style={{fontSize: 20, paddingVertical: 4}}>Add New Glaze</Text>
+            <Pressable style={[styles.button, {backgroundColor: colors.primary, borderColor: colors.border}]}  onPress={handleAddNewGlaze}>
+                <Text style={{fontSize: 20, paddingVertical: 4, color: colors.text}}>Add New Glaze</Text>
             </Pressable>
+        {children}
         </View>
     </View>
   )
@@ -78,12 +89,9 @@ const styles = StyleSheet.create({
         marginHorizontal: 30,
     },
     content: {
-        flex:1,
-        backgroundColor: "blue",
-        maxHeight: 400,
-        minHeight: 400,
-        borderColor: 'black',
-        borderWidth: 1
+        height: 400,
+        borderWidth: 1,
+        borderRadius: 10
     },
     label: {
         paddingLeft: 4,

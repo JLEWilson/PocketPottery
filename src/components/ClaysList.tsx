@@ -6,23 +6,17 @@ import NewClay from './NewClay';
 import { useDatabase } from '../services/db-context';
 import { createClayTable, getClays } from '../services/clay-service';
 import globalStyles from '../globalStyles/stylesheet';
+import { useTheme } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
-export type claysListProps = {
+export type ClaysListProps = {
     onClaySelect?: (c: Clay) => void;
     children?: React.ReactNode;
 }
 
-/*needs way to remove clays
-    might need to change button methods, since they are outside of the modal if you 
-    missclick the modal will close
-*/
-
-
-
-
-function ClaysList({onClaySelect, children}:claysListProps) {
+function ClaysList({onClaySelect, children}:ClaysListProps) {
     const DB = useDatabase()
-    
+    const {colors} = useTheme()
     const [selectedClay, setSelectedClay] = useState<Clay>()
     const [allClays, setAllClays] = useState<Clay[]>([])
     const [newClayFormVisible, setNewClayFormVisible] = useState(false)
@@ -59,16 +53,16 @@ function ClaysList({onClaySelect, children}:claysListProps) {
     }
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container]}>
             <ScrollView style={styles.scrollContainer} indicatorStyle='white'>
                 {allClays.map((c) => (
                     <Pressable key={"Button: " + c.clayId}
                         onPress={() => handleClaySelect(c)}
-                        style={[styles.button, selectedClay === c ? {backgroundColor: 'green'} : {backgroundColor: 'blue'}]}
+                        style={[styles.button, {borderColor: colors.border}, selectedClay === c ? {backgroundColor: colors.primary} : {backgroundColor: colors.card}]}
                     >
                         <Text 
                             key={"Name: " + c.clayId}
-                            style={styles.buttonText}
+                            style={[styles.buttonText, {color: colors.text}]}
                             >{c.name}</Text>
                     </Pressable>
                 ))}
@@ -76,21 +70,33 @@ function ClaysList({onClaySelect, children}:claysListProps) {
             <View style={{position: 'absolute', right: 0, left: 0, bottom: 10, alignItems: 'center'}}>
                 <Pressable 
                     onPress={() => setNewClayFormVisible(true)}
-                    style={[globalStyles.button, styles.newClayButton]}
+                    style={[globalStyles.button, styles.newClayButton, {backgroundColor: colors.primary, borderColor: colors.border}]}
                 >
-                    <Text style={styles.buttonText}>New Clay</Text>
+                    <Text style={[styles.buttonText, {color: colors.text}]}>New Clay</Text>
                 </Pressable>
                 {children}
             </View>
             <Modal
                 isVisible={newClayFormVisible}
-                animationIn={'bounceIn'}
-                animationOut={'bounceOut'}
+                animationIn={'zoomIn'} 
+                animationInTiming={750}
+                animationOut={'zoomOut'}
+                animationOutTiming={750}
+                backdropColor={colors.text}
+                backdropOpacity={0.5}
                 onBackdropPress={() => setNewClayFormVisible(false)}
                 onBackButtonPress={() => setNewClayFormVisible(false)}
+                backdropTransitionOutTiming={0}
             >
                 <View style={{flex: 1}}>
-                    <NewClay callBackFunction={handleModalSubmission}/>
+                    <NewClay callBackFunction={handleModalSubmission}>
+                    <Pressable
+                            onPress={() => setNewClayFormVisible(false)}
+                            style={{position: 'absolute', top: 10, right: 20, zIndex:2}}
+                        >
+                            <Ionicons name='close-circle-outline' size={30} color={colors.text}/>
+                        </Pressable>
+                    </NewClay>
                 </View>
             </Modal>
         </View>
@@ -102,15 +108,14 @@ export default ClaysList
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 15,
-        backgroundColor: 'green'
+        paddingHorizontal: 20,
+        zIndex: 1,
     },
     scrollContainer: {
-        marginBottom: 100
+        marginBottom: 100,
+        marginTop: 50
     },
     newClayButton: {
-        borderColor: 'black',
-        backgroundColor: 'green',
         width: 100,
         marginBottom: 5
       },
@@ -119,11 +124,10 @@ const styles = StyleSheet.create({
         padding: 10,
         justifyContent: "center",
         alignItems: 'center',
-        elevation: 8,
+        elevation: 3,
         marginBottom: 30,
         borderRadius: 30,
         borderWidth: 1,
-        borderColor: 'black'
     },
     buttonText: {
         fontSize: 20,

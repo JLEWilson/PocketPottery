@@ -6,21 +6,17 @@ import NewGlaze from './NewGlaze';
 import { useDatabase } from '../services/db-context';
 import { createGlazeTable, getGlazes } from '../services/glaze-service';
 import globalStyles from '../globalStyles/stylesheet';
+import { useTheme } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
 export type GlazesListProps = {
     onGlazeSelect?: (c: Glaze) => void;
     children?: React.ReactNode;
 }
 
-/*needs way to remove Glazes
-    might need to change button methods, since they are outside of the modal if you 
-    missclick the modal will close
-*/
-
-
 function GlazesList({children, onGlazeSelect}:GlazesListProps) {
     const DB = useDatabase()
-    
+    const {colors} = useTheme()
     const [selectedGlaze, setSelectedGlaze] = useState<Glaze>()
     const [allGlazes, setAllGlazes] = useState<Glaze[]>([])
     const [newGlazeFormVisible, setNewGlazeFormVisible] = useState(false)
@@ -58,16 +54,16 @@ function GlazesList({children, onGlazeSelect}:GlazesListProps) {
     }
 
     return (
-        <View style={styles.container}>
+         <View style={[styles.container]}>
             <ScrollView style={styles.scrollContainer} indicatorStyle='white'>
                 {allGlazes.map((g) => (
                     <Pressable key={"Button: " + g.glazeId}
                         onPress={() => handleGlazeSelect(g)}
-                        style={[styles.button, selectedGlaze === g ? {backgroundColor: 'green'} : {backgroundColor: 'blue'}]}
+                        style={[styles.button, {borderColor: colors.border}, selectedGlaze === g ? {backgroundColor: colors.primary} : {backgroundColor: colors.card}]}
                     >
                         <Text 
                             key={"Name: " + g.glazeId}
-                            style={styles.buttonText}
+                            style={[styles.buttonText, {color: colors.text}]}
                             >{g.name}</Text>
                     </Pressable>
                 ))}
@@ -75,21 +71,33 @@ function GlazesList({children, onGlazeSelect}:GlazesListProps) {
             <View style={{position: 'absolute', right: 0, left: 0, bottom: 10, alignItems: 'center'}}>
                 <Pressable 
                     onPress={() => setNewGlazeFormVisible(true)}
-                    style={[globalStyles.button, styles.newGlazeButton]}
+                    style={[globalStyles.button, styles.newGlazeButton, {backgroundColor: colors.primary, borderColor: colors.border}]}
                 >
-                    <Text style={styles.buttonText}>New Clay</Text>
+                    <Text style={[styles.buttonText, {color: colors.text}]}>New Glaze</Text>
                 </Pressable>
                 {children}
             </View>
             <Modal
                 isVisible={newGlazeFormVisible}
-                animationIn={'bounceIn'}
-                animationOut={'bounceOut'}
+                animationIn={'zoomIn'} 
+                animationInTiming={750}
+                animationOut={'zoomOut'}
+                animationOutTiming={750}
+                backdropColor={colors.text}
+                backdropOpacity={0.5}
                 onBackdropPress={() => setNewGlazeFormVisible(false)}
                 onBackButtonPress={() => setNewGlazeFormVisible(false)}
+                backdropTransitionOutTiming={0}
             >
                 <View style={{flex: 1}}>
-                    <NewGlaze callBackFunction={handleModalSubmission}/>
+                    <NewGlaze callBackFunction={handleModalSubmission}>
+                        <Pressable
+                            onPress={() => setNewGlazeFormVisible(false)}
+                            style={{position: 'absolute', top: 10, right: 20, zIndex:3}}
+                        >
+                            <Ionicons name='close-circle-outline' size={30} color={colors.text}/>
+                        </Pressable>
+                    </NewGlaze>
                 </View>
             </Modal>
         </View>
@@ -101,17 +109,15 @@ export default GlazesList
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 15,
-        paddingBottom: 40,
-        backgroundColor: 'green'
+        paddingHorizontal: 20,
+        zIndex: 1,
     },
     scrollContainer: {
-        marginBottom: 100
+        marginBottom: 100,
+        marginTop:50
     },
     newGlazeButton: {
-        borderColor: 'black',
-        backgroundColor: 'green',
-        width: 100,
+        width: 110,
         marginBottom: 5
       },
     button: {
@@ -119,11 +125,9 @@ const styles = StyleSheet.create({
         padding: 10,
         justifyContent: "center",
         alignItems: 'center',
-        elevation: 15,
         marginBottom: 30,
         borderRadius: 30,
         borderWidth: 1,
-        borderColor: 'black'
     },
     buttonText: {
         fontSize: 20,
