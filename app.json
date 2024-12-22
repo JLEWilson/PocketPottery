@@ -17,7 +17,8 @@
         {
           "photosPermission": "The app uses your chosen photos to use on your pottery display."
         }
-      ]
+      ],
+      "expo-sqlite"
     ],
     "assetBundlePatterns": [
       "**/*"
@@ -40,6 +41,7 @@
         "projectId": "20b86be5-0977-40ce-b957-52066e56fbd2"
       }
     },
+    "newArchEnabled": true,
     "owner": "jlewilson"
   }
 }
