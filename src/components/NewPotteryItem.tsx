@@ -34,6 +34,7 @@ import globalStyles from '../globalStyles/stylesheet'
 import NewFiring from './NewFiring'
 import CollapsibleSection from './CollapsibleSection'
 import { useTheme } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons'
 
 type NewPotteryItemProps = {
   callBackFunction?: () => void;
@@ -61,7 +62,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
   const [isKeyboardOpen, setKeyboardOpen] = useState(false);
   const [isContentExpanded, setContentExpanded] = useState(false);
   const minHeight = 260;
-  const maxHeight = 700;
+  const maxHeight = 680;
   const [clayViewHeight, setClayViewHeight] = useState(50)
   const animatedHeight = useRef(new Animated.Value(minHeight)).current;
 
@@ -72,37 +73,39 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
       useNativeDriver: false,
     }).start();
   };
-
+  
   useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener(
-      'keyboardDidShow',
-      () => {
-        setKeyboardOpen(true)
-        isContentExpanded ?  animateHeight(maxHeight - 250, 300) : animateHeight(minHeight + clayViewHeight, 0)
-      }
-    );
-    const keyboardDidHideListener = Keyboard.addListener(
-      'keyboardDidHide',
-      () => {
-        setKeyboardOpen(false)
-        isContentExpanded ?  animateHeight(maxHeight, 0) :  animateHeight(minHeight + clayViewHeight, 0)
-      }
-    );
-
-    // Cleanup function
+    // Add keyboard listeners to track keyboard open/close state
+    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+      setKeyboardOpen(true);
+    });
+  
+    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardOpen(false);
+    });
+  
+    // Cleanup keyboard listeners
     return () => {
       keyboardDidShowListener.remove();
       keyboardDidHideListener.remove();
     };
   }, []);
-
+  
   useEffect(() => {
-    if(isContentExpanded) {
-      isKeyboardOpen ? animateHeight(maxHeight - 250, 300) : animateHeight(maxHeight, 300)
+    let targetHeight: number;
+  
+    if (isContentExpanded) {
+      targetHeight = isKeyboardOpen ? maxHeight - 200 : maxHeight;
     } else {
-      animateHeight(minHeight + clayViewHeight, 100)
+      targetHeight = minHeight + clayViewHeight;
     }
-  }, [isContentExpanded])
+  
+    animateHeight(targetHeight, isKeyboardOpen ? 300 : 0);
+  }, [isContentExpanded, isKeyboardOpen, maxHeight, minHeight, clayViewHeight]);
+  
+
+useEffect(()=> {
+}, [clayViewHeight])
 
   const handleClayOutputResize = (height: number) => {
     setClayViewHeight(height)
@@ -184,7 +187,6 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
   const removeFiring = (f: Pick<PotteryItemFirings,  'fireType' | 'fireStyle' | 'cone'>) => {
     setFirings((prev) => prev.filter((firing) => firing !== f))
   }
-
   const createPotteryItem = (db: SQLiteDatabase, newPotteryItemID: string) => {
     const now = new Date()
     const potteryItemToAdd: PotteryItem = {
@@ -279,26 +281,35 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
   return (
     <View style={{ backgroundColor: colors.background}}>
       <View style={styles.modalOpenButton}>
-        <Button
+        <Pressable 
           onPress={() => setFormVisible(true)}
-          title="Add New Piece"
-          color="#841584"
-          accessibilityLabel="open pottery project form"
-        />
+          style={[globalStyles.button, styles.newProjectButton, {backgroundColor: colors.primary, borderColor: colors.border}]}
+        >
+          <Text style={[{color: colors.text, fontWeight: 'bold', fontSize: 20}]}>New Project</Text>
+        </Pressable>
       </View>
       <Modal 
         isVisible={formVisible}
-        animationIn={'bounceIn'} 
-        animationOut={'bounceOut'}
-        
+        animationIn={'fadeInDownBig'} 
+        animationInTiming={750}
+        animationOut={'fadeOutUpBig'}
+        animationOutTiming={750}
+        backdropColor={colors.text}
+        backdropOpacity={0.7}
         onBackdropPress={handleFormClosure}
         onBackButtonPress={handleFormClosure}
+        backdropTransitionOutTiming={0}
       >
-        <Animated.View  style={[styles.innerContainer, {height: animatedHeight, backgroundColor: colors.background}]}>
+        <Animated.View  style={[styles.innerContainer, {height: animatedHeight, backgroundColor: colors.background, borderColor: colors.border}]}>
 {/*title*/}
             <View style={[styles.group, {height: 70, width: 'auto'}]}>
               <Text style={[globalStyles.label, {color: colors.text}]}>Project Title</Text>
-              <TextInput maxLength={25} style={[styles.nameInput, {backgroundColor: colors.card, borderColor: colors.border, color: colors.text}]} onChangeText={setPieceName} placeholder='Name' value={pieceName}/>
+              <TextInput maxLength={25}  
+                style={[styles.nameInput, {backgroundColor: colors.card, borderColor: colors.border, color: colors.text}]}
+                textAlign='center'
+                onChangeText={setPieceName} 
+                cursorColor={colors.border} 
+                value={pieceName}/>
             </View>
 {/*Clays*/}
             <View style={styles.group}>
@@ -320,7 +331,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
               </ScrollView>
               <View style={[styles.buttonContainer, { justifyContent: 'center'}]}>
                 <Pressable
-                  style={[globalStyles.button, styles.button, {backgroundColor: colors.primary}]}
+                  style={[globalStyles.button, styles.button, {backgroundColor: colors.primary, borderColor: colors.border}]}
                   onPress={() => setClayFormVisible(true)}
                 >
                   <Text style={[styles.buttonText, {color: colors.text}]}>Add Clay</Text>
@@ -343,7 +354,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
                     source={{ uri: image }}
                     >
                     <Pressable onPress={() => setImageModalVisible(true)}>
-                      <Text style={styles.addImageText}>Change Image</Text>
+                      <Text style={[styles.addImageText, {color: colors.text}]}>Change Image</Text>
                     </Pressable>
                   </ImageBackground>
                 </View>
@@ -355,7 +366,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
             </View>
 {/* Notes*/}
             <View style={[styles.group, {height: 120, width: 'auto'}]}>
-              <Text style={globalStyles.label}>Notes</Text>
+              <Text style={[globalStyles.label, {color: colors.text}]}>Notes</Text>
               <TextInput 
                 textAlignVertical='center'
                 textAlign='center'
@@ -367,10 +378,10 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
             </View>
 {/*Glazes*/}
             <View style={styles.group}>
-              <Text style={globalStyles.label}>Glazes:</Text>
+              <Text style={[globalStyles.label, {color: colors.text}]}>Glazes:</Text>
               { 
                 glazes.length > 0 &&
-                <Text style={styles.reminderText}>(Tap To Remove)</Text>
+                <Text style={[styles.reminderText, {color: colors.text}]}>(Tap To Remove)</Text>
               }
               <View style={[styles.listOutput, {backgroundColor: colors.card, borderColor: colors.border}]}>
                 {glazes.map((g: Glaze) => (
@@ -383,7 +394,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
               </View>
               <View style={[styles.buttonContainer, { justifyContent: 'center', }]}>
                 <Pressable
-                  style={[globalStyles.button, styles.button, {backgroundColor: colors.primary}]}
+                  style={[globalStyles.button, styles.button, {backgroundColor: colors.primary, borderColor: colors.border}]}
                   onPress={() => setGlazeFormVisible(true)}
                 >
                   <Text style={[styles.buttonText, {color: colors.text}]}>Add Glaze</Text>
@@ -392,11 +403,10 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
             </View>
 {/*Measurements*/}
             <View style={styles.group}>
-              <Text style={globalStyles.label}>Measurements:</Text>
+              <Text style={[globalStyles.label, {color: colors.text}]}>Measurements:</Text>
               { 
                 measurements.length > 0 &&
-                <Text style={styles.reminderText}>(Tap To Remove)</Text>
-                
+                <Text style={[styles.reminderText, {color: colors.text}]}>(Tap To Remove)</Text>  
               }
               <View style={[styles.listOutput, {backgroundColor: colors.card, borderColor: colors.border}]}>
                 {measurements.map((m) => (
@@ -410,23 +420,23 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
                 ))}
               </View>
               <View style={[styles.buttonContainer, {justifyContent: 'center'}]}>
-                <Pressable style={[globalStyles.button, styles.button, {backgroundColor: colors.primary}]} onPress={() => setMeasurementFormVisible(true)}>
+                <Pressable style={[globalStyles.button, styles.button, {backgroundColor: colors.primary, borderColor: colors.border}]} onPress={() => setMeasurementFormVisible(true)}>
                   <Text style={[styles.buttonText, {color: colors.text}]}>Add Measurement</Text>
                 </Pressable>
               </View>
             </View>
 {/*Firings*/}
             <View style={styles.group}>
-              <Text style={globalStyles.label}>Firings</Text>
+              <Text style={[globalStyles.label, {color: colors.text}]}>Firings</Text>
               { 
                 firings.length > 0 &&
-                <Text style={styles.reminderText}>(Tap To Remove)</Text>
+                <Text style={[styles.reminderText, {color: colors.text}]}>(Tap To Remove)</Text>
               }
               <View style={[styles.listOutput, {backgroundColor: colors.card, borderColor: colors.border}]}>
                 {firings.map((f, index) => (
                   <Pressable 
                     key={index + f.cone + f.fireType + 'view'} 
-                    style={[styles.deleteButton, {flexDirection: 'row'}]}
+                    style={[styles.deleteButton, {flexDirection: 'row', borderColor: colors.border}]}
                     onPress={() => removeFiring(f)}
                   >
                     <Text key={f.cone + f.fireType + 'text'} style={styles.deleteButtonText}>
@@ -438,7 +448,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
                 ))}
               </View>
               <View style={[styles.buttonContainer, {justifyContent: 'center'}]}>
-                <Pressable style={[globalStyles.button, styles.button, {backgroundColor: colors.primary}]} 
+                <Pressable style={[globalStyles.button, styles.button, {backgroundColor: colors.primary, borderColor: colors.border}]} 
                   onPress={() => setFiringFormVisible(true)}
                 >
                   <Text style={[styles.buttonText, {color: colors.text}]}>Add Firing</Text>
@@ -448,10 +458,10 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
             </CollapsibleSection>
 {/*Submit Button*/}
             <View style={[{position: 'relative', right: 0, left: 0, bottom: 5},isContentExpanded ? {marginTop: 5} : {marginTop: 0}]}>
-              <Pressable style={[globalStyles.button, styles.button, {alignSelf: 'center', padding: 10, backgroundColor: colors.primary}]}
+              <Pressable style={[globalStyles.button, styles.button, {alignSelf: 'center', padding: 10, backgroundColor: colors.primary, borderColor: colors.border}]}
                 onPress={handleSubmitForm}
               >
-                <Text style={{fontWeight: 'bold', fontSize: 20}}>Add New Project</Text>
+                <Text style={{fontWeight: 'bold', fontSize: 20, color: colors.text}}>Add New Project</Text>
               </Pressable>
             </View>
         </Animated.View>
@@ -459,61 +469,96 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
 {/*Image Modal*/}
       <Modal
         isVisible={imageModalVisible}
-        animationIn={'bounceIn'}
-        animationOut={'bounceOut'}
+        animationIn={'zoomIn'} 
+        animationInTiming={750}
+        animationOut={'zoomOut'}
+        animationOutTiming={750}
+        backdropColor={colors.text}
+        backdropOpacity={0}
         onBackdropPress={() => setImageModalVisible(false)}
+        onBackButtonPress={() => setImageModalVisible(false)}
+        backdropTransitionOutTiming={0}
       >
         <View style={[styles.imageModalContainer, {backgroundColor: colors.background}]}>
-          <Pressable style={[globalStyles.button, styles.button, {backgroundColor: colors.primary}]} onPress={openCamera}>
+          <Pressable style={[globalStyles.button, styles.button, {backgroundColor: colors.primary, borderColor: colors.border}]} onPress={openCamera}>
             <Text style={[styles.buttonText, {color: colors.text}]}>New Image</Text>
           </Pressable>
-          <Pressable style={[globalStyles.button,styles.button, {backgroundColor: colors.primary}]} onPress={pickImage}>
+          <Pressable style={[globalStyles.button,styles.button, {backgroundColor: colors.primary, borderColor: colors.border}]} onPress={pickImage}>
             <Text style={[styles.buttonText, {color: colors.text}]}>Camera Roll</Text>
           </Pressable>
         </View>
       </Modal>
+{/*Measurement Modal*/}  
       <Modal
         isVisible={measurementFormVisible}
-        animationIn={'bounceIn'}
-        animationOut={'bounceOut'}
+        animationIn={'zoomIn'} 
+        animationInTiming={750}
+        animationOut={'zoomOut'}
+        animationOutTiming={750}
+        backdropColor={colors.text}
+        backdropOpacity={0.2}
         onBackdropPress={() => setMeasurementFormVisible(false)}
+        onBackButtonPress={() => setMeasurementFormVisible(false)}
+        backdropTransitionOutTiming={0}
       >
         <NewMeasurement callbackFunction={addMeasurement}/> 
       </Modal>
 {/*Clays Modal*/}
       <Modal  
         isVisible={clayFormVisible}
-        animationIn={'bounceIn'}
-        animationOut={'bounceOut'}
+        animationIn={'zoomIn'} 
+        animationInTiming={750}
+        animationOut={'zoomOut'}
+        animationOutTiming={750}
+        backdropColor={colors.text}
+        backdropOpacity={0.2}
         onBackButtonPress={() => setClayFormVisible(false)}
         onBackdropPress={() => setClayFormVisible(false)}
+        backdropTransitionOutTiming={0}
       > 
-        <View style={{flex: 1}}>
+        <View style={{height: '60%', borderWidth: 1, borderColor: colors.border, backgroundColor: colors.background, borderRadius: 10}}>
+            <Pressable
+              onPress={() => setClayFormVisible(false)}
+              style={{position: 'absolute', top: 10, right: 20, zIndex:3}}
+            >
+              <Ionicons name='close-circle-outline' size={30} color={colors.text}/>
+            </Pressable>
           <ClaysList onClaySelect={setCurrentClay} >
-              <Pressable 
-                onPress={() => {currentClay && addClay(currentClay)}}
-                style={[styles.button, globalStyles.button, {padding: 8}]}
-                >
-                <Text style={[[styles.buttonText, {color: colors.text}], {fontWeight: 'bold'}]}>Add Clay To Project</Text>
-              </Pressable>
+            <Pressable 
+              onPress={() => {currentClay && addClay(currentClay)}}
+              style={[styles.button, globalStyles.button, {backgroundColor: colors.primary, borderColor: colors.border, padding: 8}]}
+            >
+              <Text style={[[styles.buttonText, {color: colors.text}], {fontWeight: 'bold'}]}>Add Clay To Project</Text>
+            </Pressable>
           </ClaysList>
         </View>
       </Modal>
 {/*Glaze Modal*/}
       <Modal  
         isVisible={glazeFormVisible}
-        animationIn={'bounceIn'}
-        animationOut={'bounceOut'}
+        animationIn={'zoomIn'} 
+        animationInTiming={750}
+        animationOut={'zoomOut'}
+        animationOutTiming={750}
+        backdropColor={colors.text}
+        backdropOpacity={0.2}
         onBackButtonPress={() => setGlazeFormVisible(false)}
         onBackdropPress={() => setGlazeFormVisible(false)}
+        backdropTransitionOutTiming={0}
       > 
-        <View style={{flex: 1}}>
+        <View style={{height: '60%', borderWidth: 1, borderColor: colors.border, backgroundColor: colors.background, borderRadius: 10}}>
+            <Pressable
+              onPress={() => setGlazeFormVisible(false)}
+              style={{position: 'absolute', top: 10, right: 20, zIndex:3}}
+            >
+              <Ionicons name='close-circle-outline' size={30} color={colors.text}/>
+            </Pressable>
           <GlazesList onGlazeSelect={setCurrentGlaze} >
             <Pressable 
               onPress={() => {currentGlaze && addGlaze(currentGlaze)}}
-              style={[styles.button, globalStyles.button, {padding: 8}]}
-              >
-              <Text style={[globalStyles.buttonText, {fontWeight: 'bold'}]}>Add Glaze To Project</Text>
+              style={[styles.button, globalStyles.button, {backgroundColor: colors.primary, borderColor: colors.border, padding: 8}]}
+            >
+              <Text style={[[styles.buttonText, {color: colors.text}], {fontWeight: 'bold'}]}>Add Glaze To Project</Text>
             </Pressable>
           </GlazesList>
         </View>
@@ -521,8 +566,15 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
 {/*Firings Modal*/}
       <Modal 
         isVisible={firingFormVisible}
+        animationIn={'zoomIn'} 
+        animationInTiming={750}
+        animationOut={'zoomOut'}
+        animationOutTiming={750}
+        backdropColor={colors.text}
+        backdropOpacity={0.2}
         onBackButtonPress={() => setFiringFormVisible(false)}
         onBackdropPress={() => setFiringFormVisible(false)}
+        backdropTransitionOutTiming={0}
       >
         <NewFiring callbackFunction={addFiring}/>
       </Modal>
@@ -532,19 +584,21 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
 
 const styles = StyleSheet.create({
   modalOpenButton: {
-    position: 'absolute',
-    bottom: 20,
-    alignSelf: 'center',
+    position: 'absolute', 
+    right: 0, 
+    left: 0, 
+    bottom: 10, 
+    alignItems: 'center'
   },
   innerContainer: {
     borderWidth: 1,
+    borderRadius: 10
   },
   nameInput: {
     flex: 1,
-    marginBottom: 5,
     marginHorizontal: 15,
-    fontSize: 24,
-    textAlign: 'center',
+    paddingBottom: 8,
+    fontSize: 26,
     borderWidth: 1,
   },
   imageContainer: {
@@ -595,30 +649,28 @@ const styles = StyleSheet.create({
   listOutputContent: {  
     flexDirection: 'row',
     flexWrap: 'wrap',
+    flexGrow: 1,
     justifyContent: 'flex-start',
-    minHeight: 50
+    rowGap: 8
   },
   listOutput: {
-    borderColor: "black",
     borderWidth: 1,
-    minHeight: 55,
+    minHeight: 50,
     marginHorizontal: 15,
+    paddingTop:5,
+    paddingHorizontal: 5
   },
   glazeContainer: {
     flexDirection: 'row',
   },
   deleteButton: {
-    backgroundColor: 'red',
-    alignSelf: 'flex-start',
     borderRadius: 15,
     borderWidth: 1, 
-    borderColor: "black",
-    paddingVertical: 3,
-    paddingHorizontal: 5,
-    margin: 5,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    marginRight: 8,
   },
   deleteButtonText: {
-    margin: 5,
     fontSize: 16,
     textAlign: 'center',
   },
@@ -627,7 +679,8 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     marginHorizontal: 15,
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: 'left',
+    textAlignVertical: 'top',
     backgroundColor: "white",
     borderColor: "black",
     borderWidth: 1,
@@ -636,7 +689,12 @@ const styles = StyleSheet.create({
     position: "absolute", 
     right: 15, 
     fontSize: 12, 
-    fontWeight: "400"}
+    fontWeight: "400"
+  },
+  newProjectButton: {
+
+    marginBottom: 5
+  }
 })
 
 export default NewPotteryItem
