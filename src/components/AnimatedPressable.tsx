@@ -1,17 +1,10 @@
-import React from 'react';
-import { 
-  Pressable, 
-  Animated, 
-  StyleSheet, 
-  PressableProps, 
-  StyleProp, 
-  ViewStyle 
-} from 'react-native';
+import React from 'react'
+import { Pressable, Animated, StyleSheet, PressableProps, StyleProp, ViewStyle } from 'react-native'
 
 // Define props for the AnimatedPressable
 interface AnimatedPressableProps extends PressableProps {
-  style?: StyleProp<ViewStyle>; // Accepts style for the wrapper
-  children?: React.ReactNode; // Accepts any React child elements
+  style?: StyleProp<ViewStyle> // Accepts style for the wrapper
+  children?: React.ReactNode // Accepts any React child elements
 }
 
 const AnimatedPressable: React.FC<AnimatedPressableProps> = ({
@@ -20,8 +13,8 @@ const AnimatedPressable: React.FC<AnimatedPressableProps> = ({
   onPress,
   ...props
 }) => {
-  const scaleValue = React.useRef(new Animated.Value(1)).current;
-  const opacityValue = React.useRef(new Animated.Value(1)).current;
+  const scaleValue = React.useRef(new Animated.Value(1)).current
+  const opacityValue = React.useRef(new Animated.Value(1)).current
 
   const handlePressIn = () => {
     Animated.parallel([
@@ -35,8 +28,8 @@ const AnimatedPressable: React.FC<AnimatedPressableProps> = ({
         duration: 100,
         useNativeDriver: true,
       }),
-    ]).start();
-  };
+    ]).start()
+  }
 
   const handlePressOut = () => {
     Animated.parallel([
@@ -50,26 +43,16 @@ const AnimatedPressable: React.FC<AnimatedPressableProps> = ({
         duration: 100,
         useNativeDriver: true,
       }),
-    ]).start();
-  };
+    ]).start()
+  }
 
   return (
-    <Pressable
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-      onPress={onPress}
-      {...props}
-    >
-      <Animated.View
-        style={[
-          { transform: [{ scale: scaleValue }], opacity: opacityValue },
-          style,
-        ]}
-      >
+    <Pressable onPressIn={handlePressIn} onPressOut={handlePressOut} onPress={onPress} {...props}>
+      <Animated.View style={[{ transform: [{ scale: scaleValue }], opacity: opacityValue }, style]}>
         {children}
       </Animated.View>
     </Pressable>
-  );
-};
+  )
+}
 
-export default AnimatedPressable;
+export default AnimatedPressable

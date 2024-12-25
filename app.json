@@ -18,7 +18,8 @@
           "photosPermission": "The app uses your chosen photos to use on your pottery display."
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-font"
     ],
     "assetBundlePatterns": [
       "**/*"

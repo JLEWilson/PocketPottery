@@ -45,7 +45,6 @@ export type PotteryItemMeasurements = {
   scale: number
 }
 
-
 export type PotteryItemFirings = {
   firingId: string
   potteryItemId: string

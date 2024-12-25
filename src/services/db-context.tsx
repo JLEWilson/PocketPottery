@@ -1,43 +1,50 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Text, View, ActivityIndicator } from 'react-native';
-import { getDBConnection } from '../services/db-service'; // Import getDBConnection
-import type { SQLiteDatabase } from 'expo-sqlite';
+import React, { createContext, useContext, useEffect, useState } from 'react'
+import { Text, View, ActivityIndicator } from 'react-native'
+import { getDBConnection } from '../services/db-service' // Import getDBConnection
+import type { SQLiteDatabase } from 'expo-sqlite'
 
-const DatabaseContext = createContext<SQLiteDatabase | null>(null);
+const DatabaseContext = createContext<SQLiteDatabase | null>(null)
 
 export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [db, setDb] = useState<SQLiteDatabase | null>(null);
+  const [db, setDb] = useState<SQLiteDatabase | null>(null)
 
   useEffect(() => {
     const initializeDB = async () => {
       try {
-        const database = await getDBConnection();
-        setDb(database);
+        const database = await getDBConnection()
+        setDb(database)
       } catch (error) {
-        console.error('Failed to initialize the database:', (error as Error).message);
+        console.error('Failed to initialize the database:', (error as Error).message)
       }
-    };
+    }
 
-    initializeDB();
-  }, []);
+    initializeDB()
+  }, [])
 
   if (!db) {
     // loading
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor:'green' }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: 'green',
+        }}
+      >
         <ActivityIndicator size="large" color="#0000ff" />
         <Text>Initializing database...</Text>
       </View>
-    );
+    )
   }
 
-  return <DatabaseContext.Provider value={db}>{children}</DatabaseContext.Provider>;
-};
+  return <DatabaseContext.Provider value={db}>{children}</DatabaseContext.Provider>
+}
 
 export const useDatabase = (): SQLiteDatabase => {
-  const context = useContext(DatabaseContext);
+  const context = useContext(DatabaseContext)
   if (!context) {
-    throw new Error('useDatabase must be used within a DatabaseProvider');
+    throw new Error('useDatabase must be used within a DatabaseProvider')
   }
-  return context;
-};
+  return context
+}

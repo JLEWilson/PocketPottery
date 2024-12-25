@@ -1,118 +1,549 @@
-import { StyleSheet, Text, View, ActivityIndicator } from 'react-native';
-import React, { useEffect, useState, useCallback } from 'react';
-import { useDatabase } from '../services/db-context';
-import { getPotteryItemById } from '../services/potteryItem-service';
-import { PotteryItem, Clay } from '../models';
-import { getClaysByPotteryItemId } from '../services/potteryItem-clays-service';
-import { getClayById } from '../services/clay-service';
-import { RouteProp } from '@react-navigation/native';
-import { RootStackParamList } from './MyTabBar';
+import {
+  StyleSheet,
+  Text,
+  View,
+  ActivityIndicator,
+  Image,
+  ImageBackground,
+  Animated,
+  LayoutChangeEvent,
+  Pressable,
+  TouchableOpacity,
+} from 'react-native'
+import React, { useEffect, useState, useCallback, useRef } from 'react'
+import { useDatabase } from '../services/db-context'
+import { getPotteryItemById } from '../services/potteryItem-service'
+import { PotteryItem, Clay, Glaze, PotteryItemFirings, PotteryItemMeasurements } from '../models'
+import { getClaysByPotteryItemId } from '../services/potteryItem-clays-service'
+import { RouteProp, useNavigation } from '@react-navigation/native'
+import { RootStackParamList } from './MyTabBar'
+import { getGlazessByPotteryItemId } from '../services/potteryItem-glaze-service'
+import { getFiringsByPotteryItemId } from '../services/potteryItem-firing-service'
+import { getMeasurementsByPotteryItemId } from '../services/potteryItem-measurements-service'
+import { ScrollView } from 'react-native-gesture-handler'
+import { useTheme } from '@react-navigation/native'
+// import AnimatedPressable from './AnimatedPressable';
+import globalStyles from '../globalStyles/stylesheet'
 
 export type PotteryItemViewProps = {
-  route: RouteProp<RootStackParamList, 'PotteryItemView'>;
-};
+  route: RouteProp<RootStackParamList, 'PotteryItemView'>
+}
+
+const AnimatedPressable = Animated.createAnimatedComponent(TouchableOpacity)
 
 const PotteryItemView = ({ route }: PotteryItemViewProps) => {
-  const { id } = route.params;
-  const DB = useDatabase();
-  const [reload, setReload] = useState(false);
-  const [potteryItem, setPotteryItem] = useState<PotteryItem | undefined>(undefined);
-  const [clays, setClays] = useState<Clay[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { id } = route.params
+  const navigation = useNavigation()
+  const { colors } = useTheme()
+  const DB = useDatabase()
+  const [reload, setReload] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [potteryItem, setPotteryItem] = useState<PotteryItem | undefined>(undefined)
+  const [clays, setClays] = useState<Clay[]>([])
+  const [glazes, setGlazes] = useState<Glaze[]>([])
+  const [firings, setFirings] = useState<PotteryItemFirings[]>([])
+  const [measurements, setMeasurements] = useState<PotteryItemMeasurements[]>([])
+  const [scrollWidth, setScrollWidth] = useState(0)
+  const [selectedClayId, setSelectedClayId] = useState<string | null>(null)
+  const [selectedGlazeId, setSelectedGlazeId] = useState<string | null>(null)
+  const [selectedFiringId, setSelectedFiringId] = useState<string | null>(null)
+  const [selectedMeasurementId, setSelectedMeasurementId] = useState<string | null>(null)
+  const rectSizes = useRef<Record<string, Animated.ValueXY>>({})
+  const minDimensions = useRef<Record<string, { width: number; height: number }>>({})
+  const animationDuration = 300
 
+  // Initialize rectSizes for each clay
+  useEffect(() => {
+    clays.forEach((clay) => {
+      if (!rectSizes.current[clay.clayId]) {
+        rectSizes.current[clay.clayId] = new Animated.ValueXY({ x: 60, y: 30 }) // Initial size
+      }
+      if (!minDimensions.current[clay.clayId]) {
+        minDimensions.current[clay.clayId] = { width: 60, height: 30 } // Default min dimensions
+      }
+    })
 
-  function getErrorMessage(error: unknown): string {
+    glazes.forEach((glaze) => {
+      if (!rectSizes.current[glaze.glazeId]) {
+        rectSizes.current[glaze.glazeId] = new Animated.ValueXY({ x: 60, y: 30 }) // Initial size
+      }
+      if (!minDimensions.current[glaze.glazeId]) {
+        minDimensions.current[glaze.glazeId] = { width: 60, height: 30 } // Default min dimensions
+      }
+    })
+
+    firings.forEach((firing) => {
+      if (!rectSizes.current[firing.firingId]) {
+        rectSizes.current[firing.firingId] = new Animated.ValueXY({ x: 60, y: 30 }) // Initial size
+      }
+      if (!minDimensions.current[firing.firingId]) {
+        minDimensions.current[firing.firingId] = { width: 60, height: 30 } // Default min dimensions
+      }
+    })
+
+    measurements.forEach((measurement) => {
+      if (!rectSizes.current[measurement.measurementId]) {
+        rectSizes.current[measurement.measurementId] = new Animated.ValueXY({ x: 60, y: 30 }) // Initial size
+      }
+      if (!minDimensions.current[measurement.measurementId]) {
+        minDimensions.current[measurement.measurementId] = { width: 60, height: 30 } // Default min dimensions
+      }
+    })
+  }, [clays, glazes, firings, measurements])
+
+  const getErrorMessage = (error: unknown): string => {
     if (error instanceof Error) {
-      return error.message;
+      return error.message
     }
-    return String(error);
+    return String(error)
   }
+
   const loadDataCallback = useCallback(async () => {
+    setLoading(true)
+
     try {
-      console.log('Starting loadDataCallback...');
-      
-      // Test `getPotteryItemById`
-      console.log('Calling getPotteryItemById...');
-      try {
-        const storedPotteryItem = await getPotteryItemById(DB, id);
-        console.log('Result of getPotteryItemById:', storedPotteryItem);
-        if (storedPotteryItem) {
-          setPotteryItem(storedPotteryItem);
-        }
-      } catch (error) {
-        console.error('Error in getPotteryItemById:', getErrorMessage(error));
+      const storedPotteryItem = await getPotteryItemById(DB, id)
+      if (storedPotteryItem) {
+        setPotteryItem(storedPotteryItem)
+        navigation.setOptions({
+          title: storedPotteryItem.projectTitle || 'Pottery Item',
+        })
       }
-  
-      // Test `getClaysByPotteryItemId` and `getClayById`
-      console.log('Calling getClaysByPotteryItemId...');
-      try {
-        const storedClays = await getClaysByPotteryItemId(DB, id);
-        console.log('Result of getClaysByPotteryItemId:', storedClays);
-  
-        if (storedClays?.length) {
-          console.log('Calling getClayById for each storedClay...');
-          const clayDetails = await Promise.all(
-            storedClays.map(async (potteryItemClay) => {
-              try {
-                const clay = await getClayById(DB, potteryItemClay.clayId);
-                console.log('Result of getClayById for clayId:', potteryItemClay.clayId, clay);
-                return clay;
-              } catch (error) {
-                console.error('Error in getClayById:', potteryItemClay.clayId, getErrorMessage(error));
-                return null; // Handle the error gracefully
-              }
-            })
-          );
-  
-          const validClayDetails = clayDetails.filter((clay) => clay !== null && clay !== undefined);
-          setClays(validClayDetails);
-        }
-      } catch (error) {
-        console.error('Error in getClaysByPotteryItemId or mapping clays:', getErrorMessage(error));
-      }
+
+      const storedClays = await getClaysByPotteryItemId(DB, id)
+      if (storedClays) setClays(storedClays)
+
+      const storedGlazes = await getGlazessByPotteryItemId(DB, id)
+      if (storedGlazes) setGlazes(storedGlazes)
+
+      const storedFirings = await getFiringsByPotteryItemId(DB, id)
+      if (storedFirings) setFirings(storedFirings)
+
+      const storedMeasurements = await getMeasurementsByPotteryItemId(DB, id)
+      if (storedMeasurements) setMeasurements(storedMeasurements)
     } catch (error) {
-      console.error('Unknown error in loadDataCallback:', getErrorMessage(error));
+      setError(getErrorMessage(error))
+    } finally {
+      setLoading(false)
     }
-  }, [DB, id]);
-  
+  }, [DB, id, navigation])
 
   useEffect(() => {
-    loadDataCallback();
-  }, [loadDataCallback, reload]);
+    loadDataCallback()
+  }, [loadDataCallback, reload])
 
-  const handleFormSubmission = () => setReload((prev) => !prev);
+  const handleReload = () => setReload((prev) => !prev)
 
-  if (loading) {
-    return <ActivityIndicator size="large" color="#0000ff" />;
+  const handlePress = (id: string, type: 'clay' | 'glaze' | 'firing' | 'measurement') => {
+    //need to account for the jerky motion of the buttons rearranging
+    const currentSize = rectSizes.current[id]
+    const currentMinSize = minDimensions.current[id]
+
+    const updateState = (
+      setter: React.Dispatch<React.SetStateAction<string | null>>,
+      selectedId: string | null,
+    ) => {
+      setter(null)
+      if (selectedId === id) {
+        // Shrink the item back to its original size
+        Animated.timing(currentSize, {
+          toValue: {
+            x: currentMinSize?.width || 60,
+            y: currentMinSize?.height || 20,
+          },
+          duration: animationDuration,
+          useNativeDriver: false,
+        }).start()
+      } else {
+        // If another item of the same type is expanded, shrink it first
+        if (selectedId && rectSizes.current[selectedId]) {
+          Animated.timing(rectSizes.current[selectedId], {
+            toValue: {
+              x: minDimensions.current[selectedId]?.width || 60,
+              y: minDimensions.current[selectedId]?.height || 20,
+            },
+            duration: animationDuration,
+            useNativeDriver: false,
+          }).start(() => {
+            // Reset the animated value explicitly
+            rectSizes.current[selectedId].setValue({
+              x: minDimensions.current[selectedId]?.width || 60,
+              y: minDimensions.current[selectedId]?.height || 20,
+            })
+          })
+        }
+
+        // Expand the currently pressed item
+        Animated.timing(currentSize, {
+          toValue: { x: scrollWidth, y: 100 },
+          duration: animationDuration,
+          useNativeDriver: false,
+        }).start(() => setter(id))
+
+        // setter(id);
+      }
+    }
+
+    // Handle based on the type
+    if (type === 'clay') {
+      updateState(setSelectedClayId, selectedClayId)
+    } else if (type === 'glaze') {
+      updateState(setSelectedGlazeId, selectedGlazeId)
+    } else if (type === 'firing') {
+      updateState(setSelectedFiringId, selectedFiringId)
+    } else if (type === 'measurement') {
+      updateState(setSelectedMeasurementId, selectedMeasurementId)
+    }
   }
 
   return (
     <View style={styles.container}>
-      <Text>Pottery Item Details</Text>
       {error && <Text style={styles.errorText}>{error}</Text>}
       {potteryItem && (
-        <View>
-          <Text>Pottery Item: {potteryItem.projectTitle}</Text>
+        <ScrollView
+          style={[styles.scrollContainer, { borderColor: colors.border }]}
+          contentContainerStyle={[styles.scrollContent, {}]}
+        >
           {clays.length > 0 ? (
-            clays.map((clay, index) => <Text key={index}>{clay.name}</Text>)
+            <View style={styles.group}>
+              <Text style={[styles.label, { color: colors.text, fontFamily: 'heading' }]}>
+                Clays
+              </Text>
+              <View
+                onLayout={(event: LayoutChangeEvent) =>
+                  setScrollWidth(event.nativeEvent.layout.width - 10)
+                }
+                style={[styles.listOutput, { borderColor: colors.border, rowGap: 5 }]}
+              >
+                {clays.map((clay) => (
+                  <AnimatedPressable
+                    key={clay.clayId + 'button'}
+                    onPress={() => handlePress(clay.clayId, 'clay')}
+                    style={[
+                      {
+                        backgroundColor: colors.card,
+                        borderColor: colors.border,
+                        minWidth: rectSizes.current[clay.clayId]?.x,
+                        height: rectSizes.current[clay.clayId]?.y,
+                        borderWidth: 1,
+                        borderRadius: 5,
+                        padding: 4,
+                      },
+                    ]}
+                  >
+                    <Text
+                      key={clay.clayId + 'name'}
+                      style={[
+                        { color: colors.text, textAlign: 'center' },
+                        clay.clayId === selectedClayId
+                          ? { fontFamily: 'heading' }
+                          : { fontFamily: 'text' },
+                        clay.clayId === selectedClayId ? { fontSize: 18 } : { fontSize: 14 },
+                      ]}
+                    >
+                      {clay.name}
+                    </Text>
+                    {selectedClayId === clay.clayId && (
+                      <View
+                        style={{ padding: 4 }}
+                        onLayout={(event) => {
+                          if (!minDimensions.current[clay.clayId]) {
+                            const { width, height } = event.nativeEvent.layout
+                            minDimensions.current[clay.clayId] = { width, height }
+                          }
+                        }}
+                      >
+                        <View style={{ flexDirection: 'row' }}>
+                          <Text style={[{ color: colors.text, fontFamily: 'heading' }]}>
+                            Manufacturer:
+                          </Text>
+                          <Text
+                            style={[
+                              {
+                                color: colors.text,
+                                borderColor: colors.border,
+                                fontFamily: 'text',
+                                flex: 1,
+                                textAlign: 'center',
+                                borderBottomWidth: 1,
+                                borderStyle: 'dashed',
+                              },
+                            ]}
+                          >
+                            {clay.manufacturer}
+                          </Text>
+                        </View>
+                        <Text style={[{ color: colors.text, fontFamily: 'heading' }]}>Notes</Text>
+                        <View>
+                          <Text
+                            style={[
+                              {
+                                color: colors.text,
+                                borderColor: colors.border,
+                                fontFamily: 'text',
+                                paddingHorizontal: 8,
+                                borderBottomWidth: 1,
+                                borderStyle: 'dashed',
+                              },
+                            ]}
+                          >
+                            {clay.notes}
+                          </Text>
+                        </View>
+                      </View>
+                    )}
+                  </AnimatedPressable>
+                ))}
+              </View>
+            </View>
           ) : (
-            <Text>No clays found for this pottery item.</Text>
+            <Text style={[{ color: colors.text, fontFamily: 'text' }]}>
+              No clays found for this pottery item.
+            </Text>
           )}
-        </View>
+          {glazes.length > 0 ? (
+            <View style={styles.group}>
+              <Text style={[styles.label, { color: colors.text, fontFamily: 'heading' }]}>
+                Glazes
+              </Text>
+              <View style={[styles.listOutput, { borderColor: colors.border, rowGap: 5 }]}>
+                {glazes.map((glaze) => (
+                  <AnimatedPressable
+                    key={glaze.glazeId + 'button'}
+                    onPress={() => handlePress(glaze.glazeId, 'glaze')}
+                    style={[
+                      {
+                        backgroundColor: colors.card,
+                        borderColor: colors.border,
+                        minWidth: rectSizes.current[glaze.glazeId]?.x,
+                        height: rectSizes.current[glaze.glazeId]?.y,
+                        borderWidth: 1,
+                        borderRadius: 5,
+                        padding: 4,
+                      },
+                    ]}
+                  >
+                    <Text
+                      key={glaze.glazeId + 'name'}
+                      style={[
+                        { color: colors.text, textAlign: 'center' },
+                        glaze.glazeId === selectedGlazeId
+                          ? { fontFamily: 'heading' }
+                          : { fontFamily: 'text' },
+                        glaze.glazeId === selectedGlazeId ? { fontSize: 18 } : { fontSize: 14 },
+                      ]}
+                    >
+                      {glaze.name}
+                    </Text>
+                    {selectedGlazeId === glaze.glazeId && (
+                      <View
+                        style={{ padding: 4 }}
+                        onLayout={(event) => {
+                          if (!minDimensions.current[glaze.glazeId]) {
+                            const { width, height } = event.nativeEvent.layout
+                            minDimensions.current[glaze.glazeId] = { width, height }
+                          }
+                        }}
+                      >
+                        <View style={{ flexDirection: 'row' }}>
+                          <Text style={[{ color: colors.text, fontFamily: 'heading' }]}>
+                            Manufacturer:
+                          </Text>
+                          <Text
+                            style={[
+                              {
+                                color: colors.text,
+                                borderColor: colors.border,
+                                fontFamily: 'text',
+                                flex: 1,
+                                textAlign: 'center',
+                                borderBottomWidth: 1,
+                                borderStyle: 'dashed',
+                              },
+                            ]}
+                          >
+                            {glaze.manufacturer}
+                          </Text>
+                        </View>
+                        <Text style={[{ color: colors.text, fontFamily: 'heading' }]}>Notes</Text>
+                        <View>
+                          <Text
+                            style={[
+                              {
+                                color: colors.text,
+                                borderColor: colors.border,
+                                fontFamily: 'text',
+                                paddingHorizontal: 8,
+                                borderBottomWidth: 1,
+                                borderStyle: 'dashed',
+                              },
+                            ]}
+                          >
+                            {glaze.notes}
+                          </Text>
+                        </View>
+                      </View>
+                    )}
+                  </AnimatedPressable>
+                ))}
+              </View>
+            </View>
+          ) : (
+            <Text style={[{ color: colors.text, fontFamily: 'text' }]}>
+              No glazes found for this pottery item.
+            </Text>
+          )}
+          {firings.length > 0 ? (
+            <View style={styles.group}>
+              <Text style={[styles.label, { color: colors.text, fontFamily: 'heading' }]}>
+                Firings
+              </Text>
+              <View
+                style={[styles.listOutputUnselectable, { borderColor: colors.border, rowGap: 8 }]}
+              >
+                {firings.map((firing) => (
+                  <Text
+                    key={firing.firingId}
+                    style={[
+                      {
+                        color: colors.text,
+                        borderColor: colors.border,
+                        borderStyle: 'dashed',
+                        borderBottomWidth: 1,
+                        fontFamily: 'text',
+                      },
+                    ]}
+                  >
+                    {firing.fireType + '/' + firing.fireStyle + ': ' + firing.cone}
+                  </Text>
+                ))}
+              </View>
+            </View>
+          ) : (
+            <Text style={[{ color: colors.text, fontFamily: 'text' }]}>
+              No Firings found for this pottery item.
+            </Text>
+          )}
+          {measurements.length > 0 ? (
+            <View style={styles.group}>
+              <Text style={[styles.label, { color: colors.text, fontFamily: 'heading' }]}>
+                Measurements
+              </Text>
+              <View
+                style={[styles.listOutputUnselectable, { borderColor: colors.border, rowGap: 8 }]}
+              >
+                {measurements.map((m) => (
+                  <Text
+                    key={m.measurementId}
+                    style={[
+                      {
+                        color: colors.text,
+                        borderColor: colors.border,
+                        borderStyle: 'dashed',
+                        borderBottomWidth: 1,
+                        fontFamily: 'text',
+                      },
+                    ]}
+                  >
+                    {m.name + ': ' + m.scale} {m.system === 'Metric' ? 'c.' : 'in.'}
+                  </Text>
+                ))}
+              </View>
+            </View>
+          ) : (
+            <Text style={[{ color: colors.text, fontFamily: 'text' }]}>
+              No Firings found for this pottery item.
+            </Text>
+          )}
+          {potteryItem.projectNotes.length > 0 ? (
+            <View style={styles.group}>
+              <Text style={[styles.label, { color: colors.text, fontFamily: 'heading' }]}>
+                Notes
+              </Text>
+              <View
+                style={[styles.listOutputUnselectable, { borderColor: colors.border, rowGap: 8 }]}
+              >
+                <Text
+                  key={'notes'}
+                  style={[
+                    {
+                      color: colors.text,
+                      borderColor: colors.border,
+                      borderStyle: 'dashed',
+                      borderBottomWidth: 1,
+                      fontFamily: 'text',
+                    },
+                  ]}
+                >
+                  {potteryItem.projectNotes}
+                </Text>
+              </View>
+            </View>
+          ) : (
+            <Text style={[{ color: colors.text, fontFamily: 'text' }]}>
+              No notes found for this pottery item.
+            </Text>
+          )}
+          <ImageBackground
+            src={potteryItem.displayPicturePath}
+            style={styles.image}
+            resizeMode="cover"
+          />
+        </ScrollView>
       )}
-      <Text onPress={handleFormSubmission}>Reload Data</Text>
     </View>
-  );
-};
+  )
+}
 
-export default PotteryItemView;
+export default PotteryItemView
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    flex: 1,
+    padding: 10,
+  },
+  scrollContainer: {
+    borderWidth: 1,
+    padding: 10,
+  },
+  scrollContent: {
+    rowGap: 20,
+  },
+  label: {
+    fontSize: 18,
+    textAlign: 'center',
+  },
+  listOutput: {
+    borderWidth: 1,
+    borderRadius: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    minHeight: 20,
+    alignItems: 'center',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-evenly',
+  },
+  listOutputUnselectable: {
+    borderWidth: 1,
+    borderRadius: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    minHeight: 20,
+    alignItems: 'center',
+    flexDirection: 'column',
+    justifyContent: 'space-evenly',
   },
   errorText: {
     color: 'red',
   },
-});
+  group: {
+    width: 'auto',
+  },
+  image: {
+    alignSelf: 'center',
+    height: 150,
+    width: 250,
+  },
+})
