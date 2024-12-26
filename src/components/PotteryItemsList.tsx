@@ -28,8 +28,11 @@ import {
 } from '../services/potteryItem-measurements-service'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { RootStackParamList } from './MyTabBar'
-import { resetClayTable } from '../services/clay-service'
-import { resetGlazeTable } from '../services/glaze-service'
+// import { resetClayTable } from '../services/clay-service'
+// import { resetGlazeTable } from '../services/glaze-service'
+// ad this on reset button in settings
+import AnimatedPressable from './AnimatedPressable'
+import globalStyles from '../globalStyles/stylesheet'
 
 type PotteryItemsListNavigationProp = StackNavigationProp<RootStackParamList, 'PotteryItemView'>
 
@@ -39,6 +42,7 @@ const PotteryItemList = () => {
   const nav = useNavigation<PotteryItemsListNavigationProp>()
   const [potteryItems, setPotteryItems] = useState<PotteryItem[]>([])
   const [reload, setReload] = useState(false)
+  const [formVisible, setFormVisible] = useState(false)
 
   const loadDataCallback = useCallback(async () => {
     try {
@@ -70,7 +74,6 @@ const PotteryItemList = () => {
   const handlePress = (id: string) => {
     nav.navigate('PotteryItemView', { id })
   }
-
   return (
     <View style={{ backgroundColor: colors.background, flex: 1 }}>
       <ScrollView contentContainerStyle={styles.scrollView}>
@@ -78,7 +81,21 @@ const PotteryItemList = () => {
           <PotteryItemComponent key={p.potteryItemId} potteryItem={p} handlePress={handlePress} />
         ))}
       </ScrollView>
-      <NewPotteryItem callBackFunction={handleFormSubmission} />
+      <View style={styles.modalOpenButton}>
+        <AnimatedPressable
+          onPress={() => setFormVisible(true)}
+          style={[
+            globalStyles.button,
+            styles.newProjectButton,
+            { backgroundColor: colors.primary, borderColor: colors.border },
+          ]}
+        >
+          <Text style={[{ color: colors.text, fontFamily: 'textBold', fontSize: 20 }]}>
+            New Project
+          </Text>
+        </AnimatedPressable>
+      </View>
+      <NewPotteryItem callBackFunction={handleFormSubmission} formVisible={formVisible} setFormVisible={setFormVisible} />
     </View>
   )
 }
@@ -93,6 +110,16 @@ const styles = StyleSheet.create({
   },
   potteryItemsContainer: {
     flexGrow: 1,
+  },
+  modalOpenButton: {
+    position: 'absolute',
+    right: 0,
+    left: 0,
+    bottom: 10,
+    alignItems: 'center',
+  },
+  newProjectButton: {
+    marginBottom: 5,
   },
 })
 

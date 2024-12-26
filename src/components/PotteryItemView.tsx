@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
 } from 'react-native'
 import React, { useEffect, useState, useCallback, useRef } from 'react'
+import { Ionicons } from '@expo/vector-icons'
 import { useDatabase } from '../services/db-context'
 import { getPotteryItemById } from '../services/potteryItem-service'
 import { PotteryItem, Clay, Glaze, PotteryItemFirings, PotteryItemMeasurements } from '../models'
@@ -22,14 +23,15 @@ import { getFiringsByPotteryItemId } from '../services/potteryItem-firing-servic
 import { getMeasurementsByPotteryItemId } from '../services/potteryItem-measurements-service'
 import { ScrollView } from 'react-native-gesture-handler'
 import { useTheme } from '@react-navigation/native'
-// import AnimatedPressable from './AnimatedPressable';
+import AnimatedPressable from './AnimatedPressable';
 import globalStyles from '../globalStyles/stylesheet'
+import NewPotteryItem from './NewPotteryItem'
 
 export type PotteryItemViewProps = {
   route: RouteProp<RootStackParamList, 'PotteryItemView'>
 }
 
-const AnimatedPressable = Animated.createAnimatedComponent(TouchableOpacity)
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity)
 
 const PotteryItemView = ({ route }: PotteryItemViewProps) => {
   const { id } = route.params
@@ -49,8 +51,11 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
   const [selectedGlazeId, setSelectedGlazeId] = useState<string | null>(null)
   const [selectedFiringId, setSelectedFiringId] = useState<string | null>(null)
   const [selectedMeasurementId, setSelectedMeasurementId] = useState<string | null>(null)
+  const [formVisible, setFormVisible] = useState(false)
+  const [isDeleteModalVisible, setDeleteModalVisible] = useState(false)
   const rectSizes = useRef<Record<string, Animated.ValueXY>>({})
   const minDimensions = useRef<Record<string, { width: number; height: number }>>({})
+  const notesHeights = useRef<Record<string, number>>({})
   const animationDuration = 300
 
   // Initialize rectSizes for each clay
@@ -98,6 +103,14 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
     }
     return String(error)
   }
+
+  const calculateTextHeight = (text: string,): number => {
+    const maxCharsPerLine= 30
+    const fontSize = 15
+    const lineHeight = fontSize * 1.2; // Adjust multiplier if needed for your app
+    const numLines = Math.ceil(text.length / maxCharsPerLine)+ 3;
+    return numLines * lineHeight;
+  };
 
   const loadDataCallback = useCallback(async () => {
     setLoading(true)
@@ -176,7 +189,7 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
 
         // Expand the currently pressed item
         Animated.timing(currentSize, {
-          toValue: { x: scrollWidth, y: 100 },
+          toValue: { x: scrollWidth, y: notesHeights.current[id] },
           duration: animationDuration,
           useNativeDriver: false,
         }).start(() => setter(id))
@@ -201,11 +214,21 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
     <View style={styles.container}>
       {error && <Text style={styles.errorText}>{error}</Text>}
       {potteryItem && (
+      <View style={{flex: 1, rowGap: 5}}>
         <ScrollView
           style={[styles.scrollContainer, { borderColor: colors.border }]}
           contentContainerStyle={[styles.scrollContent, {}]}
         >
-          {clays.length > 0 ? (
+          {
+            potteryItem.displayPicturePath.length > 1 && (
+              <ImageBackground
+              src={potteryItem.displayPicturePath}
+              style={styles.image}
+              resizeMode="cover"
+              />
+            )
+          }
+          {clays.length > 0 && (
             <View style={styles.group}>
               <Text style={[styles.label, { color: colors.text, fontFamily: 'heading' }]}>
                 Clays
@@ -217,15 +240,24 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
                 style={[styles.listOutput, { borderColor: colors.border, rowGap: 5 }]}
               >
                 {clays.map((clay) => (
-                  <AnimatedPressable
+                  <AnimatedTouchable
                     key={clay.clayId + 'button'}
                     onPress={() => handlePress(clay.clayId, 'clay')}
+                   onLayout={(event) => {
+                      if (!minDimensions.current[clay.clayId]) {
+                        const { width, height } = event.nativeEvent.layout
+                        minDimensions.current[clay.clayId] = { width, height }
+                      }
+                      if (!notesHeights.current[clay.clayId]) {
+                        notesHeights.current[clay.clayId] = calculateTextHeight(clay.notes);
+                      }
+                    }}
                     style={[
                       {
                         backgroundColor: colors.card,
                         borderColor: colors.border,
                         minWidth: rectSizes.current[clay.clayId]?.x,
-                        height: rectSizes.current[clay.clayId]?.y,
+                        minHeight: rectSizes.current[clay.clayId]?.y,
                         borderWidth: 1,
                         borderRadius: 5,
                         padding: 4,
@@ -247,12 +279,7 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
                     {selectedClayId === clay.clayId && (
                       <View
                         style={{ padding: 4 }}
-                        onLayout={(event) => {
-                          if (!minDimensions.current[clay.clayId]) {
-                            const { width, height } = event.nativeEvent.layout
-                            minDimensions.current[clay.clayId] = { width, height }
-                          }
-                        }}
+                        
                       >
                         <View style={{ flexDirection: 'row' }}>
                           <Text style={[{ color: colors.text, fontFamily: 'heading' }]}>
@@ -283,7 +310,8 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
                                 borderColor: colors.border,
                                 fontFamily: 'text',
                                 paddingHorizontal: 8,
-                                borderBottomWidth: 1,
+                                borderWidth: 1,
+                                borderTopWidth: 0,
                                 borderStyle: 'dashed',
                               },
                             ]}
@@ -293,31 +321,36 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
                         </View>
                       </View>
                     )}
-                  </AnimatedPressable>
+                  </AnimatedTouchable>
                 ))}
               </View>
             </View>
-          ) : (
-            <Text style={[{ color: colors.text, fontFamily: 'text' }]}>
-              No clays found for this pottery item.
-            </Text>
           )}
-          {glazes.length > 0 ? (
+          {glazes.length > 0 && (
             <View style={styles.group}>
               <Text style={[styles.label, { color: colors.text, fontFamily: 'heading' }]}>
                 Glazes
               </Text>
               <View style={[styles.listOutput, { borderColor: colors.border, rowGap: 5 }]}>
                 {glazes.map((glaze) => (
-                  <AnimatedPressable
+                  <AnimatedTouchable
                     key={glaze.glazeId + 'button'}
                     onPress={() => handlePress(glaze.glazeId, 'glaze')}
+                    onLayout={(event) => {
+                      if (!minDimensions.current[glaze.glazeId]) {
+                        const { width, height } = event.nativeEvent.layout
+                        minDimensions.current[glaze.glazeId] = { width, height }
+                      }
+                      if (!notesHeights.current[glaze.glazeId]) {
+                        notesHeights.current[glaze.glazeId] = calculateTextHeight(glaze.notes);
+                      }
+                    }}
                     style={[
                       {
                         backgroundColor: colors.card,
                         borderColor: colors.border,
                         minWidth: rectSizes.current[glaze.glazeId]?.x,
-                        height: rectSizes.current[glaze.glazeId]?.y,
+                        minHeight: rectSizes.current[glaze.glazeId]?.y,
                         borderWidth: 1,
                         borderRadius: 5,
                         padding: 4,
@@ -339,12 +372,6 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
                     {selectedGlazeId === glaze.glazeId && (
                       <View
                         style={{ padding: 4 }}
-                        onLayout={(event) => {
-                          if (!minDimensions.current[glaze.glazeId]) {
-                            const { width, height } = event.nativeEvent.layout
-                            minDimensions.current[glaze.glazeId] = { width, height }
-                          }
-                        }}
                       >
                         <View style={{ flexDirection: 'row' }}>
                           <Text style={[{ color: colors.text, fontFamily: 'heading' }]}>
@@ -385,16 +412,12 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
                         </View>
                       </View>
                     )}
-                  </AnimatedPressable>
+                  </AnimatedTouchable>
                 ))}
               </View>
             </View>
-          ) : (
-            <Text style={[{ color: colors.text, fontFamily: 'text' }]}>
-              No glazes found for this pottery item.
-            </Text>
           )}
-          {firings.length > 0 ? (
+          {firings.length > 0 && (
             <View style={styles.group}>
               <Text style={[styles.label, { color: colors.text, fontFamily: 'heading' }]}>
                 Firings
@@ -420,12 +443,8 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
                 ))}
               </View>
             </View>
-          ) : (
-            <Text style={[{ color: colors.text, fontFamily: 'text' }]}>
-              No Firings found for this pottery item.
-            </Text>
           )}
-          {measurements.length > 0 ? (
+          {measurements.length > 0 && (
             <View style={styles.group}>
               <Text style={[styles.label, { color: colors.text, fontFamily: 'heading' }]}>
                 Measurements
@@ -451,12 +470,8 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
                 ))}
               </View>
             </View>
-          ) : (
-            <Text style={[{ color: colors.text, fontFamily: 'text' }]}>
-              No Firings found for this pottery item.
-            </Text>
           )}
-          {potteryItem.projectNotes.length > 0 ? (
+          {potteryItem.projectNotes.length > 0 && (
             <View style={styles.group}>
               <Text style={[styles.label, { color: colors.text, fontFamily: 'heading' }]}>
                 Notes
@@ -480,17 +495,41 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
                 </Text>
               </View>
             </View>
-          ) : (
-            <Text style={[{ color: colors.text, fontFamily: 'text' }]}>
-              No notes found for this pottery item.
-            </Text>
           )}
-          <ImageBackground
-            src={potteryItem.displayPicturePath}
-            style={styles.image}
-            resizeMode="cover"
-          />
+          {
+            (potteryItem.displayPicturePath.length <= 1 ||
+            clays.length <= 0 ||
+            glazes.length <= 0 ||
+            firings.length <= 0 ||
+            measurements.length <= 0) &&
+            <Text style={{color: colors.text, fontFamily: 'text', textAlign: 'center'}}>
+            The project currently has no {potteryItem.displayPicturePath.length < 1 && "Pictures"}
+            {clays.length <= 0 && (potteryItem.displayPicturePath.length < 1 ? ", Clays" : "Clays")}
+            {glazes.length <= 0 && (clays.length <= 0 || potteryItem.displayPicturePath.length < 1 ? ", Glazes" : "Glazes")}
+            {firings.length <= 0 && (glazes.length <= 0 || clays.length <= 0 || potteryItem.displayPicturePath.length < 1 ? ", Firings" : "Firings")}
+            {measurements.length <= 0 && (firings.length <= 0 || glazes.length <= 0 || clays.length <= 0 || potteryItem.displayPicturePath.length < 1 ? ", Measurements" : "Measurements")}
+          </Text>
+          }
         </ScrollView>
+        <View style={{flexDirection: 'row', justifyContent:'space-evenly'}} >
+          <AnimatedPressable style={{padding: 4}} onPress={() => setFormVisible(true)}>
+            <Ionicons name="create" color={colors.border} size={40} />
+            </AnimatedPressable>
+          <AnimatedPressable style={[{padding: 4}]} onPress={() => setDeleteModalVisible(true)}>
+            <Ionicons name="trash"  color={colors.border} size={40} />
+          </AnimatedPressable>
+        </View>
+        <NewPotteryItem formVisible={formVisible} setFormVisible={setFormVisible} 
+          initialData={{
+          pieceName: potteryItem.projectTitle,
+          image: potteryItem.displayPicturePath,
+          clays: clays,
+          glazes: glazes,
+          measurements: measurements,
+          firings: firings,
+          notes: potteryItem.projectNotes,
+           } }/>
+      </View>
       )}
     </View>
   )
@@ -505,10 +544,13 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     borderWidth: 1,
+    borderStyle: 'dashed',
+    borderRadius:8,
     padding: 10,
   },
   scrollContent: {
     rowGap: 20,
+    paddingBottom: 30
   },
   label: {
     fontSize: 18,
@@ -542,8 +584,11 @@ const styles = StyleSheet.create({
     width: 'auto',
   },
   image: {
+    height: 100,
+    width: 100,
+    borderRadius: 20,
+    borderWidth: 1,
     alignSelf: 'center',
-    height: 150,
-    width: 250,
+    overflow: 'hidden'
   },
 })

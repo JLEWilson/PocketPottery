@@ -43,14 +43,24 @@ import { addPotteryItemMeasurement } from '../services/potteryItem-measurements-
 import TextStroke from './TextStroke'
 
 type NewPotteryItemProps = {
-  callBackFunction?: () => void
+  callBackFunction?: () => void,
+  formVisible: boolean,
+  setFormVisible: (v: boolean) => void,
+  initialData?: {
+    pieceName?: string;
+    image?: string | null;
+    clays?: Clay[];
+    glazes?: Glaze[];
+    measurements?: Pick<PotteryItemMeasurements, 'name' | 'scale' | 'system'>[];
+    firings?: Pick<PotteryItemFirings, 'fireType' | 'cone' | 'fireStyle'>[];
+    notes?: string;
+  };
 }
 
 const NewPotteryItem = (props: NewPotteryItemProps) => {
   const DB = useDatabase()
   const { colors } = useTheme()
-  const { callBackFunction } = props
-  const [formVisible, setFormVisible] = useState(false)
+  const { callBackFunction, formVisible, setFormVisible, initialData } = props
   const [pieceName, setPieceName] = useState('')
   const [image, setImage] = useState<string | null>(null)
   const [imageModalVisible, setImageModalVisible] = useState(false)
@@ -83,6 +93,17 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
       useNativeDriver: false,
     }).start()
   }
+  useEffect(() => {
+    if (initialData) {
+      setPieceName(initialData.pieceName || '');
+      setImage(initialData.image || null);
+      setClays(initialData.clays || []);
+      setGlazes(initialData.glazes || []);
+      setMeasurements(initialData.measurements || []);
+      setFirings(initialData.firings || []);
+      setNotes(initialData.notes || '');
+    }
+  }, [initialData]);
 
   useEffect(() => {
     // Add keyboard listeners to track keyboard open/close state
@@ -110,7 +131,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
       targetHeight = minHeight + clayViewHeight
     }
 
-    animateHeight(targetHeight, isKeyboardOpen ? 300 : 0)
+    animateHeight(targetHeight, 300)
   }, [isContentExpanded, isKeyboardOpen, maxHeight, minHeight, clayViewHeight])
 
   useEffect(() => {}, [clayViewHeight])
@@ -253,7 +274,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
       addPotteryItemFiring(db, temp)
     })
   }
-  const handleSubmitForm = async () => {
+  const handleNewPotteryItem = async () => {
     if (pieceName.length < 1) {
       Alert.alert('Missing Name', 'Please add a name for your project')
       return
@@ -280,6 +301,12 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
     handleFormClosure()
     callBackFunction?.()
   }
+  const handleUpdatePotteryItem = async () => {
+    console.log('updating...')
+  }
+  const handleSubmitForm = async () => {  
+    initialData ? handleUpdatePotteryItem() : handleNewPotteryItem()
+  }
 
   const handleFormClosure = () => {
     setFormVisible(false)
@@ -304,20 +331,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
 
   return (
     <View style={{ backgroundColor: colors.background }}>
-      <View style={styles.modalOpenButton}>
-        <AnimatedPressable
-          onPress={() => setFormVisible(true)}
-          style={[
-            globalStyles.button,
-            styles.newProjectButton,
-            { backgroundColor: colors.primary, borderColor: colors.border },
-          ]}
-        >
-          <Text style={[{ color: colors.text, fontFamily: 'textBold', fontSize: 20 }]}>
-            New Project
-          </Text>
-        </AnimatedPressable>
-      </View>
+      
       <Modal
         isVisible={formVisible}
         animationIn={'fadeInDownBig'}
@@ -426,13 +440,13 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
             {/*image*/}
             <View style={styles.imageContainer}>
               {image ? (
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+              <AnimatedPressable onPress={() => setImageModalVisible(true)}>
                   <ImageBackground
-                    style={[styles.addImage]}
+                    style={[styles.addImage, {borderColor: colors.border}]}
+                    imageStyle={[styles.addImage]}
                     resizeMode="cover"
                     source={{ uri: image }}
                   >
-                    <AnimatedPressable onPress={() => setImageModalVisible(true)}>
                       <TextStroke color={colors.background} stroke={1}>
                         <Text
                           style={{
@@ -445,9 +459,8 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
                           Change Image
                         </Text>
                       </TextStroke>
-                    </AnimatedPressable>
                   </ImageBackground>
-                </View>
+                    </AnimatedPressable>
               ) : (
                 <AnimatedPressable
                   style={[
@@ -484,6 +497,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
                     fontFamily: 'text',
                   },
                 ]}
+                maxLength={250}
                 multiline={true}
                 blurOnSubmit={true}
                 onChangeText={setNotes}
@@ -671,9 +685,16 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
               ]}
               onPress={handleSubmitForm}
             >
+              {
+              initialData ? 
+              <Text style={{ fontSize: 18, color: colors.text, fontFamily: 'textBold' }}>
+                Update Project
+              </Text> 
+              : 
               <Text style={{ fontSize: 18, color: colors.text, fontFamily: 'textBold' }}>
                 Add New Project
               </Text>
+              }
             </AnimatedPressable>
           </View>
         </Animated.View>
@@ -846,13 +867,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
 }
 
 const styles = StyleSheet.create({
-  modalOpenButton: {
-    position: 'absolute',
-    right: 0,
-    left: 0,
-    bottom: 10,
-    alignItems: 'center',
-  },
+ 
   innerContainer: {
     borderWidth: 1,
     borderRadius: 10,
@@ -875,13 +890,9 @@ const styles = StyleSheet.create({
     width: 80,
     borderRadius: 5,
     borderWidth: 1,
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  image: {
-    height: 50,
-    width: 50,
-    borderRadius: 5,
   },
   imageModalContainer: {
     alignSelf: 'center',
@@ -947,9 +958,7 @@ const styles = StyleSheet.create({
     right: 15,
     fontSize: 12,
   },
-  newProjectButton: {
-    marginBottom: 5,
-  },
+  
 })
 
 export default NewPotteryItem

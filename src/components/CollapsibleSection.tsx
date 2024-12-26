@@ -20,31 +20,11 @@ const CollapsibleSection = ({
 }: CollapsibleSectionProps) => {
   const { colors } = useTheme()
   const [isExpanded, setIsExpanded] = useState(false)
-  const [completeScrollBarHeight, setCompleteScrollBarHeight] = useState(1)
-  const [visibleScrollBarHeight, setVisibleScrollBarHeight] = useState(0)
-
-  const scrollIndicatorSize =
-    completeScrollBarHeight > visibleScrollBarHeight
-      ? (visibleScrollBarHeight * visibleScrollBarHeight) / completeScrollBarHeight
-      : visibleScrollBarHeight
 
   const toggleDetails = () => {
     setIsExpanded(!isExpanded)
     isExpanded ? onCollapse() : onExpand()
   }
-
-  const scrollIndicator = useRef(new Animated.Value(0)).current
-  const difference =
-    visibleScrollBarHeight > scrollIndicatorSize ? visibleScrollBarHeight - scrollIndicatorSize : 1
-
-  const scrollIndicatorPosition = Animated.multiply(
-    scrollIndicator,
-    visibleScrollBarHeight / completeScrollBarHeight,
-  ).interpolate({
-    inputRange: [0, difference],
-    outputRange: [0, difference],
-    extrapolate: 'clamp',
-  })
 
   return (
     <View style={styles.container}>
@@ -71,42 +51,9 @@ const CollapsibleSection = ({
         >
           <ScrollView
             contentContainerStyle={{ backgroundColor: colors.background }}
-            showsVerticalScrollIndicator={false}
-            scrollEventThrottle={16}
-            onContentSizeChange={(_, height) => {
-              setCompleteScrollBarHeight(height)
-            }}
-            onLayout={({
-              nativeEvent: {
-                layout: { height },
-              },
-            }) => {
-              setVisibleScrollBarHeight(height)
-            }}
-            onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollIndicator } } }], {
-              useNativeDriver: false,
-            })}
           >
             {children}
           </ScrollView>
-          <View
-            style={{
-              height: '100%',
-              width: 6,
-              backgroundColor: colors.card,
-              borderRadius: 8,
-            }}
-          >
-            <Animated.View
-              style={{
-                width: 6,
-                borderRadius: 8,
-                backgroundColor: colors.primary,
-                height: scrollIndicatorSize,
-                transform: [{ translateY: scrollIndicatorPosition }],
-              }}
-            />
-          </View>
         </View>
       )}
     </View>
