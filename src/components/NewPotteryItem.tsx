@@ -26,7 +26,7 @@ import {
   PotteryItemFirings,
 } from '../models'
 import { v4 as uuidv4 } from 'uuid'
-import { addPotteryItem } from '../services/potteryItem-service'
+import { addPotteryItem, updatePotteryItem } from '../services/potteryItem-service'
 import type { SQLiteDatabase } from 'expo-sqlite'
 import { useDatabase } from '../services/db-context'
 import NewMeasurement from './NewMeasurement'
@@ -35,11 +35,11 @@ import NewFiring from './NewFiring'
 import CollapsibleSection from './CollapsibleSection'
 import { useTheme } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
-import { addPotteryItemClayLink } from '../services/potteryItem-clays-service'
-import { addPotteryItemGlazeLink } from '../services/potteryItem-glaze-service'
+import { addPotteryItemClayLink, removePotteryItemClayLink } from '../services/potteryItem-clays-service'
+import { addPotteryItemGlazeLink, removePotteryItemGlazeLink } from '../services/potteryItem-glaze-service'
 import AnimatedPressable from './AnimatedPressable'
 import { addPotteryItemFiring } from '../services/potteryItem-firing-service'
-import { addPotteryItemMeasurement } from '../services/potteryItem-measurements-service'
+import { addPotteryItemMeasurement, deleteMeasurement } from '../services/potteryItem-measurements-service'
 import TextStroke from './TextStroke'
 
 type NewPotteryItemProps = {
@@ -47,15 +47,23 @@ type NewPotteryItemProps = {
   formVisible: boolean,
   setFormVisible: (v: boolean) => void,
   initialData?: {
-    pieceName?: string;
-    image?: string | null;
-    clays?: Clay[];
-    glazes?: Glaze[];
-    measurements?: Pick<PotteryItemMeasurements, 'name' | 'scale' | 'system'>[];
-    firings?: Pick<PotteryItemFirings, 'fireType' | 'cone' | 'fireStyle'>[];
-    notes?: string;
+    potteryItem: PotteryItem,
+    clays: Clay[];
+    glazes: Glaze[];
+    measurements: MeasurementState[]
+    firings: FiringState[]
   };
 }
+
+type MeasurementState = Omit<PotteryItemMeasurements, 'measurementId'> & {
+  measurementId?: string; 
+  potteryItemId?: string; 
+};
+
+type FiringState = Omit<PotteryItemFirings, 'firingId'> & {
+  firingId?: string; 
+  potteryItemId?: string;
+};
 
 const NewPotteryItem = (props: NewPotteryItemProps) => {
   const DB = useDatabase()
@@ -71,13 +79,9 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
   const [glazes, setGlazes] = useState<Glaze[]>([])
   const [glazeFormVisible, setGlazeFormVisible] = useState(false)
   const [measurementFormVisible, setMeasurementFormVisible] = useState(false)
-  const [measurements, setMeasurements] = useState<
-    Pick<PotteryItemMeasurements, 'name' | 'scale' | 'system'>[]
-  >([])
+  const [measurements, setMeasurements] = useState<MeasurementState[]>([])
   const [firingFormVisible, setFiringFormVisible] = useState(false)
-  const [firings, setFirings] = useState<
-    Pick<PotteryItemFirings, 'fireType' | 'cone' | 'fireStyle'>[]
-  >([])
+  const [firings, setFirings] = useState<FiringState[]>([])
   const [notes, setNotes] = useState('')
   const [isKeyboardOpen, setKeyboardOpen] = useState(false)
   const [isContentExpanded, setContentExpanded] = useState(false)
@@ -95,13 +99,23 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
   }
   useEffect(() => {
     if (initialData) {
-      setPieceName(initialData.pieceName || '');
-      setImage(initialData.image || null);
+      setPieceName(initialData.potteryItem.projectTitle || '');
+      setImage(initialData.potteryItem.displayPicturePath || null);
       setClays(initialData.clays || []);
       setGlazes(initialData.glazes || []);
-      setMeasurements(initialData.measurements || []);
-      setFirings(initialData.firings || []);
-      setNotes(initialData.notes || '');
+      setMeasurements(
+        initialData.measurements.map((measurement) => ({
+          ...measurement,  // Spread existing properties
+          potteryItemId: initialData.potteryItem.potteryItemId,  // Add potteryItemId from initialData
+        })) || []
+      );
+      setFirings(
+        initialData.firings.map((firing) => ({
+          ...firing,
+          potteryItemId: initialData.potteryItem.potteryItemId
+        })) || []
+      )
+      setNotes(initialData.potteryItem.projectNotes || '');
     }
   }, [initialData]);
 
@@ -140,7 +154,6 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
     setClayViewHeight(height)
     animateHeight(minHeight + height, 100)
   }
-
   const pickImage = async () => {
     setImageModalVisible(false)
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -154,7 +167,6 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
       setImage(result.assets[0].uri)
     }
   }
-
   const openCamera = async () => {
     setImageModalVisible(false)
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync()
@@ -167,50 +179,41 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
       setImage(result.assets[0].uri)
     }
   }
-
   const addClay = (c: Clay) => {
     setClayFormVisible(false)
     if (clays.includes(c)) return
     setClays((prevClays) => [...prevClays, c])
   }
-
   const removeClay = (c: Clay) => {
     setClays((prevClays) => prevClays.filter((clay) => clay !== c))
   }
-
   const addGlaze = (g: Glaze) => {
     setGlazeFormVisible(false)
     if (glazes.includes(g)) return
     setGlazes((prevGlazes) => [...prevGlazes, g])
   }
-
   const removeGlaze = (g: Glaze) => {
     setGlazes((prevGlazes) => prevGlazes.filter((glaze) => glaze !== g))
   }
-
   const addMeasurement = (
     measurement: Pick<PotteryItemMeasurements, 'name' | 'scale' | 'system'>,
   ) => {
     setMeasurementFormVisible(false)
-    const newMeasurement = {
-      name: measurement.name,
-      scale: measurement.scale,
-      system: measurement.system,
-    }
+    const newMeasurement: MeasurementState = {
+      ...measurement,
+      potteryItemId: '', // Use an empty string or null if potteryItemId is not yet available
+    };
     if (measurements.includes(newMeasurement)) return
     setMeasurements((prev) => [...prev, newMeasurement])
   }
-
   const removeMeasurement = (m: Pick<PotteryItemMeasurements, 'name' | 'scale' | 'system'>) => {
     setMeasurements((prev) => prev.filter((measurement) => measurement !== m))
   }
-
   const addFiring = (firing: Pick<PotteryItemFirings, 'fireType' | 'fireStyle' | 'cone'>) => {
     setFiringFormVisible(false)
     const newFiring = {
-      fireStyle: firing.fireStyle,
-      fireType: firing.fireType,
-      cone: firing.cone,
+      ...firing,
+      potteryItemId: ''
     }
     if (firings.includes(newFiring)) return
     setFirings((prev) => [...prev, newFiring])
@@ -219,7 +222,8 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
     setFirings((prev) => prev.filter((firing) => firing !== f))
   }
 
-  const createPotteryItem = (db: SQLiteDatabase, newPotteryItemID: string) => {
+  //Data Handlers
+  const createPotteryItem = async (db: SQLiteDatabase, newPotteryItemID: string) => {
     const now = new Date()
     const potteryItemToAdd: PotteryItem = {
       potteryItemId: newPotteryItemID,
@@ -229,9 +233,9 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
       projectNotes: notes,
       displayPicturePath: image ? image : '',
     }
-    addPotteryItem(db, potteryItemToAdd)
+    await addPotteryItem(db, potteryItemToAdd)
   }
-  const createPotteryItemPicture = (db: SQLiteDatabase, newPotteryItemId: string) => {
+  const createPotteryItemPicture = async (db: SQLiteDatabase, newPotteryItemId: string) => {
     const potteryItemPictureToAdd: PotteryItemPictures = {
       pictureId: uuidv4(),
       potteryItemId: newPotteryItemId,
@@ -239,31 +243,34 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
     }
     //Use Service to Submit
   }
-  const createPotteryItemClays = (db: SQLiteDatabase, newPotteryItemId: string) => {
-    console.log('add link')
-    clays.forEach((c) => {
-      addPotteryItemClayLink(db, newPotteryItemId, c.clayId)
-    })
+  const createPotteryItemClays = async (db: SQLiteDatabase, newPotteryItemId: string) => {
+    const promises = clays.map((clay) => 
+      addPotteryItemClayLink(db, newPotteryItemId, clay.clayId)
+    )
+    await Promise.all(promises)
   }
-  const createPotteryItemGlazes = (db: SQLiteDatabase, newPotteryItemId: string) => {
-    glazes.forEach((g) => {
-      addPotteryItemGlazeLink(db, newPotteryItemId, g.glazeId)
-    })
+  const createPotteryItemGlazes = async (db: SQLiteDatabase, newPotteryItemId: string) => {
+    const promises = glazes.map((glaze) =>
+      addPotteryItemGlazeLink(db, newPotteryItemId, glaze.glazeId)
+    );
+    await Promise.all(promises);
   }
-  const createPotteryItemMeasurements = (db: SQLiteDatabase, newPotteryItemId: string) => {
-    measurements.forEach((m) => {
+  const createPotteryItemMeasurements = async (db: SQLiteDatabase, newPotteryItemId: string) => {
+    const promises = measurements.map((m) => {
       const temp: PotteryItemMeasurements = {
         measurementId: uuidv4(),
         potteryItemId: newPotteryItemId,
         name: m.name,
         system: m.system,
         scale: m.scale,
-      }
-      addPotteryItemMeasurement(db, temp)
-    })
+      };
+      return addPotteryItemMeasurement(db, temp);
+    });
+    
+    await Promise.all(promises); 
   }
-  const createPotteryItemFirings = (db: SQLiteDatabase, newPotteryItemId: string) => {
-    firings.forEach((f) => {
+  const createPotteryItemFirings = async (db: SQLiteDatabase, newPotteryItemId: string) => {
+    const promises = firings.map((f) => {
       const temp: PotteryItemFirings = {
         firingId: uuidv4(),
         potteryItemId: newPotteryItemId,
@@ -271,9 +278,130 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
         fireType: f.fireType,
         cone: f.cone,
       }
-      addPotteryItemFiring(db, temp)
+      return addPotteryItemFiring(db, temp)
     })
+    await Promise.all(promises)
   }
+  const updateExistingPotteryItem = (db: SQLiteDatabase, itemId: string) => {
+    const temp: PotteryItem = {
+      potteryItemId: itemId,
+      projectTitle: pieceName,
+      projectNotes: notes,
+      displayPicturePath: image || '',
+      dateCreated: initialData?.potteryItem.dateCreated ||  new Date().toISOString(),
+      dateEdited: new Date().toISOString()
+    }
+    updatePotteryItem(db, temp)
+  }
+
+  const updateExistingPotteryItemClays = async (db: SQLiteDatabase, itemId: string)=> {
+    // Extract IDs from current and initial clays
+    const newClayIds = clays.map(clay => clay.clayId); 
+    const existingClayIds = (initialData?.clays || []).map(clay => clay.clayId); 
+
+    // Find clays to add and clays to remove
+    const claysToAdd = newClayIds.filter(id => !existingClayIds.includes(id)); 
+    const claysToRemove = existingClayIds.filter(id => !newClayIds.includes(id)); 
+
+    // Add new clays
+    for (const clayId of claysToAdd) {
+      await addPotteryItemClayLink(db, itemId, clayId);
+    }
+
+    // Remove unlinked clays
+    for (const clayId of claysToRemove) {
+      await removePotteryItemClayLink(db, itemId, clayId);
+    }
+  }
+  //PotteryItemGlazes
+  const updateExistingPotteryItemGlazes = async (db: SQLiteDatabase, itemId: string)=> {
+    // Extract IDs from current and initial glazes
+    const newGlazeIds = glazes.map(glaze => glaze.glazeId); 
+    const existingGlazeIds = (initialData?.glazes || []).map(glaze => glaze.glazeId); 
+
+    // Find glazes to add and glazes to remove
+    const glazesToAdd = newGlazeIds.filter(id => !existingGlazeIds.includes(id)); 
+    const claysToRemove = existingGlazeIds.filter(id => !newGlazeIds.includes(id)); 
+
+    // Add new glazes
+    for (const glazeId of glazesToAdd) {
+      await addPotteryItemGlazeLink(db, itemId, glazeId);
+    }
+
+    // Remove unlinked glaze
+    for (const clayId of claysToRemove) {
+      await removePotteryItemGlazeLink(db, itemId, clayId);
+    }
+  }
+  //Pictures
+  const updateExistingPotteryItemPicture = (db: SQLiteDatabase, itemId: string)=> {
+    const potteryItemPictureToAdd: PotteryItemPictures = {
+      pictureId: uuidv4(),
+      potteryItemId: itemId,
+      picturePath: image ? image : 'undefined',
+    }
+    //Use Service to update
+  }
+  //PotteryItemMeasurements
+  const updateExistingPotteryItemMeasurements = async (db: SQLiteDatabase, itemId: string)=> {
+    // Extract IDs from current and initial measurements
+    const newMeasurementIds = measurements.map(m => m.measurementId);  // Measurement IDs in state
+    const existingMeasurementIds = (initialData?.measurements || []).map(m => m.measurementId);  // Measurement IDs in initialData
+
+    // Find measurements to add and measurements to remove
+    const measurementsToAdd = measurements.filter(m => !m.measurementId);  // New measurements without IDs
+    const measurementsToRemove = existingMeasurementIds.filter(id => !newMeasurementIds.includes(id));  // Removed measurements
+
+    // Add new measurements
+    for (const measurement of measurementsToAdd) {
+      const newMeasurement: PotteryItemMeasurements = {
+        measurementId: uuidv4(),  // Generate a new unique ID
+        potteryItemId: itemId,
+        name: measurement.name,
+        scale: measurement.scale,
+        system: measurement.system,
+      };
+      await addPotteryItemMeasurement(db, newMeasurement);  // Add the new measurement
+    }
+
+    // Remove unlinked measurements
+    for (const measurementId of measurementsToRemove) {
+      if(measurementId){
+        await deleteMeasurement(db, measurementId);  // Delete removed measurement from the database
+      }
+    }
+  }
+  //PotteryItemFiring
+  const updateExistingPotteryItemFirings = async (db: SQLiteDatabase, itemId: string)=> {
+    // Extract IDs from current and initial firings
+    const newFiringsIds = firings.map(f => f.firingId);  // Measurement IDs in state
+    const existingFirings = (initialData?.firings || []).map(f => f.firingId);  // Measurement IDs in initialData
+
+    // Find measurements to add and measurements to remove
+    const firingsToAdd = firings.filter(f => !f.firingId);  // New measurements without IDs
+    const firingsToRemove = existingFirings.filter(id => !newFiringsIds.includes(id));  // Removed measurements
+
+    // Add new measurements
+    for (const firing of firingsToAdd) {
+      const newFiring: PotteryItemFirings = {
+        firingId: uuidv4(),  // Generate a new unique ID
+        potteryItemId: itemId,
+        fireStyle: firing.fireStyle,
+        fireType: firing.fireType,
+        cone: firing.cone,
+      };
+      await addPotteryItemFiring(db, newFiring);  // Add the new measurement
+    }
+
+    // Remove unlinked measurements
+    for (const firingId of firingsToRemove) {
+      if(firingId){
+        await deleteMeasurement(db, firingId);  // Delete removed measurement from the database
+      }
+    }
+  }
+
+
   const handleNewPotteryItem = async () => {
     if (pieceName.length < 1) {
       Alert.alert('Missing Name', 'Please add a name for your project')
@@ -286,26 +414,49 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
 
     const newPotteryItemId = uuidv4()
     //PotteryItem
-    createPotteryItem(DB, newPotteryItemId)
+    await createPotteryItem(DB, newPotteryItemId)
     //PotteryItemClays
-    createPotteryItemClays(DB, newPotteryItemId)
+    await createPotteryItemClays(DB, newPotteryItemId)
     //Pictures
-    createPotteryItemPicture(DB, newPotteryItemId)
+    await createPotteryItemPicture(DB, newPotteryItemId)
     //PotteryItemGlazes
-    createPotteryItemGlazes(DB, newPotteryItemId)
+    await createPotteryItemGlazes(DB, newPotteryItemId)
     //PotteryItemMeasurements
-    createPotteryItemMeasurements(DB, newPotteryItemId)
+    await createPotteryItemMeasurements(DB, newPotteryItemId)
     //PotteryItemFiring
-    createPotteryItemFirings(DB, newPotteryItemId)
+    await createPotteryItemFirings(DB, newPotteryItemId)
 
     handleFormClosure()
     callBackFunction?.()
   }
-  const handleUpdatePotteryItem = async () => {
-    console.log('updating...')
+  const handleUpdatePotteryItem = async (updateId: string) => {
+    if (pieceName.length < 1) {
+      Alert.alert('Missing Name', 'Please add a name for your project')
+      return
+    }
+    if (clays.length < 1) {
+      Alert.alert('Missing Clay', 'Please add at least one clay to your project.')
+      return
+    }
+    //PotteryItem
+    
+    updateExistingPotteryItem(DB, updateId)
+    //PotteryItemClays
+    updateExistingPotteryItemClays(DB, updateId)
+    //Pictures
+    updateExistingPotteryItemPicture(DB, updateId)
+    //PotteryItemGlazes
+    updateExistingPotteryItemGlazes(DB, updateId)
+    //PotteryItemMeasurements
+    updateExistingPotteryItemMeasurements(DB, updateId)
+    //PotteryItemFiring
+    updateExistingPotteryItemFirings(DB, updateId)
+
+    handleFormClosure()
+    callBackFunction?.()
   }
   const handleSubmitForm = async () => {  
-    initialData ? handleUpdatePotteryItem() : handleNewPotteryItem()
+    initialData ? handleUpdatePotteryItem(initialData.potteryItem.potteryItemId) : handleNewPotteryItem()
   }
 
   const handleFormClosure = () => {
