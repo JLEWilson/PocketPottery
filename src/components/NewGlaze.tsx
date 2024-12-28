@@ -50,6 +50,8 @@ const NewGlaze = (props: NewGlazeProps) => {
                 color: colors.text,
                 borderColor: colors.border,
                 fontFamily: 'text',
+                textAlign: 'center',
+                textAlignVertical: 'center',
               },
             ]}
             onChangeText={setName}
@@ -71,6 +73,8 @@ const NewGlaze = (props: NewGlazeProps) => {
                 color: colors.text,
                 borderColor: colors.border,
                 fontFamily: 'text',
+                textAlign: 'center',
+                textAlignVertical: 'center',
               },
             ]}
             onChangeText={setManufacturer}
@@ -93,6 +97,8 @@ const NewGlaze = (props: NewGlazeProps) => {
                 color: colors.text,
                 borderColor: colors.border,
                 fontFamily: 'text',
+                textAlign: 'left',
+                textAlignVertical: 'top',
               },
             ]}
             onChangeText={setNotes}
@@ -146,8 +152,6 @@ const styles = StyleSheet.create({
     alignContent: 'center',
   },
   textInput: {
-    textAlign: 'left',
-    textAlignVertical: 'top',
     borderWidth: 1,
   },
   button: {
