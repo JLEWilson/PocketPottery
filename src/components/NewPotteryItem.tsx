@@ -35,7 +35,7 @@ import NewFiring from './NewFiring'
 import CollapsibleSection from './CollapsibleSection'
 import { useTheme } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
-import { addPotteryItemClayLink, removePotteryItemClayLink } from '../services/potteryItem-clays-service'
+import { addPotteryItemClayLink, getAllPotteryItemClayLinks, removePotteryItemClayLink } from '../services/potteryItem-clays-service'
 import { addPotteryItemGlazeLink, removePotteryItemGlazeLink } from '../services/potteryItem-glaze-service'
 import AnimatedPressable from './AnimatedPressable'
 import { addPotteryItemFiring } from '../services/potteryItem-firing-service'
@@ -282,7 +282,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
     })
     await Promise.all(promises)
   }
-  const updateExistingPotteryItem = (db: SQLiteDatabase, itemId: string) => {
+  const updateExistingPotteryItem = async (db: SQLiteDatabase, itemId: string) => {
     const temp: PotteryItem = {
       potteryItemId: itemId,
       projectTitle: pieceName,
@@ -291,7 +291,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
       dateCreated: initialData?.potteryItem.dateCreated ||  new Date().toISOString(),
       dateEdited: new Date().toISOString()
     }
-    updatePotteryItem(db, temp)
+    await updatePotteryItem(db, temp)
   }
 
   const updateExistingPotteryItemClays = async (db: SQLiteDatabase, itemId: string)=> {
@@ -302,16 +302,11 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
     // Find clays to add and clays to remove
     const claysToAdd = newClayIds.filter(id => !existingClayIds.includes(id)); 
     const claysToRemove = existingClayIds.filter(id => !newClayIds.includes(id)); 
-
     // Add new clays
-    for (const clayId of claysToAdd) {
-      await addPotteryItemClayLink(db, itemId, clayId);
-    }
-
+    await Promise.all(claysToAdd.map(clayId => addPotteryItemClayLink(db, itemId, clayId)));
     // Remove unlinked clays
-    for (const clayId of claysToRemove) {
-      await removePotteryItemClayLink(db, itemId, clayId);
-    }
+    await Promise.all(claysToRemove.map(clayId => removePotteryItemClayLink(db, itemId, clayId)));
+    const allClays = await getAllPotteryItemClayLinks(db)
   }
   //PotteryItemGlazes
   const updateExistingPotteryItemGlazes = async (db: SQLiteDatabase, itemId: string)=> {
@@ -324,14 +319,10 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
     const claysToRemove = existingGlazeIds.filter(id => !newGlazeIds.includes(id)); 
 
     // Add new glazes
-    for (const glazeId of glazesToAdd) {
-      await addPotteryItemGlazeLink(db, itemId, glazeId);
-    }
-
+    await Promise.all(glazesToAdd.map(glazeId => addPotteryItemGlazeLink(db, itemId, glazeId)));
     // Remove unlinked glaze
-    for (const clayId of claysToRemove) {
-      await removePotteryItemGlazeLink(db, itemId, clayId);
-    }
+    await Promise.all(claysToRemove.map(glazeId => removePotteryItemGlazeLink(db, itemId, glazeId)));
+
   }
   //Pictures
   const updateExistingPotteryItemPicture = (db: SQLiteDatabase, itemId: string)=> {
@@ -431,34 +422,44 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
   }
   const handleUpdatePotteryItem = async (updateId: string) => {
     if (pieceName.length < 1) {
-      Alert.alert('Missing Name', 'Please add a name for your project')
-      return
+      Alert.alert('Missing Name', 'Please add a name for your project');
+      return;
     }
     if (clays.length < 1) {
-      Alert.alert('Missing Clay', 'Please add at least one clay to your project.')
-      return
+      Alert.alert('Missing Clay', 'Please add at least one clay to your project.');
+      return;
     }
-    //PotteryItem
-    
-    updateExistingPotteryItem(DB, updateId)
-    //PotteryItemClays
-    updateExistingPotteryItemClays(DB, updateId)
-    //Pictures
-    updateExistingPotteryItemPicture(DB, updateId)
-    //PotteryItemGlazes
-    updateExistingPotteryItemGlazes(DB, updateId)
-    //PotteryItemMeasurements
-    updateExistingPotteryItemMeasurements(DB, updateId)
-    //PotteryItemFiring
-    updateExistingPotteryItemFirings(DB, updateId)
-
-    handleFormClosure()
-    callBackFunction?.()
+  
+    // Perform update actions in sequence
+    try {
+      await updateExistingPotteryItem(DB, updateId);
+      await updateExistingPotteryItemClays(DB, updateId);
+      await updateExistingPotteryItemPicture(DB, updateId);
+      await updateExistingPotteryItemGlazes(DB, updateId);
+      await updateExistingPotteryItemMeasurements(DB, updateId);
+      await updateExistingPotteryItemFirings(DB, updateId);
+  
+      // Close modal after all updates complete
+      handleFormClosure();
+      callBackFunction?.();
+    } catch (error) {
+      console.error('Error updating pottery item:', error);
+    }
   }
+  
   const handleSubmitForm = async () => {  
     initialData ? handleUpdatePotteryItem(initialData.potteryItem.potteryItemId) : handleNewPotteryItem()
   }
-
+const test = async () => {
+  await addPotteryItem(DB, {
+    potteryItemId: "730b365e-67fb-4c4b-8a3d-e23160c557cd",
+    dateCreated: "2024-12-27T05:34:49.302Z",
+    dateEdited: "2024-12-27T05:36:38.072Z",
+    projectTitle: "55",
+    projectNotes: "",
+    displayPicturePath: "",
+  });
+}
   const handleFormClosure = () => {
     setFormVisible(false)
     setPieceName('')
@@ -495,6 +496,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
         onBackButtonPress={handleFormClosure}
         backdropTransitionOutTiming={0}
       >
+        <Button title='test' onPress={test}/>
         <Animated.View
           style={[
             styles.innerContainer,
