@@ -23,9 +23,9 @@ export const addPotteryItemFiring = async (
 ): Promise<void> => {
   const query = `
     INSERT INTO ${POTTERY_ITEM_FIRINGS_TABLE} (firingId, potteryItemId, fireStyle, fireType, cone)
-    VALUES ('${firing.firingId}', '${firing.potteryItemId}', '${firing.fireStyle}', '${firing.fireType}', '${firing.cone}');
+    VALUES (?, ?, ?, ?, ?);
   `
-  await db.execAsync(query)
+  await db.runAsync(query, [firing.firingId, firing.potteryItemId, firing.fireStyle, firing.fireType, firing.cone])
 }
 
 export const getFiringsByPotteryItemId = async (
@@ -35,18 +35,18 @@ export const getFiringsByPotteryItemId = async (
   const query = `
     SELECT *
     FROM ${POTTERY_ITEM_FIRINGS_TABLE}
-    WHERE potteryItemId = '${potteryItemId}';
+    WHERE potteryItemId = ?;
   `
-  const result = await db.getAllAsync(query)
+  const result = await db.getAllAsync(query, [potteryItemId])
   return result ? (result as PotteryItemFirings[]) : null // Returns all firings for the specified pottery item
 }
 
 export const deleteFiring = async (db: SQLiteDatabase, firingId: string): Promise<void> => {
   const query = `
     DELETE FROM ${POTTERY_ITEM_FIRINGS_TABLE}
-    WHERE firingId = '${firingId}';
+    WHERE firingId = ?;
   `
-  await db.execAsync(query)
+  await db.runAsync(query, [firingId])
 }
 
 export const deleteFiringsByPotteryItemId = async (
@@ -55,9 +55,9 @@ export const deleteFiringsByPotteryItemId = async (
 ): Promise<void> => {
   const query = `
     DELETE FROM ${POTTERY_ITEM_FIRINGS_TABLE}
-    WHERE potteryItemId = '${potteryItemId}';
+    WHERE potteryItemId = ?;
   `
-  await db.execAsync(query)
+  await db.runAsync(query, [potteryItemId])
 }
 
 export const deletePotteryItemFiringsTable = async (db: SQLiteDatabase): Promise<void> => {

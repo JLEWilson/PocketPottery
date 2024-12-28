@@ -23,9 +23,9 @@ export const addPotteryItemGlazeLink = async (
 ): Promise<void> => {
   const query = `
     INSERT INTO ${POTTERY_ITEM_GLAZES_TABLE} (potteryItemId, glazeId)
-    VALUES ('${potteryItemId}', '${glazeId}');
+    VALUES (?, ?);
   `
-  await db.execAsync(query)
+  await db.runAsync(query, [potteryItemId, glazeId])
 }
 
 export const removePotteryItemGlazeLink = async (
@@ -35,9 +35,9 @@ export const removePotteryItemGlazeLink = async (
 ): Promise<void> => {
   const query = `
     DELETE FROM ${POTTERY_ITEM_GLAZES_TABLE}
-    WHERE potteryItemId = ${potteryItemId} AND glazeId = ${glazeId};
+    WHERE potteryItemId = ? AND glazeId = ?;
   `
-  await db.execAsync(query)
+  await db.runAsync(query, [potteryItemId, glazeId])
 }
 
 export const getGlazessByPotteryItemId = async (
@@ -75,7 +75,7 @@ export const getAllPotteryItemGlazeLinks = async (
     SELECT * FROM ${POTTERY_ITEM_GLAZES_TABLE};
   `
   const result = await db.getAllAsync(query)
-  return result ? (result as PotteryItemGlazes[]) : null // Returns all links between PotteryItems and Glazes
+  return result ? (result as PotteryItemGlazes[]) : null 
 }
 
 export const deletePotteryItemGlazeTable = async (db: SQLiteDatabase): Promise<void> => {

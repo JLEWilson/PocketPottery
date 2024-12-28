@@ -23,9 +23,9 @@ export const addPotteryItemMeasurement = async (
 ): Promise<void> => {
   const query = `
     INSERT INTO ${POTTERY_ITEM_MEASUREMENTS_TABLE} (measurementId, potteryItemId, name, system, scale)
-    VALUES ('${measurement.measurementId}', '${measurement.potteryItemId}', '${measurement.name}', '${measurement.system}', ${measurement.scale});
+    VALUES (?, ?, ?, ?, ?);
   `
-  await db.execAsync(query)
+  await db.runAsync(query, [measurement.measurementId, measurement.potteryItemId, measurement.name, measurement.system, measurement.scale])
 }
 
 export const getMeasurementsByPotteryItemId = async (
@@ -35,9 +35,9 @@ export const getMeasurementsByPotteryItemId = async (
   const query = `
     SELECT *
     FROM ${POTTERY_ITEM_MEASUREMENTS_TABLE}
-    WHERE potteryItemId = '${potteryItemId}';
+    WHERE potteryItemId = ?;
   `
-  const result = await db.getAllAsync(query)
+  const result = await db.getAllAsync(query, [potteryItemId])
   return result ? (result as PotteryItemMeasurements[]) : null // Returns all measurements for the specified pottery item
 }
 
@@ -47,9 +47,9 @@ export const deleteMeasurement = async (
 ): Promise<void> => {
   const query = `
     DELETE FROM ${POTTERY_ITEM_MEASUREMENTS_TABLE}
-    WHERE measurementId = '${measurementId}';
+    WHERE measurementId = ?;
   `
-  await db.execAsync(query)
+  await db.runAsync(query, [measurementId])
 }
 
 export const deleteMeasurementsByPotteryItemId = async (
@@ -58,9 +58,9 @@ export const deleteMeasurementsByPotteryItemId = async (
 ): Promise<void> => {
   const query = `
     DELETE FROM ${POTTERY_ITEM_MEASUREMENTS_TABLE}
-    WHERE potteryItemId = '${potteryItemId}';
+    WHERE potteryItemId = ?;
   `
-  await db.execAsync(query)
+  await db.runAsync(query, [potteryItemId])
 }
 
 export const deletePotteryItemMeasurementsTable = async (db: SQLiteDatabase): Promise<void> => {

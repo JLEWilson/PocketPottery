@@ -31,32 +31,33 @@ export const addGlaze = async (db: SQLiteDatabase, glaze: Glaze) => {
   const addQuery = `
 	INSERT INTO ${TABLE_NAME} (
 	glazeId, name, manufacturer, notes
-	) VALUES (
-		'${glaze.glazeId}', 
-		'${glaze.name}', 
-		'${glaze.manufacturer}', 
-		'${glaze.notes}'
-	);`
+	) VALUES (?, ?, ?, ?);`
 
-  await db.execAsync(addQuery)
+  await db.runAsync(addQuery, [glaze.glazeId, glaze.name, glaze.manufacturer, glaze.notes])
 }
 
-export const updateGlaze = async (db: SQLiteDatabase, glaze: Glaze) => {
+export const updateGlaze = async (db: SQLiteDatabase, glaze: Glaze): Promise<void> => {
   const updateQuery = `
     UPDATE ${TABLE_NAME}
     SET 
-		name = '${glaze.name}',
-		manufacturer = '${glaze.manufacturer}', 
-		notes = '${glaze.notes}'
-    WHERE clayId = '${glaze.glazeId}';`
+      name = ?, 
+      manufacturer = ?, 
+      notes = ?
+    WHERE glazeId = ?;
+  `;
 
-  await db.execAsync(updateQuery)
-  console.log('Glaze updated successfully!')
-}
+  try {
+    await db.runAsync(updateQuery, [glaze.name, glaze.manufacturer, glaze.notes, glaze.glazeId]);
+    console.log('Glaze updated successfully!');
+  } catch (error) {
+    console.error('Error updating glaze:', error);
+    throw error;
+  }
+};
 
 export const deleteGlazeById = async (db: SQLiteDatabase, id: string) => {
-  const deleteQuery = `DELETE FROM ${TABLE_NAME} WHERE glazeId = ${id}`
-  await db.execAsync(deleteQuery)
+  const deleteQuery = `DELETE FROM ${TABLE_NAME} WHERE glazeId = ?`
+  await db.runAsync(deleteQuery, id)
 }
 
 export const deleteGlazeTable = async (db: SQLiteDatabase) => {

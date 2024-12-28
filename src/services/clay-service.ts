@@ -31,31 +31,26 @@ export const addClay = async (db: SQLiteDatabase, clay: Clay) => {
   const addQuery = `
 	INSERT INTO ${TABLE_NAME} (
 	clayId, name, manufacturer, notes
-	) VALUES (
-		'${clay.clayId}', 
-		'${clay.name}', 
-		'${clay.manufacturer}', 
-		'${clay.notes}'
-	);`
+	) VALUES (?, ?, ?, ?);`
 
-  await db.execAsync(addQuery)
+  await db.runAsync(addQuery, [clay.clayId, clay.name, clay.manufacturer, clay.notes])
 }
 
 export const updateClay = async (db: SQLiteDatabase, clay: Clay) => {
   const updateQuery = `
     UPDATE ${TABLE_NAME}
-    SET 
-		name = '${clay.name}',
-		manufacturer = '${clay.manufacturer}', 
-		notes = '${clay.notes}'
-    WHERE clayId = '${clay.clayId}';`
+    SET
+      name = ?, 
+      manufacturer = ?, 
+      notes = ?
+		WHERE clayId = ?;`
 
-  await db.execAsync(updateQuery)
+  await db.runSync(updateQuery, [clay.name, clay.manufacturer, clay.notes, clay.clayId])
 }
 
 export const deleteClayById = async (db: SQLiteDatabase, id: string) => {
-  const deleteQuery = `DELETE FROM ${TABLE_NAME} WHERE clayId = ${id}`
-  await db.execAsync(deleteQuery)
+  const deleteQuery = `DELETE FROM ${TABLE_NAME} WHERE clayId = ?`
+  await db.runAsync(deleteQuery, id)
 }
 
 export const deleteClayTable = async (db: SQLiteDatabase) => {
