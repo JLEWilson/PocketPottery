@@ -1,7 +1,7 @@
 import './gesture-handler'
 import React, { useState } from 'react'
 import { DatabaseProvider } from './src/services/db-context'
-import { useColorScheme, StatusBar, Appearance, View } from 'react-native'
+import { useColorScheme, StatusBar, Appearance, View, Text } from 'react-native'
 import PotteryItemList from './src/components/PotteryItemsList'
 import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native'
 import MyTabBar, { RootStackParamList, RootTabParamList } from './src/components/MyTabBar'
@@ -87,7 +87,7 @@ const App = () => {
         },
         headerTitleAlign: 'center',
         headerRight: () => 
-          <View style={{ marginRight: 15, marginTop: 15 }}>
+          <View style={{ position: 'absolute', right: 15, top: 15 }}>
             <AnimatedPressable style={{ padding: 5 }} onPress={() => setSettingsModalVisible(true)}>
               <Ionicons name="settings" size={20} color={myTheme.colors.text} />
             </AnimatedPressable>
@@ -99,7 +99,7 @@ const App = () => {
         component={ClaysList}
         key="ClaysList"
         options={{
-          title: 'My Clays',
+          title: 'Clays',
           headerShown: true,
           tabBarIcon: ({ color, size }) => <Ionicons name="cube" color={color} size={size} />,
         }}
@@ -109,8 +109,22 @@ const App = () => {
         component={PotteryItemList}
         key="PotteryItemsList"
         options={{
-          title: 'Pocket Pottery',
           headerShown: true,
+          title: 'Pieces',
+          headerTitle: () => (
+            <Text
+              style={{
+                color: myTheme.colors.text,
+                fontFamily: 'title',
+                fontSize: 28,
+                textAlign: 'center',
+                textAlignVertical: 'center',
+                flex: 1, // Ensures centering in the available space
+              }}
+            >
+              Pocket Pottery
+            </Text>
+          ),
           headerTitleAlign: 'center',
           tabBarIcon: ({ color, size }) => <Ionicons name="cafe" color={color} size={size} />,
         }}
@@ -120,7 +134,7 @@ const App = () => {
         component={GlazesList}
         key="GlazesList"
         options={{
-          title: 'My Glazes',
+          title: 'Glazes',
           headerShown: true,
           tabBarIcon: ({ color, size }) => <Ionicons name="water" color={color} size={size} />,
         }}
