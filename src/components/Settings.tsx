@@ -1,7 +1,7 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native'
-import React, { useState } from 'react'
+import { BackHandler, Pressable, StyleSheet, Text, View } from 'react-native'
+import React, { useEffect, useState } from 'react'
 import { Ionicons } from '@expo/vector-icons'
-import { useTheme } from '@react-navigation/native'
+import { useFocusEffect, useTheme } from '@react-navigation/native'
 import Modal from 'react-native-modal'
 import AnimatedPressable from './AnimatedPressable'
 import { useDatabase } from '../services/db-context'
@@ -12,18 +12,21 @@ import { resetGlazeTable } from '../services/glaze-service'
 import { resetPotteryItemGlazesTable } from '../services/potteryItem-glaze-service'
 import { resetFiringsTable } from '../services/potteryItem-firing-service'
 import { resetMeasurementsTable } from '../services/potteryItem-measurements-service'
+import globalStyles from '../globalStyles/stylesheet'
 
 type SettingsModalProps = {
-  isDarkMode: boolean
-  setDarkMode: (b: boolean) => void
+  isDarkMode: boolean,
+  setDarkMode: (b: boolean) => void,
+  isModalVisible: boolean,
+  setModalVisible: (b: boolean) => void
 }
 
-const SettingsModal = ({ isDarkMode, setDarkMode }: SettingsModalProps) => {
+const SettingsModal = ({ isDarkMode, setDarkMode, isModalVisible, setModalVisible}: SettingsModalProps) => {
   const { colors } = useTheme()
   const DB = useDatabase()
-  const [isModalVisible, setModalVisible] = useState(false)
 
   const resetAllData = async () => {
+    //Will probably have to have a loading screen during this function because all other views will change
     try {
       // Reset all tables
       await resetPotteryItemTable(DB)
@@ -42,33 +45,55 @@ const SettingsModal = ({ isDarkMode, setDarkMode }: SettingsModalProps) => {
   }
 
   return (
-    <View>
-      <View style={{ marginRight: 10 }}>
-        <AnimatedPressable style={{ padding: 5 }} onPress={() => setModalVisible(true)}>
-          <Ionicons name="settings" size={20} color={colors.text} />
-        </AnimatedPressable>
-      </View>
       <Modal
         isVisible={isModalVisible}
         animationIn={'zoomIn'}
-        animationInTiming={750}
         animationOut={'zoomOut'}
+        animationInTiming={750}
         animationOutTiming={750}
-        backdropColor={colors.text}
+        backdropColor={colors.border}
         backdropOpacity={0.8}
         onBackdropPress={() => setModalVisible(false)}
         onBackButtonPress={() => setModalVisible(false)}
         backdropTransitionOutTiming={0}
       >
         <View
-          style={[styles.modal, { backgroundColor: colors.background, borderColor: colors.border }]}
+          style={[
+            styles.container,
+            { backgroundColor: colors.background, borderColor: colors.border },
+          ]}
         >
-          <AnimatedPressable
-            style={[styles.button, { backgroundColor: colors.primary, borderColor: colors.border }]}
-            onPress={() => setDarkMode(!isDarkMode)}
+          <View style={{position: 'absolute', top: 0, alignSelf: 'center'}}>
+            <Text style={{ fontFamily: 'title', textAlign: 'center', fontSize: 26, color: colors.text}}>
+              Settings
+            </Text>
+          </View>
+          <View style={[globalStyles.radio, { borderColor: colors.border }]}>
+          <Pressable
+            onPress={() => setDarkMode(true)}
+            style={[
+              globalStyles.radioButton,
+              { borderColor: colors.border, padding: 10},
+              isDarkMode
+                ? { backgroundColor: '#88A78C' }
+                : { backgroundColor: '#CBB5C2' },
+            ]}
           >
-            <Text>Settings</Text>
-          </AnimatedPressable>
+            <Text>DarkMode</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => setDarkMode(false)}
+            style={[
+              globalStyles.radioButton,
+              { borderColor: colors.border },
+              !isDarkMode
+                ? { backgroundColor: '#88A78C' }
+                : { backgroundColor: '#CBB5C2' },
+            ]}
+          >
+            <Text>Light Mode</Text>
+          </Pressable>
+        </View>
           <AnimatedPressable
             style={[styles.button, { backgroundColor: colors.primary, borderColor: colors.border }]}
             onPress={resetAllData}
@@ -77,7 +102,6 @@ const SettingsModal = ({ isDarkMode, setDarkMode }: SettingsModalProps) => {
           </AnimatedPressable>
         </View>
       </Modal>
-    </View>
   )
 }
 
@@ -85,16 +109,20 @@ export default SettingsModal
 
 const styles = StyleSheet.create({
   modal: {
+    flex: 1,
+  },
+  container: {
+    height: 500,
     borderWidth: 1,
     borderRadius: 10,
-    height: 500,
+    justifyContent: 'space-evenly',
+    padding: 25,
   },
   button: {
-    padding: 4,
+    padding: 10,
     borderWidth: 1,
     borderRadius: 5,
-    alignSelf: 'center',
     justifyContent: 'center',
-    textAlign: 'center',
+    alignItems: 'center',
   },
 })
