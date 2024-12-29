@@ -109,7 +109,7 @@ useFocusEffect(
             { backgroundColor: colors.primary, borderColor: colors.border },
           ]}
         >
-          <Text style={[{ color: colors.text, fontFamily: 'textBold', fontSize: 20 }, { flex: 1, textAlign: 'center' },]}>
+          <Text style={[{ color: colors.text, fontFamily: 'textBold', fontSize: 20 , textAlign: 'center', padding: 1}]}>
             New Project
           </Text>
         </AnimatedPressable>
