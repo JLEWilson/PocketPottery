@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View, Pressable, TextInput } from 'react-native'
 import React, { useState } from 'react'
 import type { PotteryItemMeasurements } from '../models'
-import globalStyles from '../globalStyles/stylesheet'
+import globalStyles from '../constants/stylesheet'
 import { useTheme } from '@react-navigation/native'
 import AnimatedPressable from './AnimatedPressable'
 

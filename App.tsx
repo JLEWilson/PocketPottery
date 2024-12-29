@@ -111,6 +111,7 @@ const App = () => {
         options={{
           title: 'Pocket Pottery',
           headerShown: true,
+          headerTitleAlign: 'center',
           tabBarIcon: ({ color, size }) => <Ionicons name="cafe" color={color} size={size} />,
         }}
       />

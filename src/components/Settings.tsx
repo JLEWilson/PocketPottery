@@ -12,7 +12,7 @@ import { resetGlazeTable } from '../services/glaze-service'
 import { resetPotteryItemGlazesTable } from '../services/potteryItem-glaze-service'
 import { resetFiringsTable } from '../services/potteryItem-firing-service'
 import { resetMeasurementsTable } from '../services/potteryItem-measurements-service'
-import globalStyles from '../globalStyles/stylesheet'
+import globalStyles from '../constants/stylesheet'
 
 type SettingsModalProps = {
   isDarkMode: boolean,

@@ -31,7 +31,7 @@ import { addPotteryItem, updatePotteryItem } from '../services/potteryItem-servi
 import type { SQLiteDatabase } from 'expo-sqlite'
 import { useDatabase } from '../services/db-context'
 import NewMeasurement from './NewMeasurement'
-import globalStyles from '../globalStyles/stylesheet'
+import globalStyles from '../constants/stylesheet'
 import NewFiring from './NewFiring'
 import CollapsibleSection from './CollapsibleSection'
 import { useTheme } from '@react-navigation/native'

@@ -32,7 +32,7 @@ import { RootStackParamList, RootTabParamList } from './MyTabBar'
 // import { resetGlazeTable } from '../services/glaze-service'
 // ad this on reset button in settings
 import AnimatedPressable from './AnimatedPressable'
-import globalStyles from '../globalStyles/stylesheet'
+import globalStyles from '../constants/stylesheet'
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
 
 type PotteryItemsStackNavigationProp = StackNavigationProp<RootStackParamList, 'PotteryItemView'>
@@ -109,7 +109,7 @@ useFocusEffect(
             { backgroundColor: colors.primary, borderColor: colors.border },
           ]}
         >
-          <Text style={[{ color: colors.text, fontFamily: 'textBold', fontSize: 20 }]}>
+          <Text style={[{ color: colors.text, fontFamily: 'textBold', fontSize: 20 }, { flex: 1, textAlign: 'center' },]}>
             New Project
           </Text>
         </AnimatedPressable>

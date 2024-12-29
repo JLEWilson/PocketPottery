@@ -77,6 +77,8 @@ export default function MyTabBar({ state, descriptors, navigation }: BottomTabBa
                   color: isFocused ? colors.text : colors.background,
                   marginTop: -3,
                   fontFamily: 'text',
+                  flex: 1, 
+                  textAlign: 'center',
                 }}
               >
                 {label}

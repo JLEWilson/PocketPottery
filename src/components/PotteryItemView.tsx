@@ -24,7 +24,7 @@ import { deleteMeasurementsByPotteryItemId, getMeasurementsByPotteryItemId } fro
 import { ScrollView } from 'react-native-gesture-handler'
 import { useTheme } from '@react-navigation/native'
 import AnimatedPressable from './AnimatedPressable'
-import globalStyles from '../globalStyles/stylesheet'
+import globalStyles from '../constants/stylesheet'
 import NewPotteryItem from './NewPotteryItem'
 import Modal from 'react-native-modal'
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
