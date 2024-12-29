@@ -1,7 +1,7 @@
 import './gesture-handler'
 import React, { useState } from 'react'
 import { DatabaseProvider } from './src/services/db-context'
-import { useColorScheme, StatusBar } from 'react-native'
+import { useColorScheme, StatusBar, Appearance, View } from 'react-native'
 import PotteryItemList from './src/components/PotteryItemsList'
 import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native'
 import MyTabBar, { RootStackParamList, RootTabParamList } from './src/components/MyTabBar'
@@ -20,6 +20,8 @@ import {
 } from '@expo-google-fonts/montserrat-alternates'
 import { Aladin_400Regular } from '@expo-google-fonts/aladin'
 import { AveriaLibre_400Regular, AveriaLibre_700Bold } from '@expo-google-fonts/averia-libre'
+import { setStatusBarStyle } from 'expo-status-bar'
+import AnimatedPressable from './src/components/AnimatedPressable'
 
 const MyLightTheme = {
   ...DefaultTheme,
@@ -50,8 +52,12 @@ const Tab = createBottomTabNavigator<RootTabParamList>()
 const Stack = createStackNavigator<RootStackParamList>()
 
 const App = () => {
-  const [isDarkMode, setIsDarkMode] = useState(false)
-  const myTheme = isDarkMode ? MyDarkTheme : MyLightTheme
+  const [colorScheme, setColorScheme] = useState(
+    Appearance.getColorScheme() || 'light'
+  );
+  const [isSettingsModalVisible, setSettingsModalVisible] = useState(false)
+  const [quickLoad, setQuickLoad] = useState(false)
+  const myTheme = colorScheme === 'dark' ? MyDarkTheme : MyLightTheme
   let [fontsLoaded] = useFonts({
     title: Aladin_400Regular,
     heading: AveriaLibre_400Regular,
@@ -59,6 +65,9 @@ const App = () => {
     text: MontserratAlternates_400Regular,
     textBold: MontserratAlternates_700Bold,
   })
+  const toggleTheme = (b: boolean) => {
+    setColorScheme(b ? 'dark' : 'light');
+  };
 
   const TabNavigator = () => (
     <Tab.Navigator
@@ -77,7 +86,12 @@ const App = () => {
           fontSize: 28,
         },
         headerTitleAlign: 'center',
-        headerRight: () => <SettingsModal isDarkMode={isDarkMode} setDarkMode={setIsDarkMode} />,
+        headerRight: () => 
+          <View style={{ marginRight: 15, marginTop: 15 }}>
+            <AnimatedPressable style={{ padding: 5 }} onPress={() => setSettingsModalVisible(true)}>
+              <Ionicons name="settings" size={20} color={myTheme.colors.text} />
+            </AnimatedPressable>
+          </View>,
       }}
     >
       <Tab.Screen
@@ -115,7 +129,7 @@ const App = () => {
   return (
     <DatabaseProvider>
       <NavigationContainer theme={myTheme}>
-        <StatusBar />
+        <StatusBar backgroundColor={myTheme.colors.background} barStyle={colorScheme === 'light' ? 'light-content':'dark-content'} />
         <Stack.Navigator
           screenOptions={{
             headerStyle: {
@@ -137,17 +151,23 @@ const App = () => {
           <Stack.Screen
             name="Tabs"
             component={TabNavigator}
-            options={{ headerShown: false }} // Hide the stack header for tabs
+            options={{ headerShown: false }}
           />
           <Stack.Screen
             name="PotteryItemView"
             component={PotteryItemView}
             initialParams={{ id: '123' }}
             options={{
-              title: 'PotteryItemView', // Header title for this screen
+              title: 'PotteryItemView',
             }}
           />
         </Stack.Navigator>
+        <SettingsModal 
+          isDarkMode={colorScheme === 'dark'} 
+          setDarkMode={toggleTheme} 
+          isModalVisible={isSettingsModalVisible} 
+          setModalVisible={setSettingsModalVisible}
+          />
       </NavigationContainer>
     </DatabaseProvider>
   )
