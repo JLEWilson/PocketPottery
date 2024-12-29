@@ -6,7 +6,7 @@ import NewClay from './NewClay'
 import { useDatabase } from '../services/db-context'
 import { createClayTable, getClays } from '../services/clay-service'
 import globalStyles from '../globalStyles/stylesheet'
-import { useFocusEffect, useNavigation, useTheme } from '@react-navigation/native'
+import { useFocusEffect, useIsFocused, useNavigation, useTheme } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
 import AnimatedPressable from './AnimatedPressable'
 import { RootTabParamList } from './MyTabBar'
@@ -22,6 +22,7 @@ type PotteryItemsListNavigationProp = BottomTabNavigationProp<RootTabParamList, 
 function ClaysList({ onClaySelect, children }: ClaysListProps) {
   const DB = useDatabase()
   const navigation = useNavigation<PotteryItemsListNavigationProp>()
+  const isFocused = useIsFocused()
   const { colors } = useTheme()
   const [selectedClay, setSelectedClay] = useState<Clay>()
   const [allClays, setAllClays] = useState<Clay[]>([])
@@ -59,8 +60,11 @@ function ClaysList({ onClaySelect, children }: ClaysListProps) {
   )
 
   useEffect(() => {
-    loadDataCallback()
-  }, [loadDataCallback, reload])
+    if (isFocused) {
+      loadDataCallback(); 
+    }
+  }, [isFocused, reload, loadDataCallback]);
+  
 
   const handleClaySelect = (c: Clay) => {
     setSelectedClay(c)
@@ -105,7 +109,7 @@ function ClaysList({ onClaySelect, children }: ClaysListProps) {
             { backgroundColor: colors.primary, borderColor: colors.border },
           ]}
         >
-          <Text style={[{ color: colors.text, fontFamily: 'textBold', fontSize: 16 }]}>
+          <Text style={[{ color: colors.text, fontFamily: 'textBold', fontSize: 16 }, onClaySelect == undefined ? {fontSize: 20 } : {fontSize: 16}]}>
             New Clay
           </Text>
         </AnimatedPressable>
@@ -117,7 +121,7 @@ function ClaysList({ onClaySelect, children }: ClaysListProps) {
         animationInTiming={750}
         animationOut={'zoomOut'}
         animationOutTiming={750}
-        backdropColor={colors.text}
+        backdropColor={colors.border}
         backdropOpacity={0.5}
         onBackdropPress={() => setNewClayFormVisible(false)}
         onBackButtonPress={() => setNewClayFormVisible(false)}

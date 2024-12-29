@@ -150,7 +150,7 @@ const NewFiring = ({ callbackFunction }: NewFiringProps) => {
         animationInTiming={750}
         animationOut={'zoomOut'}
         animationOutTiming={750}
-        backdropColor={colors.text}
+        backdropColor={colors.border}
         backdropOpacity={0.5}
         backdropTransitionOutTiming={0}
       >

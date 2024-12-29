@@ -6,7 +6,7 @@ import NewGlaze from './NewGlaze'
 import { useDatabase } from '../services/db-context'
 import { createGlazeTable, getGlazes } from '../services/glaze-service'
 import globalStyles from '../globalStyles/stylesheet'
-import { useFocusEffect, useNavigation, useTheme } from '@react-navigation/native'
+import { useFocusEffect, useIsFocused, useNavigation, useTheme } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
 import AnimatedPressable from './AnimatedPressable'
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
@@ -22,6 +22,7 @@ type PotteryItemsListNavigationProp = BottomTabNavigationProp<RootTabParamList, 
 function GlazesList({ children, onGlazeSelect }: GlazesListProps) {
   const DB = useDatabase()
   const navigation = useNavigation<PotteryItemsListNavigationProp>()
+  const isFocused = useIsFocused()
   const { colors } = useTheme()
   const [selectedGlaze, setSelectedGlaze] = useState<Glaze>()
   const [allGlazes, setAllGlazes] = useState<Glaze[]>([])
@@ -59,8 +60,10 @@ function GlazesList({ children, onGlazeSelect }: GlazesListProps) {
   )
 
   useEffect(() => {
-    loadDataCallback()
-  }, [loadDataCallback, reload])
+    if (isFocused) {
+      loadDataCallback(); 
+    }
+  }, [isFocused, reload, loadDataCallback]);
 
   const handleGlazeSelect = (g: Glaze) => {
     setSelectedGlaze(g)
@@ -105,7 +108,7 @@ function GlazesList({ children, onGlazeSelect }: GlazesListProps) {
             { backgroundColor: colors.primary, borderColor: colors.border },
           ]}
         >
-          <Text style={[{ color: colors.text, fontFamily: 'textBold', fontSize: 16 }]}>
+          <Text style={[{ color: colors.text, fontFamily: 'textBold'}, onGlazeSelect == undefined ? {fontSize: 20 } : {fontSize: 16}]}>
             New Glaze
           </Text>
         </AnimatedPressable>
@@ -117,7 +120,7 @@ function GlazesList({ children, onGlazeSelect }: GlazesListProps) {
         animationInTiming={750}
         animationOut={'zoomOut'}
         animationOutTiming={750}
-        backdropColor={colors.text}
+        backdropColor={colors.border}
         backdropOpacity={0.5}
         onBackdropPress={() => setNewGlazeFormVisible(false)}
         onBackButtonPress={() => setNewGlazeFormVisible(false)}

@@ -13,29 +13,32 @@ import {
 import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { Ionicons } from '@expo/vector-icons'
 import { useDatabase } from '../services/db-context'
-import { getPotteryItemById } from '../services/potteryItem-service'
+import { deletePotteryItemById, getPotteryItemById } from '../services/potteryItem-service'
 import { PotteryItem, Clay, Glaze, PotteryItemFirings, PotteryItemMeasurements } from '../models'
-import { getClaysByPotteryItemId } from '../services/potteryItem-clays-service'
+import { getClaysByPotteryItemId, removePotteryItemClayLink } from '../services/potteryItem-clays-service'
 import { RouteProp, useNavigation } from '@react-navigation/native'
-import { RootStackParamList } from './MyTabBar'
-import { getGlazessByPotteryItemId } from '../services/potteryItem-glaze-service'
-import { getFiringsByPotteryItemId } from '../services/potteryItem-firing-service'
-import { getMeasurementsByPotteryItemId } from '../services/potteryItem-measurements-service'
+import { RootStackParamList, RootTabParamList } from './MyTabBar'
+import { getGlazessByPotteryItemId, removePotteryItemGlazeLink } from '../services/potteryItem-glaze-service'
+import { deleteFiringsByPotteryItemId, getFiringsByPotteryItemId } from '../services/potteryItem-firing-service'
+import { deleteMeasurementsByPotteryItemId, getMeasurementsByPotteryItemId } from '../services/potteryItem-measurements-service'
 import { ScrollView } from 'react-native-gesture-handler'
 import { useTheme } from '@react-navigation/native'
 import AnimatedPressable from './AnimatedPressable'
 import globalStyles from '../globalStyles/stylesheet'
 import NewPotteryItem from './NewPotteryItem'
+import Modal from 'react-native-modal'
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
 
 export type PotteryItemViewProps = {
   route: RouteProp<RootStackParamList, 'PotteryItemView'>
 }
+type PotteryItemsListNavigationProp = BottomTabNavigationProp<RootTabParamList, 'PotteryItemsList'>
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity)
 
 const PotteryItemView = ({ route }: PotteryItemViewProps) => {
   const { id } = route.params
-  const navigation = useNavigation()
+  const navigation = useNavigation<PotteryItemsListNavigationProp>()
   const { colors } = useTheme()
   const DB = useDatabase()
   const [reload, setReload] = useState(false)
@@ -209,6 +212,15 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
     return numLines * lineHeight
   }
 
+  const handleDeletePotteryItem = async (id: string) => {
+
+    await deletePotteryItemById(DB, id)
+    await deleteFiringsByPotteryItemId(DB, id)
+    await deleteMeasurementsByPotteryItemId(DB, id)
+    await Promise.all(clays.map(c => removePotteryItemClayLink(DB, id, c.clayId)));
+    await Promise.all(glazes.map(g => removePotteryItemGlazeLink(DB, id, g.glazeId)));
+    navigation.navigate('PotteryItemsList')
+  }
   return (
     <View style={styles.container}>
       {error && <Text style={styles.errorText}>{error}</Text>}
@@ -541,6 +553,31 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
               firings: firings,
             }}
           />
+          <Modal 
+            isVisible={isDeleteModalVisible}
+            animationIn={'zoomIn'}
+            animationInTiming={750}
+            animationOut={'zoomOut'}
+            animationOutTiming={750}
+            backdropColor={colors.border}
+            backdropOpacity={0.8}
+            onBackdropPress={() => setDeleteModalVisible(false)}
+            onBackButtonPress={() => setDeleteModalVisible(false)}
+            backdropTransitionOutTiming={0}
+          >
+            <View style={[styles.deleteModal, {backgroundColor: colors.background, borderColor: colors.border}]}>
+              <Text style={{fontSize: 18, color: colors.text, fontFamily: 'heading', textAlign: 'center'}}>Are you sure you want to delete</Text>
+              <Text style={{fontSize: 18, color: colors.text, fontFamily: 'heading', textAlign: 'center'}}>{potteryItem.projectTitle}?</Text>
+              <View style={{flexDirection: 'row', flex: 1,justifyContent: 'space-evenly', alignItems:'center'}}>
+                <AnimatedPressable style={[styles.deleteModalButtons, {backgroundColor: colors.primary, borderColor: colors.border}]} onPress={() => setDeleteModalVisible(false)}>
+                  <Text style={[styles.deleteModalButtonText, {color: colors.text}]}>Cancel</Text>
+                </AnimatedPressable>
+                <AnimatedPressable style={[styles.deleteModalButtons, {backgroundColor: colors.notification, borderColor: colors.border}]} onPress={() => handleDeletePotteryItem(potteryItem.potteryItemId)}>
+                  <Text style={[styles.deleteModalButtonText, {color: colors.text}]}>Delete</Text>
+                </AnimatedPressable>
+              </View>
+            </View>
+          </Modal>
         </View>
       )
       )}
@@ -604,4 +641,19 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     overflow: 'hidden',
   },
+  deleteModal: {
+    borderWidth: 1,
+    borderRadius: 8,
+    height: 150,
+    padding: 10
+  },
+  deleteModalButtons: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 6,
+    borderWidth: 1
+  },
+  deleteModalButtonText: {
+    fontSize: 16
+  }
 })

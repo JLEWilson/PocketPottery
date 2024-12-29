@@ -17,6 +17,7 @@ import Modal from 'react-native-modal'
 import ClaysList from './ClaysList'
 import GlazesList from './GlazesList'
 import * as ImagePicker from 'expo-image-picker'
+import * as NavigationBar from 'expo-navigation-bar';
 import {
   type PotteryItem,
   type Glaze,
@@ -147,8 +148,6 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
 
     animateHeight(targetHeight, 300)
   }, [isContentExpanded, isKeyboardOpen, maxHeight, minHeight, clayViewHeight])
-
-  useEffect(() => {}, [clayViewHeight])
 
   const handleClayOutputResize = (height: number) => {
     setClayViewHeight(height)
@@ -450,16 +449,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
   const handleSubmitForm = async () => {  
     initialData ? handleUpdatePotteryItem(initialData.potteryItem.potteryItemId) : handleNewPotteryItem()
   }
-const test = async () => {
-  await addPotteryItem(DB, {
-    potteryItemId: "730b365e-67fb-4c4b-8a3d-e23160c557cd",
-    dateCreated: "2024-12-27T05:34:49.302Z",
-    dateEdited: "2024-12-27T05:36:38.072Z",
-    projectTitle: "55",
-    projectNotes: "",
-    displayPicturePath: "",
-  });
-}
+
   const handleFormClosure = () => {
     setFormVisible(false)
     setPieceName('')
@@ -483,20 +473,18 @@ const test = async () => {
 
   return (
     <View style={{ backgroundColor: colors.background }}>
-      
       <Modal
         isVisible={formVisible}
         animationIn={'fadeInDownBig'}
         animationInTiming={750}
         animationOut={'fadeOutUpBig'}
         animationOutTiming={750}
-        backdropColor={colors.text}
+        backdropColor={colors.border}
         backdropOpacity={0.7}
         onBackdropPress={handleFormClosure}
         onBackButtonPress={handleFormClosure}
         backdropTransitionOutTiming={0}
       >
-        <Button title='test' onPress={test}/>
         <Animated.View
           style={[
             styles.innerContainer,
@@ -859,7 +847,7 @@ const test = async () => {
         animationInTiming={750}
         animationOut={'zoomOut'}
         animationOutTiming={750}
-        backdropColor={colors.text}
+        backdropColor={colors.border}
         backdropOpacity={0.2}
         onBackdropPress={() => setImageModalVisible(false)}
         onBackButtonPress={() => setImageModalVisible(false)}
@@ -900,8 +888,8 @@ const test = async () => {
         animationInTiming={750}
         animationOut={'zoomOut'}
         animationOutTiming={750}
-        backdropColor={colors.text}
-        backdropOpacity={0.2}
+        backdropColor={colors.border}
+        backdropOpacity={0.4}
         onBackdropPress={() => setMeasurementFormVisible(false)}
         onBackButtonPress={() => setMeasurementFormVisible(false)}
         backdropTransitionOutTiming={0}
@@ -915,15 +903,15 @@ const test = async () => {
         animationInTiming={750}
         animationOut={'zoomOut'}
         animationOutTiming={750}
-        backdropColor={colors.text}
-        backdropOpacity={0.2}
+        backdropColor={colors.border}
+        backdropOpacity={0.4}
         onBackButtonPress={() => setClayFormVisible(false)}
         onBackdropPress={() => setClayFormVisible(false)}
         backdropTransitionOutTiming={0}
       >
         <View
           style={{
-            height: '60%',
+            height: 450,
             borderWidth: 1,
             borderColor: colors.border,
             backgroundColor: colors.background,
@@ -961,15 +949,15 @@ const test = async () => {
         animationInTiming={750}
         animationOut={'zoomOut'}
         animationOutTiming={750}
-        backdropColor={colors.text}
-        backdropOpacity={0.2}
+        backdropColor={colors.border}
+        backdropOpacity={0.4}
         onBackButtonPress={() => setGlazeFormVisible(false)}
         onBackdropPress={() => setGlazeFormVisible(false)}
         backdropTransitionOutTiming={0}
       >
         <View
           style={{
-            height: '60%',
+            height: 450,
             borderWidth: 1,
             borderColor: colors.border,
             backgroundColor: colors.background,
@@ -1007,8 +995,8 @@ const test = async () => {
         animationInTiming={750}
         animationOut={'zoomOut'}
         animationOutTiming={750}
-        backdropColor={colors.text}
-        backdropOpacity={0.2}
+        backdropColor={colors.border}
+        backdropOpacity={0.4}
         onBackButtonPress={() => setFiringFormVisible(false)}
         onBackdropPress={() => setFiringFormVisible(false)}
         backdropTransitionOutTiming={0}

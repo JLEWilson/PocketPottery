@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { ScrollView, StyleSheet, Text, View, Button } from 'react-native'
+import { ScrollView, StyleSheet, Text, View, BackHandler } from 'react-native'
 import { PotteryItemComponent } from './PotteryItem'
 import { PotteryItem } from '../models'
 import { useDatabase } from '../services/db-context'
@@ -9,7 +9,7 @@ import {
   resetPotteryItemTable,
 } from '../services/potteryItem-service'
 import NewPotteryItem from '../components/NewPotteryItem'
-import { useNavigation, useTheme } from '@react-navigation/native'
+import { useFocusEffect, useIsFocused, useNavigation, useTheme } from '@react-navigation/native'
 import {
   createPotteryItemFiringsTable,
   resetFiringsTable,
@@ -27,19 +27,23 @@ import {
   resetMeasurementsTable,
 } from '../services/potteryItem-measurements-service'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { RootStackParamList } from './MyTabBar'
+import { RootStackParamList, RootTabParamList } from './MyTabBar'
 // import { resetClayTable } from '../services/clay-service'
 // import { resetGlazeTable } from '../services/glaze-service'
 // ad this on reset button in settings
 import AnimatedPressable from './AnimatedPressable'
 import globalStyles from '../globalStyles/stylesheet'
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
 
-type PotteryItemsListNavigationProp = StackNavigationProp<RootStackParamList, 'PotteryItemView'>
+type PotteryItemsStackNavigationProp = StackNavigationProp<RootStackParamList, 'PotteryItemView'>
+type PotteryItemsBottomNavigationProp = BottomTabNavigationProp<RootTabParamList, 'PotteryItemsList'>
 
 const PotteryItemList = () => {
   const DB = useDatabase()
   const { colors } = useTheme()
-  const nav = useNavigation<PotteryItemsListNavigationProp>()
+  const isFocused = useIsFocused()
+  const nav = useNavigation<PotteryItemsStackNavigationProp>()
+  const navigation = useNavigation<PotteryItemsBottomNavigationProp>()
   const [potteryItems, setPotteryItems] = useState<PotteryItem[]>([])
   const [reload, setReload] = useState(false)
   const [formVisible, setFormVisible] = useState(false)
@@ -63,12 +67,27 @@ const PotteryItemList = () => {
       }
     }
   }, [DB, reload])
+useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        BackHandler.exitApp()
+        return true
+      }
 
+      // Add back handler
+      BackHandler.addEventListener('hardwareBackPress', onBackPress)
+
+      // Cleanup the handler when the screen is unfocused
+      return () => BackHandler.removeEventListener('hardwareBackPress', onBackPress)
+    }, [navigation]),
+  )
   useEffect(() => {
-    loadDataCallback()
-  }, [loadDataCallback, reload])
+    if (isFocused) {
+      loadDataCallback(); 
+    }
+  }, [isFocused, reload, loadDataCallback]);
 
-  const handleFormSubmission = () => {
+  const handleReload = () => {
     setReload((prev) => !prev)
   }
   const handlePress = (id: string) => {
@@ -95,7 +114,7 @@ const PotteryItemList = () => {
           </Text>
         </AnimatedPressable>
       </View>
-      <NewPotteryItem callBackFunction={handleFormSubmission} formVisible={formVisible} setFormVisible={setFormVisible} />
+      <NewPotteryItem callBackFunction={handleReload} formVisible={formVisible} setFormVisible={setFormVisible} />
     </View>
   )
 }
