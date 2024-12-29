@@ -77,8 +77,8 @@ export default function MyTabBar({ state, descriptors, navigation }: BottomTabBa
                   color: isFocused ? colors.text : colors.background,
                   marginTop: -3,
                   fontFamily: 'text',
-                  flex: 1, 
                   textAlign: 'center',
+                  fontSize: 12
                 }}
               >
                 {label}
@@ -102,10 +102,10 @@ const styles = StyleSheet.create({
   button: {
     flex: 1,
     marginVertical: 4,
-    padding: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 15,
     borderRadius: 5,
     alignSelf: 'center',
-    marginHorizontal: 'auto',
     justifyContent: 'center',
     alignItems: 'center',
   },
