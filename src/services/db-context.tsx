@@ -2,12 +2,12 @@ import React, { createContext, useContext, useEffect, useState } from 'react'
 import { Text, View, ActivityIndicator } from 'react-native'
 import { getDBConnection } from '../services/db-service' // Import getDBConnection
 import type { SQLiteDatabase } from 'expo-sqlite'
-
+import { useTheme } from '@react-navigation/native'
 const DatabaseContext = createContext<SQLiteDatabase | null>(null)
 
 export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [db, setDb] = useState<SQLiteDatabase | null>(null)
-
+  const {colors} = useTheme()
   useEffect(() => {
     const initializeDB = async () => {
       try {
@@ -29,7 +29,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
-          backgroundColor: 'green',
+          backgroundColor: colors.background,
         }}
       >
         <ActivityIndicator size="large" color="#0000ff" />
