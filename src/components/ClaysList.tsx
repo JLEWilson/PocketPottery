@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useRef } from 'react'
 import type { Clay } from '../models'
-import { Pressable, ScrollView, StyleSheet, Text, View, BackHandler } from 'react-native'
+import { Pressable, TouchableOpacity, ScrollView, StyleSheet, Text, View, BackHandler, Animated } from 'react-native'
 import Modal from 'react-native-modal'
 import NewClay from './NewClay'
 import { useDatabase } from '../services/db-context'
@@ -13,21 +13,26 @@ import { RootTabParamList } from './MyTabBar'
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
 
 export type ClaysListProps = {
-  onClaySelect?: (c: Clay) => void
+  onClaySelect?: (c: Clay[]) => void
   children?: React.ReactNode
 }
 
 type PotteryItemsListNavigationProp = BottomTabNavigationProp<RootTabParamList, 'PotteryItemsList'>
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity)
 
 function ClaysList({ onClaySelect, children }: ClaysListProps) {
   const DB = useDatabase()
   const navigation = useNavigation<PotteryItemsListNavigationProp>()
   const isFocused = useIsFocused()
   const { colors } = useTheme()
-  const [selectedClay, setSelectedClay] = useState<Clay>()
+  const [selectedClays, setSelectedClays] = useState<Clay[]>([])
   const [allClays, setAllClays] = useState<Clay[]>([])
   const [newClayFormVisible, setNewClayFormVisible] = useState(false)
   const [reload, setReload] = useState(false)
+  const rectHeights = useRef<Record<string, Animated.Value>>({})
+  const [currentExpandedId, setCurrentExpandedId] = useState<string | null>(null);
+  const maxHeight = 300
+  const animationDuration = 300
 
   const loadDataCallback = useCallback(async () => {
     try {
@@ -58,18 +63,81 @@ function ClaysList({ onClaySelect, children }: ClaysListProps) {
       return () => BackHandler.removeEventListener('hardwareBackPress', onBackPress)
     }, [navigation]),
   )
-
   useEffect(() => {
     if (isFocused) {
       loadDataCallback(); 
     }
   }, [isFocused, reload, loadDataCallback]);
+
+  useEffect(() => {
+    const initializeRectHeights = () => {
+      allClays.forEach((clay) => {
+        if (!rectHeights.current[clay.clayId]) {
+          rectHeights.current[clay.clayId] = new Animated.Value(1); // Initial size
+        }
+      });
+    };
+    initializeRectHeights();
+  }, [allClays]);
+
   
+const animateHeight = (id: string) => {
+  const currentSize = rectHeights.current[id];
+  if (!currentSize) {
+    console.log(`Animated.Value not initialized for id: ${id}`);
+    return;
+  }
+
+  if (currentExpandedId === id) {
+    setCurrentExpandedId(null);
+    Animated.timing(currentSize, {
+      toValue: 1,
+      duration: animationDuration,
+      useNativeDriver: false,
+    }).start();
+  } else {
+    if (currentExpandedId) {
+      const previousExpandedId = currentExpandedId;
+      const previousSize = rectHeights.current[previousExpandedId];
+      if (previousSize) {
+        Animated.timing(previousSize, {
+          toValue: 1,
+          duration: animationDuration,
+          useNativeDriver: false,
+        }).start();
+      }
+    }
+
+    Animated.timing(currentSize, {
+      toValue: maxHeight,
+      duration: animationDuration,
+      useNativeDriver: false,
+    }).start(() => {
+      setCurrentExpandedId(id) 
+    });
+  }
+};
 
   const handleClaySelect = (c: Clay) => {
-    setSelectedClay(c)
-    onClaySelect?.(c)
-  }
+    if(onClaySelect) {
+      setSelectedClays((prevSelectedClays) => {
+        const isSelected = prevSelectedClays.some((selected) => selected.clayId === c.clayId);
+    
+        // Determine the updated state
+        const updatedClays = isSelected
+          ? prevSelectedClays.filter((selected) => selected.clayId !== c.clayId) // Remove if selected
+          : [...prevSelectedClays, c]; // Add if not selected
+    
+        // If onClaySelect is defined, call it with the updated state
+        onClaySelect(updatedClays);
+    
+        return updatedClays; // Update the local state
+      });
+    } else {
+      selectedClays.includes(c) ? setSelectedClays([]) : setSelectedClays([c])
+      animateHeight(c.clayId)
+    }
+  };
 
   const handleModalSubmission = () => {
     setNewClayFormVisible(false)
@@ -79,14 +147,16 @@ function ClaysList({ onClaySelect, children }: ClaysListProps) {
   return (
     <View style={[styles.container]}>
       <ScrollView style={styles.scrollContainer} indicatorStyle="white">
-        {allClays.map((c) => (
+        {allClays.map((c) => 
+        onClaySelect ?
+        (
           <AnimatedPressable
             key={'Button: ' + c.clayId}
             onPress={() => handleClaySelect(c)}
             style={[
               styles.button,
               { borderColor: colors.border },
-              selectedClay === c
+              selectedClays.some((selected) => selected.clayId === c.clayId)
                 ? { backgroundColor: colors.primary }
                 : { backgroundColor: colors.card },
             ]}
@@ -98,7 +168,49 @@ function ClaysList({ onClaySelect, children }: ClaysListProps) {
               {c.name}
             </Text>
           </AnimatedPressable>
-        ))}
+        )
+        :
+        (
+          <AnimatedTouchable 
+          key={'Button: ' + c.clayId}
+          onPress={() => handleClaySelect(c)}
+          style={[
+            styles.button,
+            { 
+              borderColor: colors.border,
+              minHeight: rectHeights.current[c.clayId]
+            },
+            selectedClays.some((selected) => selected.clayId === c.clayId)
+              ? { backgroundColor: colors.primary }
+              : { backgroundColor: colors.card },
+          ]}
+        >
+          <Text
+            key={'Name: ' + c.clayId}
+            style={[
+              styles.buttonText, 
+              { color: colors.text, fontFamily: 'textBold' }
+            ]}
+          >
+            {c.name}
+          </Text>
+          
+            {currentExpandedId === c.clayId && (
+              <View>
+                {
+                  c.manufacturer.length > 1 &&
+                  <Text style={{ color: colors.text }}>manu</Text>
+                }
+                {
+                  c.notes.length > 1 &&
+                <Text style={{ color: colors.text }}>{c.notes}</Text>
+                }
+              </View>
+            )}
+          
+          </AnimatedTouchable>
+        )
+        )}
       </ScrollView>
       <View style={{ position: 'absolute', right: 0, left: 0, bottom: 10, alignItems: 'center' }}>
         <AnimatedPressable
@@ -160,7 +272,6 @@ const styles = StyleSheet.create({
   button: {
     flex: 1,
     padding: 10,
-    justifyContent: 'center',
     alignItems: 'center',
     elevation: 3,
     marginBottom: 30,
@@ -169,5 +280,6 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 20,
+    textAlign: 'center',
   },
-})
+});
