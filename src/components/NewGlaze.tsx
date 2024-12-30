@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
   },
   button: {
     position: 'relative',
-    bottom: 4,
+    bottom: 10,
     padding: 4,
     elevation: 3,
     borderWidth: 1,
