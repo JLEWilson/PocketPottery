@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TextInput, Pressable } from 'react-native'
+import { View, Text, StyleSheet, TextInput } from 'react-native'
 import React, { useState } from 'react'
 import type { Clay } from '../models'
 import { v4 as uuidv4 } from 'uuid'

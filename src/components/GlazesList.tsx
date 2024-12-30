@@ -9,15 +9,12 @@ import globalStyles from '../constants/stylesheet'
 import { useFocusEffect, useIsFocused, useNavigation, useTheme } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
 import AnimatedPressable from './AnimatedPressable'
-import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
-import { RootTabParamList } from './MyTabBar'
+import { PotteryItemsListNavigationProp } from './MyTabBar'
 
 export type GlazesListProps = {
   onGlazeSelect?: (c: Glaze) => void
   children?: React.ReactNode
 }
-
-type PotteryItemsListNavigationProp = BottomTabNavigationProp<RootTabParamList, 'PotteryItemsList'>
 
 function GlazesList({ children, onGlazeSelect }: GlazesListProps) {
   const DB = useDatabase()

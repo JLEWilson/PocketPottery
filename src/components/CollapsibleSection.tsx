@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react'
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Animated } from 'react-native'
+import React, { useState } from 'react'
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, } from 'react-native'
 import { useTheme } from '@react-navigation/native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 

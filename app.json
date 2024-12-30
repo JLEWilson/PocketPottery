@@ -30,7 +30,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#B7CBB5"
       },
       "softwareKeyboardLayoutMode": "pan",
       "permissions": [

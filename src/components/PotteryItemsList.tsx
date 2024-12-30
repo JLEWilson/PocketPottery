@@ -6,31 +6,23 @@ import { useDatabase } from '../services/db-context'
 import {
   createPotteryItemTable,
   getPotteryItems,
-  resetPotteryItemTable,
 } from '../services/potteryItem-service'
 import NewPotteryItem from '../components/NewPotteryItem'
 import { useFocusEffect, useIsFocused, useNavigation, useTheme } from '@react-navigation/native'
 import {
   createPotteryItemFiringsTable,
-  resetFiringsTable,
 } from '../services/potteryItem-firing-service'
 import {
   createPotteryItemGlazesTable,
-  resetPotteryItemGlazesTable,
 } from '../services/potteryItem-glaze-service'
 import {
   createPotteryItemClaysTable,
-  resetPotteryItemClaysTable,
 } from '../services/potteryItem-clays-service'
 import {
   createPotteryItemMeasurementsTable,
-  resetMeasurementsTable,
 } from '../services/potteryItem-measurements-service'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { RootStackParamList, RootTabParamList } from './MyTabBar'
-// import { resetClayTable } from '../services/clay-service'
-// import { resetGlazeTable } from '../services/glaze-service'
-// ad this on reset button in settings
 import AnimatedPressable from './AnimatedPressable'
 import globalStyles from '../constants/stylesheet'
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'

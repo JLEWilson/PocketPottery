@@ -73,7 +73,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
   const [pieceName, setPieceName] = useState('')
   const [image, setImage] = useState<string | null>(null)
   const [imageModalVisible, setImageModalVisible] = useState(false)
-  const [currentClay, setCurrentClay] = useState<Clay | null>(null)
+  const [currentClays, setCurrentClays] = useState<Clay[]>([])
   const [clays, setClays] = useState<Clay[]>([])
   const [clayFormVisible, setClayFormVisible] = useState(false)
   const [currentGlaze, setCurrentGlaze] = useState<Glaze | null>(null)
@@ -178,10 +178,12 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
       setImage(result.assets[0].uri)
     }
   }
-  const addClay = (c: Clay) => {
+  const addClay = (c: Clay[]) => {
     setClayFormVisible(false)
-    if (clays.includes(c)) return
-    setClays((prevClays) => [...prevClays, c])
+    setClays((prevClays) => {
+      const newClays = c.filter((clay) => !prevClays.includes(clay));
+      return [...prevClays, ...newClays];
+    });
   }
   const removeClay = (c: Clay) => {
     setClays((prevClays) => prevClays.filter((clay) => clay !== c))
@@ -455,7 +457,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
     setPieceName('')
     setImage(null)
     setImageModalVisible(false)
-    setCurrentClay(null)
+    setCurrentClays([])
     setClays([])
     setClayFormVisible(false)
     setCurrentGlaze(null)
@@ -924,10 +926,10 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
           >
             <Ionicons name="close-circle-outline" size={30} color={colors.text} />
           </Pressable>
-          <ClaysList onClaySelect={setCurrentClay}>
+          <ClaysList onClaySelect={setCurrentClays}>
             <AnimatedPressable
               onPress={() => {
-                currentClay && addClay(currentClay)
+                addClay(currentClays)
               }}
               style={[
                 styles.button,

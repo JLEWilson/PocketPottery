@@ -9,15 +9,12 @@ import globalStyles from '../constants/stylesheet'
 import { useFocusEffect, useIsFocused, useNavigation, useTheme } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
 import AnimatedPressable from './AnimatedPressable'
-import { RootTabParamList } from './MyTabBar'
-import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
-
+import { PotteryItemsListNavigationProp } from './MyTabBar'
 export type ClaysListProps = {
   onClaySelect?: (c: Clay[]) => void
   children?: React.ReactNode
 }
 
-type PotteryItemsListNavigationProp = BottomTabNavigationProp<RootTabParamList, 'PotteryItemsList'>
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity)
 
 function ClaysList({ onClaySelect, children }: ClaysListProps) {

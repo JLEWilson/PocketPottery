@@ -1,7 +1,6 @@
 import React from 'react'
-import { Pressable, Animated, StyleSheet, PressableProps, StyleProp, ViewStyle } from 'react-native'
+import { Pressable, Animated, PressableProps, StyleProp, ViewStyle } from 'react-native'
 
-// Define props for the AnimatedPressable
 interface AnimatedPressableProps extends PressableProps {
   style?: StyleProp<ViewStyle> // Accepts style for the wrapper
   children?: React.ReactNode // Accepts any React child elements

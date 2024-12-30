@@ -32,7 +32,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           backgroundColor: colors.background,
         }}
       >
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text>Initializing database...</Text>
       </View>
     )

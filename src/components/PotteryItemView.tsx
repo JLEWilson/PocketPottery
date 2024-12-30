@@ -3,11 +3,9 @@ import {
   Text,
   View,
   ActivityIndicator,
-  Image,
   ImageBackground,
   Animated,
   LayoutChangeEvent,
-  Pressable,
   TouchableOpacity,
 } from 'react-native'
 import React, { useEffect, useState, useCallback, useRef } from 'react'
@@ -24,7 +22,6 @@ import { deleteMeasurementsByPotteryItemId, getMeasurementsByPotteryItemId } fro
 import { ScrollView } from 'react-native-gesture-handler'
 import { useTheme } from '@react-navigation/native'
 import AnimatedPressable from './AnimatedPressable'
-import globalStyles from '../constants/stylesheet'
 import NewPotteryItem from './NewPotteryItem'
 import Modal from 'react-native-modal'
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'

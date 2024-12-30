@@ -1,5 +1,5 @@
 import React from 'react'
-import { Pressable, ImageBackground, StyleSheet, Text, View } from 'react-native'
+import { ImageBackground, StyleSheet, Text, View } from 'react-native'
 import type { PotteryItem } from '../models'
 import { useTheme } from '@react-navigation/native'
 import AnimatedPressable from './AnimatedPressable'

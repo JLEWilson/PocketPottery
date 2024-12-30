@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity } from 'react-native'
-import type { BottomTabBarProps } from '@react-navigation/bottom-tabs'
+import type { BottomTabBarProps, BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
 import { StyleSheet } from 'react-native'
 import { useTheme } from '@react-navigation/native'
 import type { ClaysListProps } from './ClaysList'
@@ -14,6 +14,7 @@ export type RootStackParamList = {
   Tabs: undefined
   PotteryItemView: { id: string }
 }
+export type PotteryItemsListNavigationProp = BottomTabNavigationProp<RootTabParamList, 'PotteryItemsList'>
 
 export default function MyTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const { colors } = useTheme()
