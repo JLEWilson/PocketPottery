@@ -1,5 +1,5 @@
 import './gesture-handler'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { DatabaseProvider } from './src/services/db-context'
 import { useColorScheme, StatusBar, Appearance, View, Text } from 'react-native'
 import PotteryItemList from './src/components/PotteryItemsList'
@@ -20,7 +20,7 @@ import {
 } from '@expo-google-fonts/montserrat-alternates'
 import { Aladin_400Regular } from '@expo-google-fonts/aladin'
 import { AveriaLibre_400Regular, AveriaLibre_700Bold } from '@expo-google-fonts/averia-libre'
-import { setStatusBarStyle } from 'expo-status-bar'
+import * as SplashScreen from 'expo-splash-screen';
 import AnimatedPressable from './src/components/AnimatedPressable'
 
 const MyLightTheme = {
@@ -50,13 +50,16 @@ const MyDarkTheme = {
 
 const Tab = createBottomTabNavigator<RootTabParamList>()
 const Stack = createStackNavigator<RootStackParamList>()
-
+SplashScreen.preventAutoHideAsync();
+SplashScreen.setOptions({
+  duration: 1000,
+  fade: true,
+});
 const App = () => {
   const [colorScheme, setColorScheme] = useState(
     Appearance.getColorScheme() || 'light'
   );
   const [isSettingsModalVisible, setSettingsModalVisible] = useState(false)
-  const [quickLoad, setQuickLoad] = useState(false)
   const myTheme = colorScheme === 'dark' ? MyDarkTheme : MyLightTheme
   let [fontsLoaded] = useFonts({
     title: Aladin_400Regular,
@@ -68,6 +71,18 @@ const App = () => {
   const toggleTheme = (b: boolean) => {
     setColorScheme(b ? 'dark' : 'light');
   };
+  const [appIsReady, setAppIsReady] = useState(false);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setAppIsReady(true);
+      SplashScreen.hideAsync();
+    }, 2000);
+  }, []);
+
+  if (!appIsReady) {
+    return null; // Keep the splash screen visible
+  }
 
   const TabNavigator = () => (
     <Tab.Navigator
