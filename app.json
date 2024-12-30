@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "pocketpottery",
+    "name": "Pocket Pottery",
     "slug": "pocketpottery",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -9,7 +9,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#B7CBB5"
     },
     "plugins": [
       [
@@ -45,6 +45,12 @@
     "extra": {
       "eas": {
         "projectId": "20b86be5-0977-40ce-b957-52066e56fbd2"
+      }
+    },
+    "expo": {
+      "splash": {
+        "image": "./assets/splash.png",
+        "backgroundColor": "#ffffff"
       }
     },
     "newArchEnabled": true,
