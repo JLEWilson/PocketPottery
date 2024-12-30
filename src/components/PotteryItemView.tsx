@@ -144,7 +144,6 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
   const handleReload = () => setReload((prev) => !prev)
 
   const handlePress = (id: string, type: 'clay' | 'glaze' | 'firing' | 'measurement') => {
-    //need to account for the jerky motion of the buttons rearranging
     const currentSize = rectSizes.current[id]
     const currentMinSize = minDimensions.current[id]
 
