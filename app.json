@@ -30,7 +30,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#B7CBB5"
+        "backgroundColor": "#ADC28A"
       },
       "softwareKeyboardLayoutMode": "pan",
       "permissions": [
@@ -50,7 +50,7 @@
     "expo": {
       "splash": {
         "image": "./assets/splash.png",
-        "backgroundColor": "#B7CBB5"
+        "backgroundColor": "#ADC28A"
       }
     },
     "newArchEnabled": true,

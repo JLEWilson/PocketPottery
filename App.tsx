@@ -16,6 +16,7 @@ import { Colors } from 'react-native/Libraries/NewAppScreen'
 import {
   useFonts,
   MontserratAlternates_400Regular,
+  MontserratAlternates_500Medium,
   MontserratAlternates_700Bold,
 } from '@expo-google-fonts/montserrat-alternates'
 import { Aladin_400Regular } from '@expo-google-fonts/aladin'
@@ -27,9 +28,9 @@ const MyLightTheme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    background: '#B7CBB5',
-    primary: '#88A78C',
-    card: '#CBB5C2',
+    background: '#ADC2A8',
+    primary: '#78967A',
+    card: '#B8CABF',
     text: '#3C413C',
     border: '#727E78',
     notification: '#975F32',
@@ -65,7 +66,7 @@ const App = () => {
     title: Aladin_400Regular,
     heading: AveriaLibre_400Regular,
     headingBold: AveriaLibre_700Bold,
-    text: MontserratAlternates_400Regular,
+    text: MontserratAlternates_500Medium,
     textBold: MontserratAlternates_700Bold,
   })
   const toggleTheme = (b: boolean) => {
