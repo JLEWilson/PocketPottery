@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react'
+import React, { useEffect, useState, useCallback, useRef, SetStateAction } from 'react'
 import type { Clay } from '../models'
 import { Pressable, TouchableOpacity, ScrollView, StyleSheet, Text, View, BackHandler, Animated } from 'react-native'
 import Modal from 'react-native-modal'
@@ -10,40 +10,68 @@ import { useFocusEffect, useIsFocused, useNavigation, useTheme } from '@react-na
 import { Ionicons } from '@expo/vector-icons'
 import AnimatedPressable from './AnimatedPressable'
 import { PotteryItemsListNavigationProp } from './MyTabBar'
+
 export type ClaysListProps = {
-  onClaySelect?: (c: Clay[]) => void
+  existingProjectClays?: Clay[]
+  selectedClays?: Clay[]
+  setSelectedClays?: React.Dispatch<SetStateAction<Clay[]>>
   children?: React.ReactNode
 }
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity)
 
-function ClaysList({ onClaySelect, children }: ClaysListProps) {
+function ClaysList({ selectedClays, existingProjectClays, setSelectedClays, children }: ClaysListProps) {
   const DB = useDatabase()
   const navigation = useNavigation<PotteryItemsListNavigationProp>()
   const isFocused = useIsFocused()
   const { colors } = useTheme()
-  const [selectedClays, setSelectedClays] = useState<Clay[]>([])
   const [allClays, setAllClays] = useState<Clay[]>([])
   const [newClayFormVisible, setNewClayFormVisible] = useState(false)
+  const [curClay, setCurClay] = useState<Clay | null>(null)
+  const [modalClayData, setModalClayData] = useState<Clay | undefined>(undefined)
   const [reload, setReload] = useState(false)
   const rectHeights = useRef<Record<string, Animated.Value>>({})
   const [currentExpandedId, setCurrentExpandedId] = useState<string | null>(null);
-  const maxHeight = 300
+  const maxHeight = 170
   const animationDuration = 300
+  const isSelectable = Boolean(setSelectedClays);
 
+  // const loadDataCallback = useCallback(async () => {
+  //   try {
+  //     await createClayTable(DB)
+  //     const storedClays = await getClays(DB)
+  //     setAllClays(storedClays)
+  //   } catch (error) {
+  //     if (error instanceof Error) {
+  //       console.error(`Error clays items: ${error.message}`)
+  //     } else {
+  //       console.error('Unknown error occurred while loading clays.')
+  //     }
+  //   }
+  // }, [DB])
   const loadDataCallback = useCallback(async () => {
     try {
-      await createClayTable(DB)
-      const storedClays = await getClays(DB)
-      setAllClays(storedClays)
+      await createClayTable(DB); // Ensure the table exists
+      const storedClays = await getClays(DB); // Fetch all clays from the database
+  
+      // Filter out clays that are already in `selectedClays` (only initially)
+      const initiallyFilteredClays = existingProjectClays
+        ? storedClays.filter(
+            (clay) =>
+              !existingProjectClays.some((c) => c.clayId === clay.clayId)
+          )
+        : storedClays;
+  
+      setAllClays(initiallyFilteredClays); // Store the filtered clays
     } catch (error) {
       if (error instanceof Error) {
-        console.error(`Error clays items: ${error.message}`)
+        console.error(`Error loading clays: ${error.message}`);
       } else {
-        console.error('Unknown error occurred while loading clays.')
+        console.error("Unknown error occurred while loading clays.");
       }
     }
-  }, [DB])
+  }, [DB, selectedClays]); // `selectedClays` is only used for the initial filtering
+  
 
   useFocusEffect(
     useCallback(() => {
@@ -85,8 +113,8 @@ const animateHeight = (id: string) => {
     return;
   }
 
+  setCurrentExpandedId(null);
   if (currentExpandedId === id) {
-    setCurrentExpandedId(null);
     Animated.timing(currentSize, {
       toValue: 1,
       duration: animationDuration,
@@ -116,22 +144,18 @@ const animateHeight = (id: string) => {
 };
 
   const handleClaySelect = (c: Clay) => {
-    if(onClaySelect) {
-      setSelectedClays((prevSelectedClays) => {
+    if(isSelectable) {
+      setSelectedClays?.((prevSelectedClays: Clay[]) => {
         const isSelected = prevSelectedClays.some((selected) => selected.clayId === c.clayId);
-    
-        // Determine the updated state
+
         const updatedClays = isSelected
-          ? prevSelectedClays.filter((selected) => selected.clayId !== c.clayId) // Remove if selected
-          : [...prevSelectedClays, c]; // Add if not selected
-    
-        // If onClaySelect is defined, call it with the updated state
-        onClaySelect(updatedClays);
-    
+          ? prevSelectedClays.filter((selected) => selected.clayId !== c.clayId)
+          : [...prevSelectedClays, c]; 
+  
         return updatedClays; // Update the local state
-      });
+      })
     } else {
-      selectedClays.includes(c) ? setSelectedClays([]) : setSelectedClays([c])
+      curClay?.clayId === c.clayId ? setCurClay(null) : setCurClay(c)
       animateHeight(c.clayId)
     }
   };
@@ -145,7 +169,7 @@ const animateHeight = (id: string) => {
     <View style={[styles.container]}>
       <ScrollView style={styles.scrollContainer} indicatorStyle="white">
         {allClays.map((c) => 
-        onClaySelect ?
+        isSelectable ?
         (
           <AnimatedPressable
             key={'Button: ' + c.clayId}
@@ -153,7 +177,7 @@ const animateHeight = (id: string) => {
             style={[
               styles.button,
               { borderColor: colors.border },
-              selectedClays.some((selected) => selected.clayId === c.clayId)
+              selectedClays?.some((selected) => selected.clayId === c.clayId) || curClay?.clayId === c.clayId
                 ? { backgroundColor: colors.primary }
                 : { backgroundColor: colors.card },
             ]}
@@ -177,7 +201,7 @@ const animateHeight = (id: string) => {
               borderColor: colors.border,
               minHeight: rectHeights.current[c.clayId]
             },
-            selectedClays.some((selected) => selected.clayId === c.clayId)
+            selectedClays?.some((selected) => selected.clayId === c.clayId) || curClay?.clayId === c.clayId
               ? { backgroundColor: colors.primary }
               : { backgroundColor: colors.card },
           ]}
@@ -193,17 +217,40 @@ const animateHeight = (id: string) => {
           </Text>
           
             {currentExpandedId === c.clayId && (
-              <View>
-                {
-                  c.manufacturer.length > 1 &&
-                  <Text style={{ color: colors.text }}>manu</Text>
-                }
-                {
-                  c.notes.length > 1 &&
-                <Text style={{ color: colors.text }}>{c.notes}</Text>
-                }
-              </View>
-            )}
+              <View style={{flex: 1, rowGap: 10, marginTop: 10}}>
+                
+                  <View style={{flexDirection: 'row'}}>
+                    <Text>Manufacturer:</Text>
+                    {
+                      c.manufacturer.length > 1 ?
+                      <Text style={{ color: colors.text }}>{c.manufacturer}</Text>
+                      :
+                      <Text style={{ color: colors.text, borderColor: colors.border, textAlign: 'center', flex: 1, borderBottomWidth: 1, borderStyle: 'dashed'}}>N/A</Text>
+                    }
+                  </View>
+                  <View style={[{marginBottom: 4}, c.notes.length > 1 ? {flexDirection: 'column'} : {flexDirection: 'row',}]}>
+                    <Text >Notes:</Text>
+                    {
+                      c.notes.length > 1 ?
+                      <Text style={{ color: colors.text }}>{c.notes}</Text>
+                      :
+                      <Text style={{ color: colors.text, borderColor: colors.border, textAlign: 'center', flex: 1, borderBottomWidth: 1, borderStyle: 'dashed' }}>N/A</Text>
+                    }
+                  </View>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-evenly' }}>
+                  <AnimatedPressable style={{ padding: 4 }} 
+                    onPress={() => {  
+                    setModalClayData(c)
+                    setNewClayFormVisible(true) 
+                  }}>
+                    <Ionicons name="create" color={colors.border} size={40} />
+                  </AnimatedPressable>
+                  <AnimatedPressable style={[{ padding: 4 }]} onPress={() => console.log('deleteModal')}>
+                    <Ionicons name="trash" color={colors.border} size={40} />
+                  </AnimatedPressable>
+                </View>
+                    </View>
+                  )}
           
           </AnimatedTouchable>
         )
@@ -211,14 +258,17 @@ const animateHeight = (id: string) => {
       </ScrollView>
       <View style={{ position: 'absolute', right: 0, left: 0, bottom: 10, alignItems: 'center' }}>
         <AnimatedPressable
-          onPress={() => setNewClayFormVisible(true)}
+          onPress={() => {
+            setModalClayData(undefined)
+            setNewClayFormVisible(true)
+          }}
           style={[
             globalStyles.button,
             styles.newClayButton,
             { backgroundColor: colors.primary, borderColor: colors.border },
           ]}
         >
-          <Text style={[{ color: colors.text, fontFamily: 'textBold', fontSize: 16 }, onClaySelect == undefined ? {fontSize: 20 } : {fontSize: 16}]}>
+          <Text style={[{ color: colors.text, fontFamily: 'textBold', fontSize: 16 }, isSelectable ? {fontSize: 16 } : {fontSize: 20}]}>
             New Clay
           </Text>
         </AnimatedPressable>
@@ -237,7 +287,7 @@ const animateHeight = (id: string) => {
         backdropTransitionOutTiming={0}
       >
         <View style={{ flex: 1 }}>
-          <NewClay callBackFunction={handleModalSubmission}>
+          <NewClay initialData={modalClayData} callBackFunction={handleModalSubmission}>
             <Pressable
               onPress={() => setNewClayFormVisible(false)}
               style={{ position: 'absolute', top: 10, right: 20, zIndex: 2 }}
@@ -269,7 +319,6 @@ const styles = StyleSheet.create({
   button: {
     flex: 1,
     padding: 10,
-    alignItems: 'center',
     elevation: 3,
     marginBottom: 30,
     borderRadius: 30,

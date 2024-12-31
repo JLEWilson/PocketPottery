@@ -178,7 +178,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
       setImage(result.assets[0].uri)
     }
   }
-  const addClay = (c: Clay[]) => {
+  const addClays = (c: Clay[]) => {
     setClayFormVisible(false)
     setClays((prevClays) => {
       const newClays = c.filter((clay) => !prevClays.includes(clay));
@@ -187,6 +187,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
   }
   const removeClay = (c: Clay) => {
     setClays((prevClays) => prevClays.filter((clay) => clay !== c))
+    setCurrentClays((prevClays) => prevClays.filter((clay) => clay !== c))
   }
   const addGlaze = (g: Glaze) => {
     setGlazeFormVisible(false)
@@ -926,10 +927,10 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
           >
             <Ionicons name="close-circle-outline" size={30} color={colors.text} />
           </Pressable>
-          <ClaysList onClaySelect={setCurrentClays}>
+          <ClaysList selectedClays={currentClays} existingProjectClays={clays} setSelectedClays={setCurrentClays}>
             <AnimatedPressable
               onPress={() => {
-                addClay(currentClays)
+                addClays(currentClays)
               }}
               style={[
                 styles.button,

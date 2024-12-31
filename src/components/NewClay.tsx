@@ -1,8 +1,8 @@
 import { View, Text, StyleSheet, TextInput } from 'react-native'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import type { Clay } from '../models'
 import { v4 as uuidv4 } from 'uuid'
-import { addClay } from '../services/clay-service'
+import { addClay, updateClay } from '../services/clay-service'
 import { useDatabase } from '../services/db-context'
 import { useTheme } from '@react-navigation/native'
 import AnimatedPressable from './AnimatedPressable'
@@ -10,15 +10,17 @@ import AnimatedPressable from './AnimatedPressable'
 type NewClayProps = {
   callBackFunction?: () => void
   children?: React.ReactNode
+  initialData?: Clay
 }
 
 const NewClay = (props: NewClayProps) => {
-  const { callBackFunction, children } = props
+  const { callBackFunction, children, initialData } = props
   const DB = useDatabase()
   const { colors } = useTheme()
   const [name, setName] = useState('')
   const [manufacturer, setManufacturer] = useState('')
   const [notes, setNotes] = useState('')
+  const buttonText = initialData ? 'Update Clay' :  'Add New Clay'
 
   const handleAddNewClay = () => {
     const newClay: Clay = {
@@ -30,7 +32,29 @@ const NewClay = (props: NewClayProps) => {
     addClay(DB, newClay)
     callBackFunction?.()
   }
+  const handleUpdateClay = () => {
+    if(!initialData) return
 
+    const clayToUpdate: Clay = {
+      clayId: initialData.clayId,
+      name: name,
+      manufacturer: manufacturer,
+      notes: notes,
+    }
+    updateClay(DB, clayToUpdate)
+    callBackFunction?.()
+  }
+  const handleFormSubmit = () => {
+    initialData ? handleAddNewClay() : handleUpdateClay()
+  }
+  useEffect(() => {
+    if(initialData){
+      setName(initialData.name)
+      setManufacturer(initialData.manufacturer)
+      setNotes(initialData.notes)
+    }
+  },[initialData])
+  
   return (
     <View style={styles.container}>
       <View
@@ -54,6 +78,7 @@ const NewClay = (props: NewClayProps) => {
                 textAlignVertical: 'center'
               },
             ]}
+            value={name}
             onChangeText={setName}
             maxLength={20}
             blurOnSubmit={true}
@@ -77,6 +102,7 @@ const NewClay = (props: NewClayProps) => {
                 textAlignVertical: 'center'
               },
             ]}
+            value={manufacturer}
             onChangeText={setManufacturer}
             maxLength={20}
             blurOnSubmit={true}
@@ -101,6 +127,7 @@ const NewClay = (props: NewClayProps) => {
                 textAlignVertical: 'top'
               },
             ]}
+            value={notes}
             onChangeText={setNotes}
             maxLength={250}
             multiline={true}
@@ -114,7 +141,7 @@ const NewClay = (props: NewClayProps) => {
           <Text
             style={{ fontSize: 20, paddingVertical: 4, color: colors.text, fontFamily: 'textBold' }}
           >
-            Add New Clay
+            {buttonText}
           </Text>
         </AnimatedPressable>
         {children}
