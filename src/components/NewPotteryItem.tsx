@@ -178,6 +178,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
       setImage(result.assets[0].uri)
     }
   }
+
   const addClays = (c: Clay[]) => {
     setClayFormVisible(false)
     setClays((prevClays) => {

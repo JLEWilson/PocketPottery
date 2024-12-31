@@ -1,15 +1,26 @@
 import React, { useEffect, useState, useCallback, useRef, SetStateAction } from 'react'
 import type { Clay } from '../models'
-import { Pressable, TouchableOpacity, ScrollView, StyleSheet, Text, View, BackHandler, Animated } from 'react-native'
+import {
+  Pressable,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  BackHandler,
+  Animated,
+  LayoutChangeEvent,
+} from 'react-native'
 import Modal from 'react-native-modal'
 import NewClay from './NewClay'
 import { useDatabase } from '../services/db-context'
-import { createClayTable, getClays } from '../services/clay-service'
+import { createClayTable, deleteClayById, getClays } from '../services/clay-service'
 import globalStyles from '../constants/stylesheet'
 import { useFocusEffect, useIsFocused, useNavigation, useTheme } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
 import AnimatedPressable from './AnimatedPressable'
 import { PotteryItemsListNavigationProp } from './MyTabBar'
+import DeleteModal from './DeleteModal'
 
 export type ClaysListProps = {
   existingProjectClays?: Clay[]
@@ -20,146 +31,148 @@ export type ClaysListProps = {
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity)
 
-function ClaysList({ selectedClays, existingProjectClays, setSelectedClays, children }: ClaysListProps) {
+function ClaysList({
+  selectedClays,
+  existingProjectClays,
+  setSelectedClays,
+  children,
+}: ClaysListProps) {
   const DB = useDatabase()
   const navigation = useNavigation<PotteryItemsListNavigationProp>()
   const isFocused = useIsFocused()
   const { colors } = useTheme()
   const [allClays, setAllClays] = useState<Clay[]>([])
-  const [newClayFormVisible, setNewClayFormVisible] = useState(false)
+  const [isDeleteModalVisible, setDeleteModalVisible] = useState(false)
+  const [isNewClayFormVisible, setNewClayFormVisible] = useState(false)
   const [curClay, setCurClay] = useState<Clay | null>(null)
   const [modalClayData, setModalClayData] = useState<Clay | undefined>(undefined)
   const [reload, setReload] = useState(false)
   const rectHeights = useRef<Record<string, Animated.Value>>({})
-  const [currentExpandedId, setCurrentExpandedId] = useState<string | null>(null);
+  const [currentExpandedId, setCurrentExpandedId] = useState<string | null>(null)
   const maxHeight = 170
   const animationDuration = 300
-  const isSelectable = Boolean(setSelectedClays);
+  const isSelectable = Boolean(setSelectedClays)
 
-  // const loadDataCallback = useCallback(async () => {
-  //   try {
-  //     await createClayTable(DB)
-  //     const storedClays = await getClays(DB)
-  //     setAllClays(storedClays)
-  //   } catch (error) {
-  //     if (error instanceof Error) {
-  //       console.error(`Error clays items: ${error.message}`)
-  //     } else {
-  //       console.error('Unknown error occurred while loading clays.')
-  //     }
-  //   }
-  // }, [DB])
   const loadDataCallback = useCallback(async () => {
     try {
-      await createClayTable(DB); // Ensure the table exists
-      const storedClays = await getClays(DB); // Fetch all clays from the database
-  
-      // Filter out clays that are already in `selectedClays` (only initially)
+      await createClayTable(DB)
+      const storedClays = await getClays(DB)
+
       const initiallyFilteredClays = existingProjectClays
-        ? storedClays.filter(
-            (clay) =>
-              !existingProjectClays.some((c) => c.clayId === clay.clayId)
-          )
-        : storedClays;
-  
-      setAllClays(initiallyFilteredClays); // Store the filtered clays
+        ? storedClays.filter((clay) => !existingProjectClays.some((c) => c.clayId === clay.clayId))
+        : storedClays
+
+      setAllClays(initiallyFilteredClays) // Store the filtered clays
     } catch (error) {
       if (error instanceof Error) {
-        console.error(`Error loading clays: ${error.message}`);
+        console.error(`Error loading clays: ${error.message}`)
       } else {
-        console.error("Unknown error occurred while loading clays.");
+        console.error('Unknown error occurred while loading clays.')
       }
     }
-  }, [DB, selectedClays]); // `selectedClays` is only used for the initial filtering
-  
+  }, [DB, selectedClays]) // `selectedClays` is only used for the initial filtering
 
   useFocusEffect(
     useCallback(() => {
       const onBackPress = () => {
-        // Navigate to PotteryItemsList when back button is pressed
         navigation.navigate('PotteryItemsList')
-        return true // Prevent default back behavior
+        return true
       }
-
-      // Add back handler
       BackHandler.addEventListener('hardwareBackPress', onBackPress)
-
-      // Cleanup the handler when the screen is unfocused
       return () => BackHandler.removeEventListener('hardwareBackPress', onBackPress)
     }, [navigation]),
   )
+
   useEffect(() => {
     if (isFocused) {
-      loadDataCallback(); 
+      loadDataCallback()
     }
-  }, [isFocused, reload, loadDataCallback]);
+  }, [isFocused, reload, loadDataCallback])
 
   useEffect(() => {
     const initializeRectHeights = () => {
       allClays.forEach((clay) => {
         if (!rectHeights.current[clay.clayId]) {
-          rectHeights.current[clay.clayId] = new Animated.Value(1); // Initial size
+          rectHeights.current[clay.clayId] = new Animated.Value(1) // Initial size
         }
-      });
-    };
-    initializeRectHeights();
-  }, [allClays]);
+      })
+    }
+    initializeRectHeights()
+  }, [allClays])
 
-  
-const animateHeight = (id: string) => {
-  const currentSize = rectHeights.current[id];
-  if (!currentSize) {
-    console.log(`Animated.Value not initialized for id: ${id}`);
-    return;
+  const calculateHeight = (c: Clay): number => {
+    const lineHeight = 18
+    const padding = 20
+    const baseHeight = 60
+    const rowGap = 40
+
+    const notesLines = Math.ceil(c.notes.length / 35)
+    const manufacturerLines = Math.ceil(c.manufacturer.length / 15) 
+    const dynamicHeight = notesLines * lineHeight + manufacturerLines * lineHeight
+    const buffer = 40
+
+    return baseHeight + dynamicHeight + padding + buffer + rowGap
   }
 
-  setCurrentExpandedId(null);
-  if (currentExpandedId === id) {
-    Animated.timing(currentSize, {
-      toValue: 1,
-      duration: animationDuration,
-      useNativeDriver: false,
-    }).start();
-  } else {
-    if (currentExpandedId) {
-      const previousExpandedId = currentExpandedId;
-      const previousSize = rectHeights.current[previousExpandedId];
-      if (previousSize) {
-        Animated.timing(previousSize, {
-          toValue: 1,
-          duration: animationDuration,
-          useNativeDriver: false,
-        }).start();
-      }
+  const animateHeight = (c: Clay) => {
+    const id = c.clayId
+    const currentSize = rectHeights.current[id]
+    if (!currentSize) {
+      console.log(`Animated.Value not initialized for id: ${id}`)
+      return
     }
 
-    Animated.timing(currentSize, {
-      toValue: maxHeight,
-      duration: animationDuration,
-      useNativeDriver: false,
-    }).start(() => {
-      setCurrentExpandedId(id) 
-    });
+    setCurrentExpandedId(null)
+    if (currentExpandedId === id) {
+      Animated.timing(currentSize, {
+        toValue: 1,
+        duration: animationDuration,
+        useNativeDriver: false,
+      }).start()
+    } else {
+      if (currentExpandedId) {
+        const previousExpandedId = currentExpandedId
+        const previousSize = rectHeights.current[previousExpandedId]
+        if (previousSize) {
+          Animated.timing(previousSize, {
+            toValue: 1,
+            duration: animationDuration,
+            useNativeDriver: false,
+          }).start()
+        }
+      }
+      const height = calculateHeight(c)
+      Animated.timing(currentSize, {
+        toValue: height,
+        duration: animationDuration,
+        useNativeDriver: false,
+      }).start(() => {
+        setCurrentExpandedId(id)
+      })
+    }
   }
-};
 
   const handleClaySelect = (c: Clay) => {
-    if(isSelectable) {
+    if (isSelectable) {
       setSelectedClays?.((prevSelectedClays: Clay[]) => {
-        const isSelected = prevSelectedClays.some((selected) => selected.clayId === c.clayId);
+        const isSelected = prevSelectedClays.some((selected) => selected.clayId === c.clayId)
 
         const updatedClays = isSelected
           ? prevSelectedClays.filter((selected) => selected.clayId !== c.clayId)
-          : [...prevSelectedClays, c]; 
-  
-        return updatedClays; // Update the local state
+          : [...prevSelectedClays, c]
+
+        return updatedClays // Update the local state
       })
     } else {
       curClay?.clayId === c.clayId ? setCurClay(null) : setCurClay(c)
-      animateHeight(c.clayId)
+      animateHeight(c)
     }
-  };
-
+  }
+  const handleDeleteClay = async (id: string) => {
+    await deleteClayById(DB, id)
+    setReload((prev) => !prev)
+    setDeleteModalVisible(false)
+  }
   const handleModalSubmission = () => {
     setNewClayFormVisible(false)
     setReload((prev) => !prev)
@@ -168,92 +181,157 @@ const animateHeight = (id: string) => {
   return (
     <View style={[styles.container]}>
       <ScrollView style={styles.scrollContainer} indicatorStyle="white">
-        {allClays.map((c) => 
-        isSelectable ?
-        (
-          <AnimatedPressable
-            key={'Button: ' + c.clayId}
-            onPress={() => handleClaySelect(c)}
-            style={[
-              styles.button,
-              { borderColor: colors.border },
-              selectedClays?.some((selected) => selected.clayId === c.clayId) || curClay?.clayId === c.clayId
-                ? { backgroundColor: colors.primary }
-                : { backgroundColor: colors.card },
-            ]}
-          >
-            <Text
-              key={'Name: ' + c.clayId}
-              style={[styles.buttonText, { color: colors.text, fontFamily: 'textBold' }]}
+        {allClays.map((c) =>
+          isSelectable ? (
+            <AnimatedPressable
+              key={'Button: ' + c.clayId}
+              onPress={() => handleClaySelect(c)}
+              style={[
+                styles.button,
+                { borderColor: colors.border },
+                selectedClays?.some((selected) => selected.clayId === c.clayId) ||
+                curClay?.clayId === c.clayId
+                  ? { backgroundColor: colors.primary }
+                  : { backgroundColor: colors.card },
+              ]}
             >
-              {c.name}
-            </Text>
-          </AnimatedPressable>
-        )
-        :
-        (
-          <AnimatedTouchable 
-          key={'Button: ' + c.clayId}
-          onPress={() => handleClaySelect(c)}
-          style={[
-            styles.button,
-            { 
-              borderColor: colors.border,
-              minHeight: rectHeights.current[c.clayId]
-            },
-            selectedClays?.some((selected) => selected.clayId === c.clayId) || curClay?.clayId === c.clayId
-              ? { backgroundColor: colors.primary }
-              : { backgroundColor: colors.card },
-          ]}
-        >
-          <Text
-            key={'Name: ' + c.clayId}
-            style={[
-              styles.buttonText, 
-              { color: colors.text, fontFamily: 'textBold' }
-            ]}
-          >
-            {c.name}
-          </Text>
-          
-            {currentExpandedId === c.clayId && (
-              <View style={{flex: 1, rowGap: 10, marginTop: 10}}>
-                
-                  <View style={{flexDirection: 'row'}}>
-                    <Text>Manufacturer:</Text>
-                    {
-                      c.manufacturer.length > 1 ?
-                      <Text style={{ color: colors.text }}>{c.manufacturer}</Text>
-                      :
-                      <Text style={{ color: colors.text, borderColor: colors.border, textAlign: 'center', flex: 1, borderBottomWidth: 1, borderStyle: 'dashed'}}>N/A</Text>
-                    }
+              <Text
+                key={'Name: ' + c.clayId}
+                style={[styles.buttonText, { color: colors.text, fontFamily: 'textBold' }]}
+              >
+                {c.name}
+              </Text>
+            </AnimatedPressable>
+          ) : (
+            <AnimatedTouchable
+              key={'Button: ' + c.clayId}
+              onPress={() => handleClaySelect(c)}
+              style={[
+                styles.button,
+                {
+                  borderColor: colors.border,
+                  minHeight: rectHeights.current[c.clayId],
+                },
+                selectedClays?.some((selected) => selected.clayId === c.clayId) ||
+                curClay?.clayId === c.clayId
+                  ? { backgroundColor: colors.primary }
+                  : { backgroundColor: colors.card },
+              ]}
+            >
+              <Text
+                key={'Name: ' + c.clayId}
+                style={[styles.buttonText, { color: colors.text, fontFamily: 'textBold' }]}
+              >
+                {c.name}
+              </Text>
+
+              {currentExpandedId === c.clayId && (
+                <View style={{ flex: 1, rowGap: 10, marginTop: 10 }}>
+                  <View style={{ flexDirection: 'row' }}>
+                    <Text style={{ color: colors.text, fontFamily: 'headingBold', fontSize: 18 }}>
+                      Manufacturer:
+                    </Text>
+                    {c.manufacturer.length > 1 ? (
+                      <Text
+                        style={{
+                          color: colors.text,
+                          fontFamily: 'text',
+                          fontSize: 18,
+                          borderColor: colors.border,
+                          textAlign: 'center',
+                          flex: 1,
+                          borderBottomWidth: 1,
+                          borderStyle: 'dashed',
+                        }}
+                      >
+                        {c.manufacturer}
+                      </Text>
+                    ) : (
+                      <Text
+                        style={{
+                          color: colors.text,
+                          fontFamily: 'text',
+                          fontSize: 18,
+                          borderColor: colors.border,
+                          textAlign: 'center',
+                          flex: 1,
+                          borderBottomWidth: 1,
+                          borderStyle: 'dashed',
+                        }}
+                      >
+                        N/A
+                      </Text>
+                    )}
                   </View>
-                  <View style={[{marginBottom: 4}, c.notes.length > 1 ? {flexDirection: 'column'} : {flexDirection: 'row',}]}>
-                    <Text >Notes:</Text>
-                    {
-                      c.notes.length > 1 ?
-                      <Text style={{ color: colors.text }}>{c.notes}</Text>
-                      :
-                      <Text style={{ color: colors.text, borderColor: colors.border, textAlign: 'center', flex: 1, borderBottomWidth: 1, borderStyle: 'dashed' }}>N/A</Text>
-                    }
+                  <View
+                    style={[
+                      c.notes.length > 1 ? { flexDirection: 'column' } : { flexDirection: 'row' },
+                    ]}
+                  >
+                    <Text style={{ color: colors.text, fontFamily: 'headingBold', fontSize: 18 }}>
+                      Notes:
+                    </Text>
+                    {c.notes.length > 1 ? (
+                      <Text
+                        style={{
+                          color: colors.text,
+                          lineHeight: 18,
+                          borderColor: colors.border,
+                          fontSize: 18,
+                          fontFamily: 'text',
+                          textAlign: 'center',
+                          borderBottomWidth: 1,
+                          borderStyle: 'dashed',
+                        }}
+                      >
+                        {c.notes}
+                      </Text>
+                    ) : (
+                      <Text
+                        style={{
+                          color: colors.text,
+                          borderColor: colors.border,
+                          fontSize: 18,
+                          fontFamily: 'text',
+                          borderBottomWidth: 1,
+                          borderStyle: 'dashed',
+                          textAlign: 'center',
+                          flex: 1,
+                        }}
+                      >
+                        N/A
+                      </Text>
+                    )}
                   </View>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-evenly' }}>
-                  <AnimatedPressable style={{ padding: 4 }} 
-                    onPress={() => {  
-                    setModalClayData(c)
-                    setNewClayFormVisible(true) 
-                  }}>
-                    <Ionicons name="create" color={colors.border} size={40} />
-                  </AnimatedPressable>
-                  <AnimatedPressable style={[{ padding: 4 }]} onPress={() => console.log('deleteModal')}>
-                    <Ionicons name="trash" color={colors.border} size={40} />
-                  </AnimatedPressable>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-evenly',
+                    }}
+                  >
+                    <AnimatedPressable
+                      style={{ padding: 4, paddingHorizontal: 16 }}
+                      onPress={() => {
+                        setModalClayData(c)
+                        setNewClayFormVisible(true)
+                      }}
+                    >
+                      <Ionicons name="create" color={colors.border} size={30} />
+                    </AnimatedPressable>
+                    <AnimatedPressable
+                      style={[{ paddingVertical: 4, paddingHorizontal: 16, borderColor: colors.border }]}
+                      onPress={() => {
+                        setModalClayData(c)
+                        setDeleteModalVisible(true)
+                      }}
+                    >
+                      <Ionicons name="trash" color={colors.border} size={30} />
+                    </AnimatedPressable>
+                  </View>
                 </View>
-                    </View>
-                  )}
-          
-          </AnimatedTouchable>
-        )
+              )}
+            </AnimatedTouchable>
+          ),
         )}
       </ScrollView>
       <View style={{ position: 'absolute', right: 0, left: 0, bottom: 10, alignItems: 'center' }}>
@@ -268,14 +346,26 @@ const animateHeight = (id: string) => {
             { backgroundColor: colors.primary, borderColor: colors.border },
           ]}
         >
-          <Text style={[{ color: colors.text, fontFamily: 'textBold', fontSize: 16 }, isSelectable ? {fontSize: 16 } : {fontSize: 20}]}>
+          <Text
+            style={[
+              { color: colors.text, fontFamily: 'textBold', fontSize: 16 },
+              isSelectable ? { fontSize: 16 } : { fontSize: 20 },
+            ]}
+          >
             New Clay
           </Text>
         </AnimatedPressable>
         {children}
       </View>
+      <DeleteModal 
+        name={modalClayData?.name || 'Error Retrieving Name'} 
+        deleteId={modalClayData?.clayId || '0'}
+        isDeleteModalVisible={isDeleteModalVisible}
+        setDeleteModalVisible={setDeleteModalVisible}
+        deleteCallback={handleDeleteClay}
+        />
       <Modal
-        isVisible={newClayFormVisible}
+        isVisible={isNewClayFormVisible}
         animationIn={'zoomIn'}
         animationInTiming={750}
         animationOut={'zoomOut'}
@@ -328,4 +418,4 @@ const styles = StyleSheet.create({
     fontSize: 20,
     textAlign: 'center',
   },
-});
+})

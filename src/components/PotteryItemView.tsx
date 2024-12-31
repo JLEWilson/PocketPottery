@@ -25,6 +25,7 @@ import AnimatedPressable from './AnimatedPressable'
 import NewPotteryItem from './NewPotteryItem'
 import Modal from 'react-native-modal'
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
+import DeleteModal from './DeleteModal'
 
 export type PotteryItemViewProps = {
   route: RouteProp<RootStackParamList, 'PotteryItemView'>
@@ -549,31 +550,13 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
               firings: firings,
             }}
           />
-          <Modal 
-            isVisible={isDeleteModalVisible}
-            animationIn={'zoomIn'}
-            animationInTiming={750}
-            animationOut={'zoomOut'}
-            animationOutTiming={750}
-            backdropColor={colors.border}
-            backdropOpacity={0.8}
-            onBackdropPress={() => setDeleteModalVisible(false)}
-            onBackButtonPress={() => setDeleteModalVisible(false)}
-            backdropTransitionOutTiming={0}
-          >
-            <View style={[styles.deleteModal, {backgroundColor: colors.background, borderColor: colors.border}]}>
-              <Text style={{fontSize: 18, color: colors.text, fontFamily: 'heading', textAlign: 'center'}}>Are you sure you want to delete</Text>
-              <Text style={{fontSize: 18, color: colors.text, fontFamily: 'heading', textAlign: 'center'}}>{potteryItem.projectTitle}?</Text>
-              <View style={{flexDirection: 'row', flex: 1,justifyContent: 'space-evenly', alignItems:'center'}}>
-                <AnimatedPressable style={[styles.deleteModalButtons, {backgroundColor: colors.primary, borderColor: colors.border}]} onPress={() => setDeleteModalVisible(false)}>
-                  <Text style={[styles.deleteModalButtonText, {color: colors.text}]}>Cancel</Text>
-                </AnimatedPressable>
-                <AnimatedPressable style={[styles.deleteModalButtons, {backgroundColor: colors.notification, borderColor: colors.border}]} onPress={() => handleDeletePotteryItem(potteryItem.potteryItemId)}>
-                  <Text style={[styles.deleteModalButtonText, {color: colors.text}]}>Delete</Text>
-                </AnimatedPressable>
-              </View>
-            </View>
-          </Modal>
+          <DeleteModal 
+            name={potteryItem.projectTitle} 
+            deleteId={potteryItem.potteryItemId}
+            isDeleteModalVisible={isDeleteModalVisible} 
+            setDeleteModalVisible={setDeleteModalVisible} 
+            deleteCallback={handleDeletePotteryItem}
+          />
         </View>
       )
       )}
@@ -637,19 +620,5 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     overflow: 'hidden',
   },
-  deleteModal: {
-    borderWidth: 1,
-    borderRadius: 8,
-    height: 150,
-    padding: 10
-  },
-  deleteModalButtons: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 6,
-    borderWidth: 1
-  },
-  deleteModalButtonText: {
-    fontSize: 16
-  }
+  
 })
