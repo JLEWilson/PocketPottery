@@ -50,7 +50,7 @@
     "expo": {
       "splash": {
         "image": "./assets/splash.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#B7CBB5"
       }
     },
     "newArchEnabled": true,
