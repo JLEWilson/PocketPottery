@@ -19,12 +19,15 @@ const NewFiring = ({ callbackFunction }: NewFiringProps) => {
   const [isConeSelectVisible, setConeSelectVisible] = useState(false)
   const { colors } = useTheme()
 
+
   const handleDropdownSelection = (key: string) => {
     setConeSelectVisible(false)
     setCone(parseInt(key) as keyof typeof CONE_TEMPERATURES)
   }
 
   const handleSubmitFiring = () => {
+
+
     const f: Pick<PotteryItemFirings, 'fireType' | 'fireStyle' | 'cone'> = {
       fireStyle: fireStyle,
       fireType: fireType,
@@ -37,9 +40,9 @@ const NewFiring = ({ callbackFunction }: NewFiringProps) => {
     <View
       style={[styles.container, { backgroundColor: colors.background, borderColor: colors.border }]}
     >
-      <Text style={[globalStyles.title, { marginBottom: 20, color: colors.text }]}>New Firing</Text>
+      <Text style={[globalStyles.title, { marginBottom: 20, color: colors.text, fontFamily: 'title' }]}>New Firing</Text>
       <View style={styles.group}>
-        <Text style={[globalStyles.label, { color: colors.text }]}>Fire Type:</Text>
+        <Text style={[globalStyles.label, { color: colors.text, fontFamily: 'heading' }]}>Fire Type:</Text>
         <View style={[globalStyles.radio, { borderColor: colors.border }]}>
           <Pressable
             onPress={() => setFireType('Bisque')}
@@ -51,7 +54,7 @@ const NewFiring = ({ callbackFunction }: NewFiringProps) => {
                 : { backgroundColor: colors.card },
             ]}
           >
-            <Text style={{ color: colors.text }}>Bisque</Text>
+            <Text style={{ color: colors.text, fontFamily: 'text' }}>Bisque</Text>
           </Pressable>
           <Pressable
             onPress={() => setFireType('Glaze')}
@@ -63,12 +66,12 @@ const NewFiring = ({ callbackFunction }: NewFiringProps) => {
                 : { backgroundColor: colors.card },
             ]}
           >
-            <Text style={{ color: colors.text }}>Glaze</Text>
+            <Text style={{ color: colors.text, fontFamily: 'text' }}>Glaze</Text>
           </Pressable>
         </View>
       </View>
       <View style={styles.group}>
-        <Text style={[globalStyles.label, { color: colors.text }]}>Fire Style:</Text>
+        <Text style={[globalStyles.label, { color: colors.text, fontFamily: 'heading' }]}>Fire Style:</Text>
         <View style={[globalStyles.radio, { borderColor: colors.border }]}>
           <Pressable
             onPress={() => setFireStyle('Oxidation')}
@@ -80,7 +83,7 @@ const NewFiring = ({ callbackFunction }: NewFiringProps) => {
                 : { backgroundColor: colors.card },
             ]}
           >
-            <Text style={{ color: colors.text }}>Oxidation</Text>
+            <Text style={{ color: colors.text, fontFamily: 'text', fontSize:12 }}>Oxidation</Text>
           </Pressable>
           <Pressable
             onPress={() => setFireStyle('Reduction')}
@@ -92,30 +95,30 @@ const NewFiring = ({ callbackFunction }: NewFiringProps) => {
                 : { backgroundColor: colors.card },
             ]}
           >
-            <Text style={{ color: colors.text }}>Reduction</Text>
+            <Text style={{ color: colors.text, fontFamily: 'text', fontSize:12 }}>Reduction</Text>
           </Pressable>
           <Pressable
             onPress={() => setFireStyle('Environmental')}
             style={[
               globalStyles.radioButton,
-              { borderColor: colors.border },
+              { borderColor: colors.border, flex: 1.5 },
               fireStyle === 'Environmental'
                 ? { backgroundColor: colors.primary }
                 : { backgroundColor: colors.card },
             ]}
           >
-            <Text style={{ color: colors.text }}>Environmental</Text>
+            <Text style={{ color: colors.text, fontFamily: 'text', fontSize:12, minWidth:0 }}>Environmental</Text>
           </Pressable>
         </View>
       </View>
       {fireStyle != 'Environmental' && (
         <View style={styles.group}>
-          <Text style={[globalStyles.label, { color: colors.text }]}>Temperature</Text>
+          <Text style={[globalStyles.label, { color: colors.text, fontFamily: 'heading' }]}>Temperature</Text>
           <Pressable
             style={[styles.dropdown, { borderColor: colors.border, backgroundColor: colors.card }]}
             onPress={() => setConeSelectVisible(true)}
           >
-            <Text style={{ color: colors.text }}>
+            <Text style={{ color: colors.text, fontFamily: 'text' }}>
               {'Cone: ' +
                 CONE_TEMPERATURES[cone].cone +
                 ' (' +
@@ -160,9 +163,9 @@ const NewFiring = ({ callbackFunction }: NewFiringProps) => {
             { backgroundColor: colors.background, borderColor: colors.border },
           ]}
         >
-          <ScrollView style={styles.modalScrollContainer}>
+          <ScrollView contentContainerStyle={styles.modalScrollContainer}>
             {Object.entries(CONE_TEMPERATURES).map(([key, value]) => (
-              <Pressable
+              <AnimatedPressable
                 style={[
                   styles.selection,
                   { backgroundColor: colors.card, borderColor: colors.border },
@@ -170,10 +173,10 @@ const NewFiring = ({ callbackFunction }: NewFiringProps) => {
                 onPress={() => handleDropdownSelection(key)}
                 key={key}
               >
-                <Text>
+                <Text style={{color: colors.text, fontFamily: 'text'}}>
                   {'Cone: ' + value.cone + ' (' + value.fahrenheit + 'F / ' + value.celsius + 'C)'}
                 </Text>
-              </Pressable>
+              </AnimatedPressable>
             ))}
           </ScrollView>
         </View>
@@ -202,9 +205,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
   },
   selection: {
-    margin: 5,
+    marginHorizontal: 5,
     justifyContent: 'center',
     padding: 8,
+    borderWidth: 1,
   },
   modalContainer: {
     padding: 10,
@@ -214,7 +218,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   modalScrollContainer: {
-    paddingBottom: 25,
+    rowGap: 5
   },
   button: {
     borderColor: 'black',

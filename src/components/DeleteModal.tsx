@@ -28,14 +28,14 @@ const DeleteModal = ({name, deleteId, isDeleteModalVisible, setDeleteModalVisibl
     backdropTransitionOutTiming={0}
   >
     <View style={[styles.deleteModal, {backgroundColor: colors.background, borderColor: colors.border}]}>
-      <Text style={{fontSize: 18, color: colors.text, fontFamily: 'heading', textAlign: 'center'}}>Are you sure you want to delete</Text>
-      <Text style={{fontSize: 18, color: colors.text, fontFamily: 'heading', textAlign: 'center'}}>{name}?</Text>
-      <View style={{flexDirection: 'row', flex: 1,justifyContent: 'space-evenly', alignItems:'center'}}>
+      <Text style={{fontSize: 20, color: colors.text, fontFamily: 'headingBold', textAlign: 'center'}}>Are you sure you want to delete</Text>
+      <Text style={{fontSize: 20, color: colors.text, fontFamily: 'heading', textAlign: 'center'}}>{name}?</Text>
+      <View style={{flexDirection: 'row', flex: 1,justifyContent: 'space-evenly', alignItems:'center', marginTop: 10}}>
         <AnimatedPressable style={[styles.deleteModalButtons, {backgroundColor: colors.primary, borderColor: colors.border}]} onPress={() => setDeleteModalVisible(false)}>
-          <Text style={[styles.deleteModalButtonText, {color: colors.text}]}>Cancel</Text>
+          <Text style={[styles.deleteModalButtonText, {color: colors.text, fontFamily: 'textBold'}]}>Cancel</Text>
         </AnimatedPressable>
         <AnimatedPressable style={[styles.deleteModalButtons, {backgroundColor: colors.notification, borderColor: colors.border}]} onPress={() => deleteCallback(deleteId)}>
-          <Text style={[styles.deleteModalButtonText, {color: colors.text}]}>Delete</Text>
+          <Text style={[styles.deleteModalButtonText, {color: colors.text, fontFamily: 'textBold'}]}>Delete</Text>
         </AnimatedPressable>
       </View>
     </View>

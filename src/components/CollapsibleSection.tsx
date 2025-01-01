@@ -31,13 +31,13 @@ const CollapsibleSection = ({
       <TouchableOpacity onPress={toggleDetails} style={styles.toggleButton}>
         <View style={{ borderWidth: 1, borderColor: colors.text, height: 0, flex: 1 }} />
         <View style={{ flexDirection: 'row', flex: 3, justifyContent: 'center' }}>
-          <Text style={[styles.toggleButtonText, { color: colors.text }]}>
+          <Text style={[styles.toggleButtonText, { color: colors.text, fontFamily: 'heading', marginHorizontal: 5}]}>
             {isExpanded ? hideText : showText}
           </Text>
           {isExpanded ? (
-            <Ionicons name="caret-up-outline" size={24} color={colors.text} />
+            <Ionicons name="caret-up-outline" size={20} color={colors.text} />
           ) : (
-            <Ionicons name="caret-down-outline" size={24} color={colors.text} />
+            <Ionicons name="caret-down-outline" size={20} color={colors.text} />
           )}
         </View>
         <View style={{ borderWidth: 1, borderColor: colors.text, height: 0, flex: 1 }} />
@@ -65,7 +65,6 @@ export default CollapsibleSection
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 4,
   },
   toggleButton: {
     padding: 10,
@@ -75,18 +74,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   toggleButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  detailsText: {
     fontSize: 14,
-    color: 'black',
   },
   scrollArea: {
     marginHorizontal: 10,
-    borderWidth: 1,
-    borderColor: 'black',
     flex: 1,
     flexDirection: 'row',
   },

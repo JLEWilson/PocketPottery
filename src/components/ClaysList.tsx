@@ -9,7 +9,6 @@ import {
   View,
   BackHandler,
   Animated,
-  LayoutChangeEvent,
 } from 'react-native'
 import Modal from 'react-native-modal'
 import NewClay from './NewClay'
@@ -49,7 +48,6 @@ function ClaysList({
   const [reload, setReload] = useState(false)
   const rectHeights = useRef<Record<string, Animated.Value>>({})
   const [currentExpandedId, setCurrentExpandedId] = useState<string | null>(null)
-  const maxHeight = 170
   const animationDuration = 300
   const isSelectable = Boolean(setSelectedClays)
 
@@ -62,7 +60,7 @@ function ClaysList({
         ? storedClays.filter((clay) => !existingProjectClays.some((c) => c.clayId === clay.clayId))
         : storedClays
 
-      setAllClays(initiallyFilteredClays) // Store the filtered clays
+      setAllClays(initiallyFilteredClays)
     } catch (error) {
       if (error instanceof Error) {
         console.error(`Error loading clays: ${error.message}`)
@@ -70,7 +68,7 @@ function ClaysList({
         console.error('Unknown error occurred while loading clays.')
       }
     }
-  }, [DB, selectedClays]) // `selectedClays` is only used for the initial filtering
+  }, [DB, selectedClays])
 
   useFocusEffect(
     useCallback(() => {
@@ -93,7 +91,7 @@ function ClaysList({
     const initializeRectHeights = () => {
       allClays.forEach((clay) => {
         if (!rectHeights.current[clay.clayId]) {
-          rectHeights.current[clay.clayId] = new Animated.Value(1) // Initial size
+          rectHeights.current[clay.clayId] = new Animated.Value(1)
         }
       })
     }
@@ -107,7 +105,7 @@ function ClaysList({
     const rowGap = 40
 
     const notesLines = Math.ceil(c.notes.length / 35)
-    const manufacturerLines = Math.ceil(c.manufacturer.length / 15) 
+    const manufacturerLines = Math.ceil(c.manufacturer.length / 15)
     const dynamicHeight = notesLines * lineHeight + manufacturerLines * lineHeight
     const buffer = 40
 
@@ -161,18 +159,20 @@ function ClaysList({
           ? prevSelectedClays.filter((selected) => selected.clayId !== c.clayId)
           : [...prevSelectedClays, c]
 
-        return updatedClays // Update the local state
+        return updatedClays
       })
     } else {
       curClay?.clayId === c.clayId ? setCurClay(null) : setCurClay(c)
       animateHeight(c)
     }
   }
+
   const handleDeleteClay = async (id: string) => {
     await deleteClayById(DB, id)
     setReload((prev) => !prev)
     setDeleteModalVisible(false)
   }
+
   const handleModalSubmission = () => {
     setNewClayFormVisible(false)
     setReload((prev) => !prev)
@@ -231,7 +231,7 @@ function ClaysList({
                     <Text style={{ color: colors.text, fontFamily: 'headingBold', fontSize: 18 }}>
                       Manufacturer:
                     </Text>
-                    {c.manufacturer.length > 1 ? (
+                    {c.manufacturer.length > 0 ? (
                       <Text
                         style={{
                           color: colors.text,
@@ -265,13 +265,13 @@ function ClaysList({
                   </View>
                   <View
                     style={[
-                      c.notes.length > 1 ? { flexDirection: 'column' } : { flexDirection: 'row' },
+                      c.notes.length > 0 ? { flexDirection: 'column' } : { flexDirection: 'row' },
                     ]}
                   >
                     <Text style={{ color: colors.text, fontFamily: 'headingBold', fontSize: 18 }}>
                       Notes:
                     </Text>
-                    {c.notes.length > 1 ? (
+                    {c.notes.length > 0 ? (
                       <Text
                         style={{
                           color: colors.text,
@@ -319,7 +319,9 @@ function ClaysList({
                       <Ionicons name="create" color={colors.border} size={30} />
                     </AnimatedPressable>
                     <AnimatedPressable
-                      style={[{ paddingVertical: 4, paddingHorizontal: 16, borderColor: colors.border }]}
+                      style={[
+                        { paddingVertical: 4, paddingHorizontal: 16, borderColor: colors.border },
+                      ]}
                       onPress={() => {
                         setModalClayData(c)
                         setDeleteModalVisible(true)
@@ -357,13 +359,13 @@ function ClaysList({
         </AnimatedPressable>
         {children}
       </View>
-      <DeleteModal 
-        name={modalClayData?.name || 'Error Retrieving Name'} 
+      <DeleteModal
+        name={modalClayData?.name || 'Error Retrieving Name'}
         deleteId={modalClayData?.clayId || '0'}
         isDeleteModalVisible={isDeleteModalVisible}
         setDeleteModalVisible={setDeleteModalVisible}
         deleteCallback={handleDeleteClay}
-        />
+      />
       <Modal
         isVisible={isNewClayFormVisible}
         animationIn={'zoomIn'}

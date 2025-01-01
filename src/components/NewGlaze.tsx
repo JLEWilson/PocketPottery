@@ -1,19 +1,20 @@
 import { View, Text, StyleSheet, TextInput } from 'react-native'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import type { Glaze } from '../models'
 import { v4 as uuidv4 } from 'uuid'
 import { useTheme } from '@react-navigation/native'
-import { addGlaze } from '../services/glaze-service'
+import { addGlaze, updateGlaze } from '../services/glaze-service'
 import { useDatabase } from '../services/db-context'
 import AnimatedPressable from './AnimatedPressable'
 
 type NewGlazeProps = {
   callBackFunction?: () => void
   children?: React.ReactNode
+  initialData?: Glaze
 }
 
 const NewGlaze = (props: NewGlazeProps) => {
-  const { callBackFunction, children } = props
+  const { callBackFunction, children, initialData } = props
   const DB = useDatabase()
   const { colors } = useTheme()
   const [name, setName] = useState('')
@@ -30,6 +31,31 @@ const NewGlaze = (props: NewGlazeProps) => {
     addGlaze(DB, newGlaze)
     callBackFunction?.()
   }
+
+  const handleUpdateGlaze = () => {
+    if(!initialData) return
+    
+    const glazeToUpdate: Glaze = {
+      glazeId: initialData.glazeId,
+      name: name,
+      manufacturer: manufacturer,
+      notes: notes,
+    }
+    updateGlaze(DB, glazeToUpdate)
+    callBackFunction?.()
+  }
+
+  const handleFormSubmit = () => {
+    initialData ? handleUpdateGlaze() : handleAddNewGlaze()
+  }
+
+  useEffect(() => {
+     if(initialData){
+       setName(initialData.name)
+       setManufacturer(initialData.manufacturer)
+       setNotes(initialData.notes)
+     }
+   },[initialData])
 
   return (
     <View style={styles.container}>
@@ -54,6 +80,7 @@ const NewGlaze = (props: NewGlazeProps) => {
                 textAlignVertical: 'center',
               },
             ]}
+            value={name}
             onChangeText={setName}
             maxLength={20}
             blurOnSubmit={true}
@@ -79,6 +106,7 @@ const NewGlaze = (props: NewGlazeProps) => {
             ]}
             onChangeText={setManufacturer}
             maxLength={20}
+            value={manufacturer}
             blurOnSubmit={true}
             selectTextOnFocus={true}
           />
@@ -101,6 +129,7 @@ const NewGlaze = (props: NewGlazeProps) => {
                 textAlignVertical: 'top',
               },
             ]}
+            value={notes}
             onChangeText={setNotes}
             maxLength={250}
             multiline={true}
@@ -109,7 +138,7 @@ const NewGlaze = (props: NewGlazeProps) => {
         </View>
         <AnimatedPressable
           style={[styles.button, { backgroundColor: colors.primary, borderColor: colors.border }]}
-          onPress={handleAddNewGlaze}
+          onPress={handleFormSubmit}
         >
           <Text
             style={{ fontSize: 20, paddingVertical: 4, color: colors.text, fontFamily: 'textBold' }}

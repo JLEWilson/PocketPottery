@@ -41,11 +41,11 @@ const MyDarkTheme = {
   colors: {
     ...DarkTheme.colors,
     background: '#2e2e2e',
-    primary: '#778360',
+    primary: '#78967A',
     card: '#464745',
-    text: '#E8EBE6',
-    border: '#504A3D',
-    notification: '#E85E00',
+    text: '#B8CABF',
+    border: '#4A5B52',
+    notification: '#6F411B',
   },
 }
 
@@ -56,6 +56,7 @@ SplashScreen.setOptions({
   duration: 1000,
   fade: true,
 });
+
 const App = () => {
   const [colorScheme, setColorScheme] = useState(
     Appearance.getColorScheme() || 'light'
@@ -78,7 +79,7 @@ const App = () => {
     setTimeout(() => {
       setAppIsReady(true);
       SplashScreen.hideAsync();
-    }, 2000);
+    }, 1000);
   }, []);
 
   if (!appIsReady) {
@@ -160,13 +161,12 @@ const App = () => {
   return (
     <DatabaseProvider>
       <NavigationContainer theme={myTheme}>
-        <StatusBar backgroundColor={myTheme.colors.background} barStyle={colorScheme === 'light' ? 'light-content':'dark-content'} />
+        <StatusBar backgroundColor={myTheme.colors.background} barStyle={colorScheme === 'light' ? 'dark-content':'light-content'} />
         <Stack.Navigator
           screenOptions={{
             headerStyle: {
               backgroundColor: myTheme.colors.background,
-              borderWidth: 1,
-              borderColor: myTheme.colors.border,
+
             },
             headerTitleAlign: 'center',
             headerTitleStyle: {

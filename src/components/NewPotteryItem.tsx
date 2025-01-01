@@ -12,6 +12,7 @@ import {
   Animated,
   Keyboard,
   Alert,
+  AlertOptions,
 } from 'react-native'
 import Modal from 'react-native-modal'
 import ClaysList from './ClaysList'
@@ -76,7 +77,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
   const [currentClays, setCurrentClays] = useState<Clay[]>([])
   const [clays, setClays] = useState<Clay[]>([])
   const [clayFormVisible, setClayFormVisible] = useState(false)
-  const [currentGlaze, setCurrentGlaze] = useState<Glaze | null>(null)
+  const [currentGlazes, setCurrentGlazes] = useState<Glaze[]>([])
   const [glazes, setGlazes] = useState<Glaze[]>([])
   const [glazeFormVisible, setGlazeFormVisible] = useState(false)
   const [measurementFormVisible, setMeasurementFormVisible] = useState(false)
@@ -90,6 +91,8 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
   const maxHeight = 680
   const [clayViewHeight, setClayViewHeight] = useState(50)
   const animatedHeight = useRef(new Animated.Value(minHeight)).current
+  const [isAlertVisible, setAlertVisible] = useState(false)
+  const [alertText, setAlertText] = useState('')
 
   const animateHeight = (toValue: number, speed: number) => {
     Animated.timing(animatedHeight, {
@@ -190,10 +193,12 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
     setClays((prevClays) => prevClays.filter((clay) => clay !== c))
     setCurrentClays((prevClays) => prevClays.filter((clay) => clay !== c))
   }
-  const addGlaze = (g: Glaze) => {
+  const addGlaze = (g: Glaze[]) => {
     setGlazeFormVisible(false)
-    if (glazes.includes(g)) return
-    setGlazes((prevGlazes) => [...prevGlazes, g])
+    setGlazes((prevGlazes) => {
+      const newGlazes = g.filter((glaze) => !prevGlazes.includes(glaze))
+      return [...prevGlazes, ...newGlazes]
+    })
   }
   const removeGlaze = (g: Glaze) => {
     setGlazes((prevGlazes) => prevGlazes.filter((glaze) => glaze !== g))
@@ -398,11 +403,13 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
 
   const handleNewPotteryItem = async () => {
     if (pieceName.length < 1) {
-      Alert.alert('Missing Name', 'Please add a name for your project')
+      setAlertText('Name')
+      setAlertVisible(true)
       return
     }
     if (clays.length < 1) {
-      Alert.alert('Missing Clay', 'Please add at least one clay to your project.')
+      setAlertText('Clay')
+      setAlertVisible(true)
       return
     }
 
@@ -462,7 +469,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
     setCurrentClays([])
     setClays([])
     setClayFormVisible(false)
-    setCurrentGlaze(null)
+    setCurrentGlazes([])
     setGlazes([])
     setGlazeFormVisible(false)
     setMeasurementFormVisible(false)
@@ -504,6 +511,9 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
             <Text style={[globalStyles.label, { color: colors.text, fontFamily: 'heading' }]}>
               Project Title
             </Text>
+            <Text style={[styles.reminderText, { color: colors.text, fontFamily: 'text' }]}>
+                Required
+              </Text>
             <TextInput
               maxLength={20}
               style={[
@@ -852,7 +862,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
         animationOut={'zoomOut'}
         animationOutTiming={750}
         backdropColor={colors.border}
-        backdropOpacity={0.2}
+        backdropOpacity={0.5}
         onBackdropPress={() => setImageModalVisible(false)}
         onBackButtonPress={() => setImageModalVisible(false)}
         backdropTransitionOutTiming={0}
@@ -893,7 +903,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
         animationOut={'zoomOut'}
         animationOutTiming={750}
         backdropColor={colors.border}
-        backdropOpacity={0.4}
+        backdropOpacity={0.5}
         onBackdropPress={() => setMeasurementFormVisible(false)}
         onBackButtonPress={() => setMeasurementFormVisible(false)}
         backdropTransitionOutTiming={0}
@@ -908,7 +918,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
         animationOut={'zoomOut'}
         animationOutTiming={750}
         backdropColor={colors.border}
-        backdropOpacity={0.4}
+        backdropOpacity={0.5}
         onBackButtonPress={() => setClayFormVisible(false)}
         onBackdropPress={() => setClayFormVisible(false)}
         backdropTransitionOutTiming={0}
@@ -954,7 +964,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
         animationOut={'zoomOut'}
         animationOutTiming={750}
         backdropColor={colors.border}
-        backdropOpacity={0.4}
+        backdropOpacity={0.5}
         onBackButtonPress={() => setGlazeFormVisible(false)}
         onBackdropPress={() => setGlazeFormVisible(false)}
         backdropTransitionOutTiming={0}
@@ -974,10 +984,10 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
           >
             <Ionicons name="close-circle-outline" size={30} color={colors.text} />
           </Pressable>
-          <GlazesList onGlazeSelect={setCurrentGlaze}>
+          <GlazesList selectedGlazes={currentGlazes} existingProjectGlazes={glazes} setSelectedGlazes={setCurrentGlazes}>
             <AnimatedPressable
               onPress={() => {
-                currentGlaze && addGlaze(currentGlaze)
+                addGlaze(currentGlazes)
               }}
               style={[
                 styles.button,
@@ -1000,12 +1010,48 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
         animationOut={'zoomOut'}
         animationOutTiming={750}
         backdropColor={colors.border}
-        backdropOpacity={0.4}
+        backdropOpacity={0.5}
         onBackButtonPress={() => setFiringFormVisible(false)}
         onBackdropPress={() => setFiringFormVisible(false)}
         backdropTransitionOutTiming={0}
       >
         <NewFiring callbackFunction={addFiring} />
+      </Modal>
+      {/*Alert Modal*/}
+      <Modal 
+        isVisible={isAlertVisible}
+        animationIn={'zoomIn'}
+        animationInTiming={400}
+        animationOut={'zoomOut'}
+        animationOutTiming={400}
+        backdropColor={colors.border}
+        backdropOpacity={0.5}
+        onBackButtonPress={() => setAlertVisible(false)}
+        onBackdropPress={() => setAlertVisible(false)}
+        backdropTransitionOutTiming={0}
+      >
+        <View
+         style={{
+          height: 130,
+          borderWidth: 1,
+          borderColor: colors.border,
+          backgroundColor: colors.background,
+          borderRadius: 10,
+          padding: 8,
+          rowGap: 8
+        }}>
+          <Text style={{color: colors.text, fontFamily: 'title', fontSize: 20, flex: 1}}>Missing {alertText}</Text>
+          <Text style={{color: colors.text, fontFamily: 'heading', fontSize: 18, textAlign: 'center', flex: 1}}>Please add a {alertText} to your project</Text>
+          <AnimatedPressable onPress={() => setAlertVisible(false)}
+            style={[
+              { backgroundColor: colors.primary, borderColor: colors.border, paddingVertical: 4, paddingHorizontal: 10, alignSelf: 'flex-end', borderWidth: 1, borderRadius: 10, },
+            ]}
+            >
+              <Text style={{color: colors.text, fontFamily: 'textBold', textAlign: 'center',}}>
+                Okay
+              </Text>
+            </AnimatedPressable>
+        </View>
       </Modal>
     </View>
   )
@@ -1056,7 +1102,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   button: {
-    marginTop: 4,
+    marginTop: 10,
   },
   buttonText: {
     fontSize: 16,

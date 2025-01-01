@@ -9,6 +9,7 @@ const globalStyles = StyleSheet.create({
   },
   label: {
     marginLeft: 8,
+    marginBottom: 6,
     fontSize: 14,
   },
   button: {

@@ -304,7 +304,7 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
                                 },
                               ]}
                             >
-                              {clay.manufacturer}
+                              {clay.manufacturer.length >= 1 ? clay.manufacturer : 'N/A'}
                             </Text>
                           </View>
                           <Text style={[{ color: colors.text, fontFamily: 'heading' }]}>Notes</Text>
@@ -319,10 +319,11 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
                                   borderWidth: 1,
                                   borderTopWidth: 0,
                                   borderStyle: 'dashed',
+                                  textAlign: 'center'
                                 },
                               ]}
                             >
-                              {clay.notes}
+                              {clay.notes.length >= 1 ? clay.notes : 'N/A'}
                             </Text>
                           </View>
                         </View>
@@ -394,7 +395,7 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
                                 },
                               ]}
                             >
-                              {glaze.manufacturer}
+                              {glaze.manufacturer.length >=1 ? glaze.manufacturer : 'N/A'}
                             </Text>
                           </View>
                           <Text style={[{ color: colors.text, fontFamily: 'heading' }]}>Notes</Text>
@@ -411,7 +412,7 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
                                 },
                               ]}
                             >
-                              {glaze.notes}
+                              {glaze.notes.length >= 2? glaze.notes : 'N/A'}
                             </Text>
                           </View>
                         </View>
@@ -569,7 +570,7 @@ export default PotteryItemView
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
+    paddingHorizontal: 10,
   },
   scrollContainer: {
     borderWidth: 1,

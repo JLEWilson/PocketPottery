@@ -45,7 +45,7 @@ const NewClay = (props: NewClayProps) => {
     callBackFunction?.()
   }
   const handleFormSubmit = () => {
-    initialData ? handleAddNewClay() : handleUpdateClay()
+    initialData ? handleUpdateClay() : handleAddNewClay() 
   }
   useEffect(() => {
     if(initialData){
@@ -136,7 +136,7 @@ const NewClay = (props: NewClayProps) => {
         </View>
         <AnimatedPressable
           style={[styles.button, { backgroundColor: colors.primary, borderColor: colors.border }]}
-          onPress={handleAddNewClay}
+          onPress={handleFormSubmit}
         >
           <Text
             style={{ fontSize: 20, paddingVertical: 4, color: colors.text, fontFamily: 'textBold' }}
