@@ -379,7 +379,10 @@ function GlazesList({
         backdropTransitionOutTiming={0}
       >
         <View style={{ flex: 1 }}>
-          <NewGlaze initialData={modalGlazeData} callBackFunction={handleModalSubmission}>
+          <NewGlaze initialData={modalGlazeData} callBackFunction={handleModalSubmission} 
+                      allManufacturers={Array.from(new Set(allGlazes.map(glaze => glaze.manufacturer))).filter(manufacturer => manufacturer.length > 0)}
+
+          >
             <Pressable
               onPress={() => setNewGlazeFormVisible(false)}
               style={{ position: 'absolute', top: 10, right: 20, zIndex: 3 }}

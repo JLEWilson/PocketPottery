@@ -6,22 +6,27 @@ import { addClay, updateClay } from '../services/clay-service'
 import { useDatabase } from '../services/db-context'
 import { useTheme } from '@react-navigation/native'
 import AnimatedPressable from './AnimatedPressable'
+import Modal from 'react-native-modal'
+import globalStyles from '../constants/stylesheet'
+import { ScrollView } from 'react-native-gesture-handler'
 
 type NewClayProps = {
   callBackFunction?: () => void
   children?: React.ReactNode
   initialData?: Clay
+  allManufacturers: string[]
 }
 
 const NewClay = (props: NewClayProps) => {
-  const { callBackFunction, children, initialData } = props
+  const { callBackFunction, children, initialData, allManufacturers} = props
   const DB = useDatabase()
   const { colors } = useTheme()
   const [name, setName] = useState('')
   const [manufacturer, setManufacturer] = useState('')
   const [notes, setNotes] = useState('')
   const buttonText = initialData ? 'Update Clay' :  'Add New Clay'
-
+  const [isDropdownVisible, setIsDropdownVisible] = useState(false)
+  
   const handleAddNewClay = () => {
     const newClay: Clay = {
       clayId: uuidv4(),
@@ -58,7 +63,7 @@ const NewClay = (props: NewClayProps) => {
   return (
     <View style={styles.container}>
       <View
-        style={[styles.content, { backgroundColor: colors.background, borderColor: colors.border }]}
+        style={[styles.content, { backgroundColor: colors.background, borderColor: colors.border, rowGap: 10 }]}
       >
         <Text style={[styles.title, { color: colors.text, fontFamily: 'title' }]}>New Clay</Text>
         <View style={[styles.textInputGroup, { flex: 1 }]}>
@@ -108,6 +113,15 @@ const NewClay = (props: NewClayProps) => {
             blurOnSubmit={true}
             selectTextOnFocus={true}
           />
+          {
+            allManufacturers.length > 0 && 
+            <AnimatedPressable
+            onPress={() => setIsDropdownVisible(true)} 
+            style={[globalStyles.button, {backgroundColor: colors.primary, borderColor: colors.border, marginTop: 5, alignSelf: 'center'}]}
+            >
+            <Text style={[{ color: colors.text, fontFamily: 'textBold', fontSize: 14 }]}>Choose From Existing</Text>
+            </AnimatedPressable>
+          }
         </View>
         <View style={[styles.textInputGroup, { flex: 2 }]}>
           <Text style={[styles.label, { color: colors.text, fontFamily: 'headingBold' }]}>
@@ -146,6 +160,44 @@ const NewClay = (props: NewClayProps) => {
         </AnimatedPressable>
         {children}
       </View>
+      <Modal 
+        isVisible={isDropdownVisible}
+        animationIn={'zoomIn'}
+        animationInTiming={750}
+        animationOut={'zoomOut'}
+        animationOutTiming={750}
+        backdropColor={colors.border}
+        backdropOpacity={0.5}
+        onBackdropPress={() => setIsDropdownVisible(false)}
+        onBackButtonPress={() => setIsDropdownVisible(false)}
+        backdropTransitionOutTiming={0}
+      >
+        <View  
+        style={[
+          styles.modalContainer,
+          { backgroundColor: colors.background, borderColor: colors.border },
+        ]}
+        >
+
+          <ScrollView>
+            {allManufacturers.map((m, i) => (
+              <AnimatedPressable key={'manu:' + i}
+              onPress={() => {
+                setManufacturer(m)
+                setIsDropdownVisible(false)
+              }}
+              style={[
+                styles.selection,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+              >
+                <Text style={[{color: colors.text, fontFamily: 'textBold', textAlign: 'center'}]}>{m}</Text>
+              </AnimatedPressable>
+            ))}
+            <></>
+          </ScrollView>
+                </View>
+      </Modal>
     </View>
   )
 }
@@ -193,4 +245,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  modalContainer: {
+    padding: 10,
+    marginHorizontal: 40,
+    marginVertical: 150,
+    borderWidth: 1,
+    borderRadius: 10,
+    maxHeight: 300
+  },
+  selection: {
+  marginHorizontal: 5,
+    justifyContent: 'center',
+    padding: 8,
+    borderWidth: 1,
+  }
 })

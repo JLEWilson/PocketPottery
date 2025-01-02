@@ -379,7 +379,11 @@ function ClaysList({
         backdropTransitionOutTiming={0}
       >
         <View style={{ flex: 1 }}>
-          <NewClay initialData={modalClayData} callBackFunction={handleModalSubmission}>
+          <NewClay 
+            initialData={modalClayData} 
+            callBackFunction={handleModalSubmission} 
+            allManufacturers={Array.from(new Set(allClays.map(clay => clay.manufacturer))).filter(manufacturer => manufacturer.length > 0)}
+            >
             <Pressable
               onPress={() => setNewClayFormVisible(false)}
               style={{ position: 'absolute', top: 10, right: 20, zIndex: 2 }}
