@@ -127,7 +127,7 @@ const NewFiring = ({ callbackFunction }: NewFiringProps) => {
                 CONE_TEMPERATURES[cone].celsius +
                 'C)'}
             </Text>
-            <Text style={{ position: 'absolute', right: 15, color: colors.text }}>
+            <Text style={{ position: 'absolute', right: 15, color: colors.text}}>
               <Ionicons color={colors.text} size={20} name="caret-down" />
             </Text>
           </Pressable>
@@ -137,7 +137,6 @@ const NewFiring = ({ callbackFunction }: NewFiringProps) => {
         <AnimatedPressable
           style={[
             globalStyles.button,
-            styles.button,
             { backgroundColor: colors.primary, borderColor: colors.border },
           ]}
           onPress={handleSubmitFiring}
@@ -220,11 +219,7 @@ const styles = StyleSheet.create({
   modalScrollContainer: {
     rowGap: 5
   },
-  button: {
-    borderColor: 'black',
-  },
   buttonText: {
     fontSize: 16,
-    fontWeight: 'bold',
   },
 })

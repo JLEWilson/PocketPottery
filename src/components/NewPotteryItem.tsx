@@ -509,7 +509,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
           {/*title*/}
           <View style={[styles.group, { height: 70, width: 'auto' }]}>
             <Text style={[globalStyles.label, { color: colors.text, fontFamily: 'heading' }]}>
-              Project Title
+              Piece Title
             </Text>
             <Text style={[styles.reminderText, { color: colors.text, fontFamily: 'text' }]}>
                 Required
@@ -843,11 +843,11 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
               {
               initialData ? 
               <Text style={{ fontSize: 18, color: colors.text, fontFamily: 'textBold' }}>
-                Update Project
+                Update Piece
               </Text> 
               : 
               <Text style={{ fontSize: 18, color: colors.text, fontFamily: 'textBold' }}>
-                Add New Project
+                Add New Piece
               </Text>
               }
             </AnimatedPressable>
@@ -950,7 +950,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
               ]}
             >
               <Text style={{ color: colors.text, fontFamily: 'textBold', fontSize: 18 }}>
-                Add Clay To Project
+                Add Clay To Piece
               </Text>
             </AnimatedPressable>
           </ClaysList>
@@ -996,7 +996,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
               ]}
             >
               <Text style={{ color: colors.text, fontFamily: 'textBold', fontSize: 18 }}>
-                Add Glaze To Project
+                Add Glaze To Piece
               </Text>
             </AnimatedPressable>
           </GlazesList>
@@ -1041,7 +1041,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
           rowGap: 8
         }}>
           <Text style={{color: colors.text, fontFamily: 'title', fontSize: 20, flex: 1}}>Missing {alertText}</Text>
-          <Text style={{color: colors.text, fontFamily: 'heading', fontSize: 18, textAlign: 'center', flex: 1}}>Please add a {alertText} to your project</Text>
+          <Text style={{color: colors.text, fontFamily: 'heading', fontSize: 18, textAlign: 'center', flex: 1}}>Please add a {alertText} to your piece</Text>
           <AnimatedPressable onPress={() => setAlertVisible(false)}
             style={[
               { backgroundColor: colors.primary, borderColor: colors.border, paddingVertical: 4, paddingHorizontal: 10, alignSelf: 'flex-end', borderWidth: 1, borderRadius: 10, },
