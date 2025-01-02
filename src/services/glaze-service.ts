@@ -1,11 +1,11 @@
 import type { SQLiteDatabase } from 'expo-sqlite'
 import type { Glaze } from '../models'
 
-const TABLE_NAME = 'Glazes'
+export const GLAZE_TABLE_NAME = 'Glazes'
 
 export const createGlazeTable = async (db: SQLiteDatabase) => {
   // create table if not exists
-  const query = `CREATE TABLE IF NOT EXISTS ${TABLE_NAME}(
+  const query = `CREATE TABLE IF NOT EXISTS ${GLAZE_TABLE_NAME}(
         glazeId TEXT PRIMARY KEY,
         name TEXT NOT NULL,
         manufacturer TEXT,
@@ -16,20 +16,20 @@ export const createGlazeTable = async (db: SQLiteDatabase) => {
 }
 
 export const getGlazes = async (db: SQLiteDatabase): Promise<Glaze[]> => {
-  const getAllQuery = `SELECT * FROM ${TABLE_NAME}`
+  const getAllQuery = `SELECT * FROM ${GLAZE_TABLE_NAME}`
   const result = await db.getAllAsync(getAllQuery)
   return result as Glaze[]
 }
 
 export const getGlazeById = async (db: SQLiteDatabase, id: string): Promise<Glaze | null> => {
-  const getQuery = `SELECT * FROM ${TABLE_NAME} WHERE glazeId = ?`
+  const getQuery = `SELECT * FROM ${GLAZE_TABLE_NAME} WHERE glazeId = ?`
   const result = await db.getFirstAsync(getQuery)
   return result ? (result as Glaze) : null
 }
 
 export const addGlaze = async (db: SQLiteDatabase, glaze: Glaze) => {
   const addQuery = `
-	INSERT INTO ${TABLE_NAME} (
+	INSERT INTO ${GLAZE_TABLE_NAME} (
 	glazeId, name, manufacturer, notes
 	) VALUES (?, ?, ?, ?);`
 
@@ -38,7 +38,7 @@ export const addGlaze = async (db: SQLiteDatabase, glaze: Glaze) => {
 
 export const updateGlaze = async (db: SQLiteDatabase, glaze: Glaze): Promise<void> => {
   const updateQuery = `
-    UPDATE ${TABLE_NAME}
+    UPDATE ${GLAZE_TABLE_NAME}
     SET 
       name = ?, 
       manufacturer = ?, 
@@ -56,12 +56,12 @@ export const updateGlaze = async (db: SQLiteDatabase, glaze: Glaze): Promise<voi
 };
 
 export const deleteGlazeById = async (db: SQLiteDatabase, id: string) => {
-  const deleteQuery = `DELETE FROM ${TABLE_NAME} WHERE glazeId = ?`
+  const deleteQuery = `DELETE FROM ${GLAZE_TABLE_NAME} WHERE glazeId = ?`
   await db.runAsync(deleteQuery, id)
 }
 
 export const deleteGlazeTable = async (db: SQLiteDatabase) => {
-  const query = `DROP TABLE IF EXISTS ${TABLE_NAME}`
+  const query = `DROP TABLE IF EXISTS ${GLAZE_TABLE_NAME}`
   await db.execAsync(query)
 }
 

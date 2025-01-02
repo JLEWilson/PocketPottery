@@ -1,11 +1,11 @@
 import { SQLiteDatabase } from 'expo-sqlite'
 import { Clay, PotteryItem, PotteryItemClays } from '../models'
 
-export const POTTERY_ITEM_CLAYS_TABLE = 'PotteryItemClays'
+export const POTTERY_ITEM_CLAYS_TABLE_NAME = 'PotteryItemClays'
 
 export const createPotteryItemClaysTable = async (db: SQLiteDatabase): Promise<void> => {
   const createTableQuery = `
-    CREATE TABLE IF NOT EXISTS ${POTTERY_ITEM_CLAYS_TABLE} (
+    CREATE TABLE IF NOT EXISTS ${POTTERY_ITEM_CLAYS_TABLE_NAME} (
       potteryItemId TEXT NOT NULL,
       clayId TEXT NOT NULL,
       PRIMARY KEY (potteryItemId, clayId),
@@ -22,7 +22,7 @@ export const addPotteryItemClayLink = async (
   clayId: string,
 ): Promise<void> => {
   const query = `
-    INSERT INTO ${POTTERY_ITEM_CLAYS_TABLE} (potteryItemId, clayId)
+    INSERT INTO ${POTTERY_ITEM_CLAYS_TABLE_NAME} (potteryItemId, clayId)
     VALUES (?, ?);
   `;
 
@@ -35,7 +35,7 @@ export const removePotteryItemClayLink = async (
   clayId: string,
 ): Promise<void> => {
   const query = `
-    DELETE FROM ${POTTERY_ITEM_CLAYS_TABLE}
+    DELETE FROM ${POTTERY_ITEM_CLAYS_TABLE_NAME}
     WHERE potteryItemId = ? AND clayId = ?;
   `;
 
@@ -49,7 +49,7 @@ export const getClaysByPotteryItemId = async (
   const query = `
     SELECT c.*
     FROM Clays c
-    INNER JOIN ${POTTERY_ITEM_CLAYS_TABLE} pc ON c.clayId = pc.clayId
+    INNER JOIN ${POTTERY_ITEM_CLAYS_TABLE_NAME} pc ON c.clayId = pc.clayId
     WHERE pc.potteryItemId = ?;  
   `
   const result = await db.getAllAsync(query, [potteryItemId]) 
@@ -63,7 +63,7 @@ export const getPotteryItemsByClayId = async (
   const query = `
     SELECT p.*
     FROM PotteryItems p
-    INNER JOIN ${POTTERY_ITEM_CLAYS_TABLE} pc ON p.potteryItemId = pc.potteryItemId
+    INNER JOIN ${POTTERY_ITEM_CLAYS_TABLE_NAME} pc ON p.potteryItemId = pc.potteryItemId
     WHERE pc.clayId = ?; 
   `
   const result = await db.getAllAsync(query, [clayId])
@@ -74,7 +74,7 @@ export const getAllPotteryItemClayLinks = async (
   db: SQLiteDatabase,
 ): Promise<PotteryItemClays[] | null> => {
   const query = `
-    SELECT * FROM ${POTTERY_ITEM_CLAYS_TABLE};
+    SELECT * FROM ${POTTERY_ITEM_CLAYS_TABLE_NAME};
   `
   const result = await db.getAllAsync(query)
   return result ? (result as PotteryItemClays[]) : null // Returns all links between PotteryItems and Clays
@@ -82,7 +82,7 @@ export const getAllPotteryItemClayLinks = async (
 
 export const deletePotteryItemClaysTable = async (db: SQLiteDatabase): Promise<void> => {
   const deleteTableQuery = `
-    DROP TABLE IF EXISTS ${POTTERY_ITEM_CLAYS_TABLE};
+    DROP TABLE IF EXISTS ${POTTERY_ITEM_CLAYS_TABLE_NAME};
   `
   await db.execAsync(deleteTableQuery)
 }

@@ -1,11 +1,11 @@
 import { SQLiteDatabase } from 'expo-sqlite'
 import { PotteryItemFirings } from '../models'
 
-export const POTTERY_ITEM_FIRINGS_TABLE = 'PotteryItemFirings'
+export const POTTERY_ITEM_FIRINGS_TABLE_NAME = 'PotteryItemFirings'
 
 export const createPotteryItemFiringsTable = async (db: SQLiteDatabase): Promise<void> => {
   const createTableQuery = `
-    CREATE TABLE IF NOT EXISTS ${POTTERY_ITEM_FIRINGS_TABLE} (
+    CREATE TABLE IF NOT EXISTS ${POTTERY_ITEM_FIRINGS_TABLE_NAME} (
       firingId TEXT PRIMARY KEY,
       potteryItemId TEXT NOT NULL,
       fireStyle TEXT NOT NULL,
@@ -22,7 +22,7 @@ export const addPotteryItemFiring = async (
   firing: PotteryItemFirings,
 ): Promise<void> => {
   const query = `
-    INSERT INTO ${POTTERY_ITEM_FIRINGS_TABLE} (firingId, potteryItemId, fireStyle, fireType, cone)
+    INSERT INTO ${POTTERY_ITEM_FIRINGS_TABLE_NAME} (firingId, potteryItemId, fireStyle, fireType, cone)
     VALUES (?, ?, ?, ?, ?);
   `
   await db.runAsync(query, [firing.firingId, firing.potteryItemId, firing.fireStyle, firing.fireType, firing.cone])
@@ -34,7 +34,7 @@ export const getFiringsByPotteryItemId = async (
 ): Promise<PotteryItemFirings[] | null> => {
   const query = `
     SELECT *
-    FROM ${POTTERY_ITEM_FIRINGS_TABLE}
+    FROM ${POTTERY_ITEM_FIRINGS_TABLE_NAME}
     WHERE potteryItemId = ?;
   `
   const result = await db.getAllAsync(query, [potteryItemId])
@@ -43,7 +43,7 @@ export const getFiringsByPotteryItemId = async (
 
 export const deleteFiring = async (db: SQLiteDatabase, firingId: string): Promise<void> => {
   const query = `
-    DELETE FROM ${POTTERY_ITEM_FIRINGS_TABLE}
+    DELETE FROM ${POTTERY_ITEM_FIRINGS_TABLE_NAME}
     WHERE firingId = ?;
   `
   await db.runAsync(query, [firingId])
@@ -54,7 +54,7 @@ export const deleteFiringsByPotteryItemId = async (
   potteryItemId: string,
 ): Promise<void> => {
   const query = `
-    DELETE FROM ${POTTERY_ITEM_FIRINGS_TABLE}
+    DELETE FROM ${POTTERY_ITEM_FIRINGS_TABLE_NAME}
     WHERE potteryItemId = ?;
   `
   await db.runAsync(query, [potteryItemId])
@@ -62,7 +62,7 @@ export const deleteFiringsByPotteryItemId = async (
 
 export const deletePotteryItemFiringsTable = async (db: SQLiteDatabase): Promise<void> => {
   const deleteTableQuery = `
-    DROP TABLE IF EXISTS ${POTTERY_ITEM_FIRINGS_TABLE};
+    DROP TABLE IF EXISTS ${POTTERY_ITEM_FIRINGS_TABLE_NAME};
   `
   await db.execAsync(deleteTableQuery)
 }

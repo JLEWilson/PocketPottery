@@ -1,11 +1,11 @@
 import { SQLiteDatabase } from 'expo-sqlite'
 import { PotteryItemMeasurements } from '../models'
 
-export const POTTERY_ITEM_MEASUREMENTS_TABLE = 'PotteryItemMeasurements'
+export const POTTERY_ITEM_MEASUREMENTS_TABLE_NAME = 'PotteryItemMeasurements'
 
 export const createPotteryItemMeasurementsTable = async (db: SQLiteDatabase): Promise<void> => {
   const createTableQuery = `
-    CREATE TABLE IF NOT EXISTS ${POTTERY_ITEM_MEASUREMENTS_TABLE} (
+    CREATE TABLE IF NOT EXISTS ${POTTERY_ITEM_MEASUREMENTS_TABLE_NAME} (
       measurementId TEXT PRIMARY KEY,
       potteryItemId TEXT NOT NULL,
       name TEXT NOT NULL,
@@ -22,7 +22,7 @@ export const addPotteryItemMeasurement = async (
   measurement: PotteryItemMeasurements,
 ): Promise<void> => {
   const query = `
-    INSERT INTO ${POTTERY_ITEM_MEASUREMENTS_TABLE} (measurementId, potteryItemId, name, system, scale)
+    INSERT INTO ${POTTERY_ITEM_MEASUREMENTS_TABLE_NAME} (measurementId, potteryItemId, name, system, scale)
     VALUES (?, ?, ?, ?, ?);
   `
   await db.runAsync(query, [measurement.measurementId, measurement.potteryItemId, measurement.name, measurement.system, measurement.scale])
@@ -34,7 +34,7 @@ export const getMeasurementsByPotteryItemId = async (
 ): Promise<PotteryItemMeasurements[] | null> => {
   const query = `
     SELECT *
-    FROM ${POTTERY_ITEM_MEASUREMENTS_TABLE}
+    FROM ${POTTERY_ITEM_MEASUREMENTS_TABLE_NAME}
     WHERE potteryItemId = ?;
   `
   const result = await db.getAllAsync(query, [potteryItemId])
@@ -46,7 +46,7 @@ export const deleteMeasurement = async (
   measurementId: string,
 ): Promise<void> => {
   const query = `
-    DELETE FROM ${POTTERY_ITEM_MEASUREMENTS_TABLE}
+    DELETE FROM ${POTTERY_ITEM_MEASUREMENTS_TABLE_NAME}
     WHERE measurementId = ?;
   `
   await db.runAsync(query, [measurementId])
@@ -57,7 +57,7 @@ export const deleteMeasurementsByPotteryItemId = async (
   potteryItemId: string,
 ): Promise<void> => {
   const query = `
-    DELETE FROM ${POTTERY_ITEM_MEASUREMENTS_TABLE}
+    DELETE FROM ${POTTERY_ITEM_MEASUREMENTS_TABLE_NAME}
     WHERE potteryItemId = ?;
   `
   await db.runAsync(query, [potteryItemId])
@@ -65,7 +65,7 @@ export const deleteMeasurementsByPotteryItemId = async (
 
 export const deletePotteryItemMeasurementsTable = async (db: SQLiteDatabase): Promise<void> => {
   const deleteTableQuery = `
-    DROP TABLE IF EXISTS ${POTTERY_ITEM_MEASUREMENTS_TABLE};
+    DROP TABLE IF EXISTS ${POTTERY_ITEM_MEASUREMENTS_TABLE_NAME};
   `
   await db.execAsync(deleteTableQuery)
 }
