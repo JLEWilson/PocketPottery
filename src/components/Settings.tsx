@@ -62,7 +62,7 @@ const SettingsModal = ({ isDarkMode, setDarkMode, isModalVisible, setModalVisibl
             { backgroundColor: colors.background, borderColor: colors.border },
           ]}
         >
-          <View style={{position: 'absolute', top: 0, alignSelf: 'center'}}>
+          <View style={{position: 'absolute', top: 15, alignSelf: 'center'}}>
             <Text style={{ fontFamily: 'title', textAlign: 'center', fontSize: 26, color: colors.text}}>
               Settings
             </Text>
@@ -74,11 +74,11 @@ const SettingsModal = ({ isDarkMode, setDarkMode, isModalVisible, setModalVisibl
               globalStyles.radioButton,
               { borderColor: colors.border, padding: 10},
               isDarkMode
-                ? { backgroundColor: '#88A78C' }
-                : { backgroundColor: '#CBB5C2' },
+                ? { backgroundColor: colors.primary  }
+                : { backgroundColor: '#B8CABF' },
             ]}
           >
-            <Text>DarkMode</Text>
+            <Text>Dark Mode</Text>
           </Pressable>
           <Pressable
             onPress={() => setDarkMode(false)}
@@ -86,8 +86,8 @@ const SettingsModal = ({ isDarkMode, setDarkMode, isModalVisible, setModalVisibl
               globalStyles.radioButton,
               { borderColor: colors.border },
               !isDarkMode
-                ? { backgroundColor: '#88A78C' }
-                : { backgroundColor: '#CBB5C2' },
+                ? { backgroundColor: colors.primary }
+                : { backgroundColor: '#B8CABF' },
             ]}
           >
             <Text>Light Mode</Text>
