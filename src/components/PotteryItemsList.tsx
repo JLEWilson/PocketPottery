@@ -106,7 +106,7 @@ const PotteryItemList = () => {
               },
             ]}
           >
-            New Project
+            New Piece
           </Text>
         </AnimatedPressable>
       </View>
