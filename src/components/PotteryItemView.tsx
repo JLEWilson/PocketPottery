@@ -11,7 +11,7 @@ import {
 import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { Ionicons } from '@expo/vector-icons'
 import { useDatabase } from '../services/db-context'
-import { deletePotteryItemById, getPotteryItemById } from '../services/potteryItem-service'
+import { deletePotteryItemById, getPotteryItemById, getPotteryItems } from '../services/potteryItem-service'
 import { PotteryItem, Clay, Glaze, PotteryItemFirings, PotteryItemMeasurements } from '../models'
 import { getClaysByPotteryItemId, removePotteryItemClayLink } from '../services/potteryItem-clays-service'
 import { RouteProp, useNavigation } from '@react-navigation/native'
@@ -28,7 +28,7 @@ import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
 import DeleteModal from './DeleteModal'
 
 export type PotteryItemViewProps = {
-  route: RouteProp<RootStackParamList, 'PotteryItemView'>
+  route: RouteProp<RootStackParamList, 'PotteryItemView'>,
 }
 type PotteryItemsListNavigationProp = BottomTabNavigationProp<RootTabParamList, 'PotteryItemsList'>
 
@@ -47,6 +47,7 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
   const [glazes, setGlazes] = useState<Glaze[]>([])
   const [firings, setFirings] = useState<PotteryItemFirings[]>([])
   const [measurements, setMeasurements] = useState<PotteryItemMeasurements[]>([])
+  const [existingSeries, setExistingSeries] = useState<string[]>([])
   const [scrollWidth, setScrollWidth] = useState(0)
   const [selectedClayId, setSelectedClayId] = useState<string | null>(null)
   const [selectedGlazeId, setSelectedGlazeId] = useState<string | null>(null)
@@ -116,7 +117,8 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
           title: storedPotteryItem.projectTitle || 'Pottery Item',
         })
       }
-
+      const storedItems = await getPotteryItems(DB)
+      if(storedItems) setExistingSeries(Array.from(new Set(storedItems.map(p => p.series))).filter((s): s is string => s != null && s.length > 0))
       const storedClays = await getClaysByPotteryItemId(DB, id)
       if (storedClays) setClays(storedClays)
 
@@ -239,6 +241,31 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
                 resizeMode="cover"
               />
             )}
+            {(potteryItem.series && potteryItem.series.length > 0) && (
+            <View style={styles.group}>
+              <Text style={[styles.label, { color: colors.text, fontFamily: 'heading' }]}>
+                Series
+              </Text>
+              <View
+                style={[styles.listOutputUnselectable, { borderColor: colors.border, rowGap: 8 }]}
+              >
+                <Text
+                  key={'series'}
+                  style={[
+                    {
+                      color: colors.text,
+                      borderColor: colors.border,
+                      borderStyle: 'dashed',
+                      borderBottomWidth: 1,
+                      fontFamily: 'text',
+                    },
+                  ]}
+                >
+                  {potteryItem.series}
+                </Text>
+              </View>
+            </View>
+          )}
             {clays.length > 0 && (
               <View style={styles.group}>
                 <Text style={[styles.label, { color: colors.text, fontFamily: 'heading' }]}>
@@ -528,6 +555,24 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
                   potteryItem.displayPicturePath.length < 1
                     ? ', Measurements'
                     : 'Measurements')}
+                  {potteryItem.projectNotes.length<=0 &&
+                       firings.length <= 0 || 
+                       glazes.length <= 0 || 
+                       clays.length <= 0 || 
+                       measurements.length <= 0 || 
+                       potteryItem.displayPicturePath.length < 1
+                       ? ', Notes' 
+                      : 'Notes'
+                  }
+               {(potteryItem.series === undefined || potteryItem.series === null || potteryItem.series.length < 1) && (
+                  potteryItem.projectNotes.length<=0 ||
+                  firings.length <= 0 || 
+                  glazes.length <= 0 || 
+                  clays.length <= 0 || 
+                  measurements.length <= 0 || 
+                  potteryItem.displayPicturePath.length < 1 
+                  ? ', Series' 
+                  : 'Series')}
               </Text>
             )}
           </ScrollView>
@@ -549,7 +594,9 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
               glazes: glazes,
               measurements: measurements,
               firings: firings,
+              series: potteryItem.series || ''
             }}
+            existingSeries={existingSeries}
           />
           <DeleteModal 
             name={potteryItem.projectTitle} 

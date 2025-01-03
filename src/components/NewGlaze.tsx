@@ -197,7 +197,6 @@ const NewGlaze = (props: NewGlazeProps) => {
                 <Text style={[{color: colors.text, fontFamily: 'textBold', textAlign: 'center'}]}>{m}</Text>
               </AnimatedPressable>
             ))}
-            <></>
           </ScrollView>
                 </View>
       </Modal>

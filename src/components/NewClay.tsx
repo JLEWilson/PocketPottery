@@ -194,7 +194,6 @@ const NewClay = (props: NewClayProps) => {
                 <Text style={[{color: colors.text, fontFamily: 'textBold', textAlign: 'center'}]}>{m}</Text>
               </AnimatedPressable>
             ))}
-            <></>
           </ScrollView>
                 </View>
       </Modal>

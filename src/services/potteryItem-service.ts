@@ -1,7 +1,7 @@
 import { SQLiteDatabase } from 'expo-sqlite';
 import { PotteryItem } from '../models';
 
-const POTTERY_ITEM_TABLE_NAME = 'PotteryItems';
+export const POTTERY_ITEM_TABLE_NAME = 'PotteryItems';
 
 // Create Table
 export const createPotteryItemTable = async (db: SQLiteDatabase) => {
@@ -40,8 +40,8 @@ export const getPotteryItemById = async (
 export const addPotteryItem = async (db: SQLiteDatabase, potteryItem: PotteryItem) => {
   const query = `
     INSERT INTO ${POTTERY_ITEM_TABLE_NAME} (
-      potteryItemId, dateCreated, dateEdited, projectTitle, projectNotes, displayPicturePath
-    ) VALUES (?, ?, ?, ?, ?, ?);`;
+      potteryItemId, dateCreated, dateEdited, projectTitle, projectNotes, displayPicturePath, series
+    ) VALUES (?, ?, ?, ?, ?, ?, ?);`;
 
   await db.runAsync(query, [
     potteryItem.potteryItemId,
@@ -50,6 +50,7 @@ export const addPotteryItem = async (db: SQLiteDatabase, potteryItem: PotteryIte
     potteryItem.projectTitle,
     potteryItem.projectNotes,
     potteryItem.displayPicturePath,
+    potteryItem.series || ''
   ]);
 };
 
@@ -61,7 +62,8 @@ export const updatePotteryItem = async (db: SQLiteDatabase, potteryItem: Pottery
       dateEdited = ?,
       projectTitle = ?,
       projectNotes = ?,
-      displayPicturePath = ?
+      displayPicturePath = ?,
+      series = ?
     WHERE potteryItemId = ?;`;
     try {
       await db.runAsync(query, [
@@ -70,6 +72,7 @@ export const updatePotteryItem = async (db: SQLiteDatabase, potteryItem: Pottery
         potteryItem.projectNotes,
         potteryItem.displayPicturePath,
         potteryItem.potteryItemId,
+        potteryItem.series || ''
       ]);
     } catch (error) {
       console.error("Error updating pottery item:", error);
@@ -99,7 +102,8 @@ export const resetPotteryItemTable = async (db: SQLiteDatabase) => {
       dateEdited TEXT NOT NULL,
       projectTitle TEXT NOT NULL,
       projectNotes TEXT,
-      displayPicturePath TEXT
+      displayPicturePath TEXT,
+      series TEXT
     );`;
 
   await db.execAsync(dropQuery);

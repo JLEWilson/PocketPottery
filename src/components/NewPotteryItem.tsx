@@ -54,7 +54,9 @@ type NewPotteryItemProps = {
     glazes: Glaze[];
     measurements: MeasurementState[]
     firings: FiringState[]
+    series?: string
   };
+  existingSeries: string[]
 }
 
 type MeasurementState = Omit<PotteryItemMeasurements, 'measurementId'> & {
@@ -70,7 +72,7 @@ type FiringState = Omit<PotteryItemFirings, 'firingId'> & {
 const NewPotteryItem = (props: NewPotteryItemProps) => {
   const DB = useDatabase()
   const { colors } = useTheme()
-  const { callBackFunction, formVisible, setFormVisible, initialData } = props
+  const { callBackFunction, formVisible, setFormVisible, initialData, existingSeries } = props
   const [pieceName, setPieceName] = useState('')
   const [image, setImage] = useState<string | null>(null)
   const [imageModalVisible, setImageModalVisible] = useState(false)
@@ -93,6 +95,8 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
   const animatedHeight = useRef(new Animated.Value(minHeight)).current
   const [isAlertVisible, setAlertVisible] = useState(false)
   const [alertText, setAlertText] = useState('')
+  const [series, setSeries] = useState('')
+  const [isDropdownVisible, setIsDropdownVisible] = useState(false)
 
   const animateHeight = (toValue: number, speed: number) => {
     Animated.timing(animatedHeight, {
@@ -120,6 +124,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
         })) || []
       )
       setNotes(initialData.potteryItem.projectNotes || '');
+      setSeries(initialData.series || '')
     }
   }, [initialData]);
 
@@ -240,6 +245,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
       projectTitle: pieceName,
       projectNotes: notes,
       displayPicturePath: image ? image : '',
+      series: series,
     }
     await addPotteryItem(db, potteryItemToAdd)
   }
@@ -296,6 +302,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
       projectTitle: pieceName,
       projectNotes: notes,
       displayPicturePath: image || '',
+      series: series,
       dateCreated: initialData?.potteryItem.dateCreated ||  new Date().toISOString(),
       dateEdited: new Date().toISOString()
     }
@@ -314,7 +321,6 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
     await Promise.all(claysToAdd.map(clayId => addPotteryItemClayLink(db, itemId, clayId)));
     // Remove unlinked clays
     await Promise.all(claysToRemove.map(clayId => removePotteryItemClayLink(db, itemId, clayId)));
-    const allClays = await getAllPotteryItemClayLinks(db)
   }
   //PotteryItemGlazes
   const updateExistingPotteryItemGlazes = async (db: SQLiteDatabase, itemId: string)=> {
@@ -476,6 +482,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
     setMeasurements([])
     setFiringFormVisible(false)
     setFirings([])
+    setSeries('')
     setNotes('')
     setKeyboardOpen(false)
     setContentExpanded(false)
@@ -637,6 +644,37 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
                 </AnimatedPressable>
               )}
             </View>
+            <View style={[styles.group]}>
+            <Text style={[globalStyles.label, { color: colors.text, fontFamily: 'heading' }]}>
+              Series
+            </Text>
+            <TextInput
+              maxLength={20}
+              style={[
+                styles.nameInput,
+                {
+                  backgroundColor: colors.card,
+                  borderColor: colors.border,
+                  color: colors.text,
+                  fontFamily: 'text',
+                  fontSize: 22
+                },
+              ]}
+              textAlign="center"
+              onChangeText={setSeries}
+              cursorColor={colors.border}
+              value={series}
+            />
+            {
+            existingSeries && existingSeries.length > 0 && 
+            <AnimatedPressable
+            onPress={() => setIsDropdownVisible(true)} 
+            style={[globalStyles.button, {backgroundColor: colors.primary, borderColor: colors.border, marginTop: 5, alignSelf: 'center'}]}
+            >
+            <Text style={[{ color: colors.text, fontFamily: 'textBold', fontSize: 14 }]}>Choose From Existing</Text>
+            </AnimatedPressable>
+          }
+          </View>
             {/* Notes*/}
             <View style={[styles.group, { height: 120, width: 'auto' }]}>
               <Text style={[globalStyles.label, { color: colors.text, fontFamily: 'heading' }]}>
@@ -1053,6 +1091,44 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
             </AnimatedPressable>
         </View>
       </Modal>
+      {/*Series Dropdown*/}
+      <Modal 
+        isVisible={isDropdownVisible}
+        animationIn={'zoomIn'}
+        animationInTiming={750}
+        animationOut={'zoomOut'}
+        animationOutTiming={750}
+        backdropColor={colors.border}
+        backdropOpacity={0.5}
+        onBackdropPress={() => setIsDropdownVisible(false)}
+        onBackButtonPress={() => setIsDropdownVisible(false)}
+        backdropTransitionOutTiming={0}
+      >
+        <View  
+        style={[
+          styles.modalContainer,
+          { backgroundColor: colors.background, borderColor: colors.border },
+        ]}
+        >
+
+          <ScrollView>
+            {existingSeries.map((s, i) => (
+              <AnimatedPressable key={'manu:' + i}
+              onPress={() => {
+                setSeries(s)
+                setIsDropdownVisible(false)
+              }}
+              style={[
+                styles.selection,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+              >
+                <Text style={[{color: colors.text, fontFamily: 'textBold', textAlign: 'center'}]}>{s}</Text>
+              </AnimatedPressable>
+            ))}
+          </ScrollView>
+                </View>
+      </Modal>
     </View>
   )
 }
@@ -1149,6 +1225,20 @@ const styles = StyleSheet.create({
     right: 15,
     fontSize: 12,
   },
+  modalContainer: {
+    padding: 10,
+    marginHorizontal: 40,
+    marginVertical: 150,
+    borderWidth: 1,
+    borderRadius: 10,
+    maxHeight: 300
+  },
+  selection: {
+  marginHorizontal: 5,
+    justifyContent: 'center',
+    padding: 8,
+    borderWidth: 1,
+  }
   
 })
 

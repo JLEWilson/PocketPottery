@@ -5,6 +5,7 @@ export type PotteryItem = {
   projectTitle: string
   projectNotes: string
   displayPicturePath: string
+  series?: string
 }
 
 export type PotteryItemPictures = {

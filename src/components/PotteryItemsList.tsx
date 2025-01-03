@@ -15,6 +15,7 @@ import { RootStackParamList, RootTabParamList } from './MyTabBar'
 import AnimatedPressable from './AnimatedPressable'
 import globalStyles from '../constants/stylesheet'
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
+import { createMetaTable } from '../services/meta'
 
 type PotteryItemsStackNavigationProp = StackNavigationProp<RootStackParamList, 'PotteryItemView'>
 type PotteryItemsBottomNavigationProp = BottomTabNavigationProp<
@@ -34,6 +35,7 @@ const PotteryItemList = () => {
 
   const loadDataCallback = useCallback(async () => {
     try {
+      await createMetaTable(DB)
       await createPotteryItemTable(DB)
       await createPotteryItemClaysTable(DB)
       await createPotteryItemGlazesTable(DB)
@@ -114,6 +116,9 @@ const PotteryItemList = () => {
         callBackFunction={handleReload}
         formVisible={formVisible}
         setFormVisible={setFormVisible}
+        existingSeries={
+          Array.from(new Set(potteryItems.map(p => p.series))).filter((s): s is string => s != null && s.length > 0)
+        }
       />
     </View>
   )
