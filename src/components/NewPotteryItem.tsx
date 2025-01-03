@@ -919,7 +919,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
             ]}
             onPress={openCamera}
           >
-            <Text style={[styles.buttonText, { color: colors.text }]}>New Image</Text>
+            <Text style={[styles.buttonText, { color: colors.text, fontFamily: 'textBold' }]}>New Image</Text>
           </AnimatedPressable>
           <AnimatedPressable
             style={[
@@ -929,7 +929,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
             ]}
             onPress={pickImage}
           >
-            <Text style={[styles.buttonText, { color: colors.text }]}>Camera Roll</Text>
+            <Text style={[styles.buttonText, { color: colors.text, fontFamily: 'textBold' }]}>Camera Roll</Text>
           </AnimatedPressable>
         </View>
       </Modal>
