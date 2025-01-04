@@ -20,6 +20,7 @@ import { Ionicons } from '@expo/vector-icons'
 import AnimatedPressable from './AnimatedPressable'
 import { PotteryItemsListNavigationProp } from './MyTabBar'
 import DeleteModal from './DeleteModal'
+import { sortObjectsByProperty } from '../constants/utils'
 
 export type ClaysListProps = {
   existingProjectClays?: Clay[]
@@ -60,7 +61,7 @@ function ClaysList({
         ? storedClays.filter((clay) => !existingProjectClays.some((c) => c.clayId === clay.clayId))
         : storedClays
 
-      setAllClays(initiallyFilteredClays)
+      setAllClays(sortObjectsByProperty(initiallyFilteredClays, 'name'))
     } catch (error) {
       if (error instanceof Error) {
         console.error(`Error loading clays: ${error.message}`)
@@ -99,17 +100,19 @@ function ClaysList({
   }, [allClays])
 
   const calculateHeight = (c: Clay): number => {
-    const lineHeight = 18
-    const padding = 20
-    const baseHeight = 60
-    const rowGap = 60
+    /*
+    baseHeight: 70
+    height for rows 87
+    height for notes 145: 5 row max
+    row gaps 30
+    margin between name and rest 10
+    */
+    const baseHeight = 70
+    const rowHeight = 127 //includes rowGap and marginTop
+    const notesHeight = c.notes.length > 0 ? 145 : 29
+    const buttonHeight= 76
 
-    const notesLines = Math.ceil(c.notes.length / 35)
-    const manufacturerLines = Math.ceil(c.manufacturer.length / 15)
-    const dynamicHeight = notesLines * lineHeight + manufacturerLines * lineHeight
-    const buffer = 75
-
-    return baseHeight + dynamicHeight + padding + buffer + rowGap
+    return baseHeight + rowHeight + notesHeight + buttonHeight
   }
 
   const animateHeight = (c: Clay) => {
@@ -289,24 +292,59 @@ function ClaysList({
                       c.notes.length > 0 ? { flexDirection: 'column' } : { flexDirection: 'row' },
                     ]}
                   >
-                    <Text style={{ color: colors.text, fontFamily: 'headingBold', fontSize: 18 }}>
+                    <Text  style={{
+                      color: colors.text,
+                      fontFamily: 'headingBold',
+                      fontSize: 18,
+                      width: 58, // Set a fixed width for the label
+                    }}>
                       Notes:
                     </Text>
-                      <Text
-                        style={{
-                          color: colors.text,
-                          lineHeight: 18,
-                          borderColor: colors.border,
-                          fontSize: 18,
-                          fontFamily: 'text',
-                          textAlign: 'center',
-                          borderBottomWidth: 1,
-                          borderStyle: 'dashed',
+                    {c.notes.length > 0 ? 
+                  (
+                    <ScrollView style={{height: 145}} 
+                    nestedScrollEnabled={true}
+                    onStartShouldSetResponder={() => true}>
+                      <View onStartShouldSetResponder={() => true}>
+
+                    <Text
+                    style={{
+                      color: colors.text,
+                      lineHeight: 18,
+                      borderColor: colors.border,
+                      fontSize: 18,
+                      fontFamily: 'text',
+                      textAlign: 'center',
+                      borderBottomWidth: 1,
+                      borderRightWidth: c.notes.length > 0 ? 1: 0,
+                      borderLeftWidth: c.notes.length > 0 ? 1: 0,
+                      borderStyle: 'dashed',
+                      flex: 1
+                    }}
+                    >
+                        {c.notes} 
+                      </Text>
+                      </View>
+                    </ScrollView>
+                  )  : (
+                    <Text
+                    style={{
+                      color: colors.text,
+                      lineHeight: 18,
+                      borderColor: colors.border,
+                      fontSize: 18,
+                      fontFamily: 'text',
+                      textAlign: 'center',
+                      borderBottomWidth: 1,
+                      borderRightWidth: c.notes.length > 0 ? 1: 0,
+                      borderLeftWidth: c.notes.length > 0 ? 1: 0,
+                      borderStyle: 'dashed',
                           flex: 1
                         }}
                       >
-                        {c.notes.length > 0 ? c.notes : 'N/A'} 
+                        N/A
                       </Text>
+                    )} 
                   </View>
                   <View
                     style={{
