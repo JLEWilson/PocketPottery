@@ -28,12 +28,16 @@ export const getClayById = async (db: SQLiteDatabase, id: string): Promise<Clay 
 }
 
 export const addClay = async (db: SQLiteDatabase, clay: Clay) => {
-  const addQuery = `
-	INSERT INTO ${CLAY_TABLE_NAME} (
-	clayId, name, manufacturer, notes
-	) VALUES (?, ?, ?, ?);`
-
-  await db.runAsync(addQuery, [clay.clayId, clay.name, clay.manufacturer, clay.notes])
+  try {
+    const addQuery = `
+    INSERT INTO ${CLAY_TABLE_NAME} (
+    clayId, name, manufacturer, notes, type, firingRange
+    ) VALUES (?, ?, ?, ?, ?, ?);`
+  
+    await db.runAsync(addQuery, [clay.clayId, clay.name, clay.manufacturer, clay.notes, clay.type || '', clay.firingRange || ''])
+  } catch (error) {
+    console.error(error)
+  }
 }
 
 export const updateClay = async (db: SQLiteDatabase, clay: Clay) => {
@@ -42,10 +46,12 @@ export const updateClay = async (db: SQLiteDatabase, clay: Clay) => {
     SET
       name = ?, 
       manufacturer = ?, 
-      notes = ?
+      notes = ?,
+      type = ?,
+      firingRange = ?
 		WHERE clayId = ?;`
 
-  await db.runSync(updateQuery, [clay.name, clay.manufacturer, clay.notes, clay.clayId])
+  await db.runSync(updateQuery, [clay.name, clay.manufacturer, clay.notes, clay.clayId, clay.type || '', clay.firingRange || ''])
 }
 
 export const deleteClayById = async (db: SQLiteDatabase, id: string) => {

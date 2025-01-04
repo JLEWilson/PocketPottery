@@ -12,6 +12,7 @@ import { resetPotteryItemGlazesTable } from '../services/potteryItem-glaze-servi
 import { resetFiringsTable } from '../services/potteryItem-firing-service'
 import { resetMeasurementsTable } from '../services/potteryItem-measurements-service'
 import globalStyles from '../constants/stylesheet'
+import { resetMetaTable } from '../services/meta'
 
 type SettingsModalProps = {
   isDarkMode: boolean,
@@ -28,6 +29,7 @@ const SettingsModal = ({ isDarkMode, setDarkMode, isModalVisible, setModalVisibl
     //Will probably have to have a loading screen during this function because all other views will change
     try {
       // Reset all tables
+      await resetMetaTable(DB)
       await resetPotteryItemTable(DB)
       await resetClayTable(DB)
       await resetPotteryItemClaysTable(DB)

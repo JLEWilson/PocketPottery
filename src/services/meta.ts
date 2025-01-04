@@ -16,6 +16,7 @@ export const createMetaTable = async (db: SQLiteDatabase) => {
   let currentVersion = result ? result as number : 0;
 
   // Migrate the database
+  // console.log(currentVersion)
   if (currentVersion < 2) {
     await migrateToVersion2(db);
     await db.execAsync('INSERT OR REPLACE INTO meta (id, dbVersion) VALUES (1, 2);');
@@ -28,15 +29,25 @@ async function migrateToVersion2(db: SQLiteDatabase) {
         GLAZES
             ID string
             Type string - underglaze or glaze
-        CLAYS
-            Add field for clay type (earthenware, stoneware, or porcelain)
-            Add field for firing range (low fire, mid fire, high fire)
-        PotteryItem
-            Piece form: add series field
-                Add series field that is a drop-down(ie manufacturer)
 
     */
   await db.execAsync(`
     ALTER TABLE ${POTTERY_ITEM_TABLE_NAME} ADD COLUMN series TEXT;
+    ALTER TABLE ${CLAY_TABLE_NAME} ADD COLUMN type TEXT;
+    ALTER TABLE ${CLAY_TABLE_NAME} ADD COLUMN firingRange TEXT
   `);
+}
+
+const deleteMetaTable = async (db: SQLiteDatabase) => {
+  const query = `DROP TABLE IF EXISTS meta`
+  await db.execAsync(query)
+}
+
+export const resetMetaTable = async (db: SQLiteDatabase) => {
+  try {
+    await deleteMetaTable(db)
+    await createMetaTable(db)
+  } catch (error) {
+    console.error(error)
+  }
 }

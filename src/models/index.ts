@@ -19,6 +19,8 @@ export type Clay = {
   name: string
   manufacturer: string
   notes: string
+  type?: string
+  firingRange?: string
 }
 
 export type PotteryItemClays = {

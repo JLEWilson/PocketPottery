@@ -102,12 +102,12 @@ function ClaysList({
     const lineHeight = 18
     const padding = 20
     const baseHeight = 60
-    const rowGap = 40
+    const rowGap = 60
 
     const notesLines = Math.ceil(c.notes.length / 35)
     const manufacturerLines = Math.ceil(c.manufacturer.length / 15)
     const dynamicHeight = notesLines * lineHeight + manufacturerLines * lineHeight
-    const buffer = 40
+    const buffer = 75
 
     return baseHeight + dynamicHeight + padding + buffer + rowGap
   }
@@ -231,7 +231,6 @@ function ClaysList({
                     <Text style={{ color: colors.text, fontFamily: 'headingBold', fontSize: 18 }}>
                       Manufacturer:
                     </Text>
-                    {c.manufacturer.length > 0 ? (
                       <Text
                         style={{
                           color: colors.text,
@@ -244,9 +243,13 @@ function ClaysList({
                           borderStyle: 'dashed',
                         }}
                       >
-                        {c.manufacturer}
+                      {c.manufacturer.length > 0 ? c.manufacturer: 'N/A'}
                       </Text>
-                    ) : (
+                  </View>
+                  <View style={{ flexDirection: 'row' }}>
+                    <Text style={{ color: colors.text, fontFamily: 'headingBold', fontSize: 18 }}>
+                      Type:
+                    </Text>
                       <Text
                         style={{
                           color: colors.text,
@@ -259,9 +262,27 @@ function ClaysList({
                           borderStyle: 'dashed',
                         }}
                       >
-                        N/A
+                      {c.type && c.type.length > 0 ? c.type: 'N/A'}
                       </Text>
-                    )}
+                  </View>
+                  <View style={{ flexDirection: 'row' }}>
+                    <Text style={{ color: colors.text, fontFamily: 'headingBold', fontSize: 18 }}>
+                      Firing Range:
+                    </Text>
+                      <Text
+                        style={{
+                          color: colors.text,
+                          fontFamily: 'text',
+                          fontSize: 18,
+                          borderColor: colors.border,
+                          textAlign: 'center',
+                          flex: 1,
+                          borderBottomWidth: 1,
+                          borderStyle: 'dashed',
+                        }}
+                      >
+                      {c.firingRange ? c.firingRange: 'N/A'}
+                      </Text>
                   </View>
                   <View
                     style={[
@@ -271,7 +292,6 @@ function ClaysList({
                     <Text style={{ color: colors.text, fontFamily: 'headingBold', fontSize: 18 }}>
                       Notes:
                     </Text>
-                    {c.notes.length > 0 ? (
                       <Text
                         style={{
                           color: colors.text,
@@ -282,26 +302,11 @@ function ClaysList({
                           textAlign: 'center',
                           borderBottomWidth: 1,
                           borderStyle: 'dashed',
+                          flex: 1
                         }}
                       >
-                        {c.notes}
+                        {c.notes.length > 0 ? c.notes : 'N/A'} 
                       </Text>
-                    ) : (
-                      <Text
-                        style={{
-                          color: colors.text,
-                          borderColor: colors.border,
-                          fontSize: 18,
-                          fontFamily: 'text',
-                          borderBottomWidth: 1,
-                          borderStyle: 'dashed',
-                          textAlign: 'center',
-                          flex: 1,
-                        }}
-                      >
-                        N/A
-                      </Text>
-                    )}
                   </View>
                   <View
                     style={{

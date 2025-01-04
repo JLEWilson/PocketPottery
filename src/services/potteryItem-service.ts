@@ -102,8 +102,7 @@ export const resetPotteryItemTable = async (db: SQLiteDatabase) => {
       dateEdited TEXT NOT NULL,
       projectTitle TEXT NOT NULL,
       projectNotes TEXT,
-      displayPicturePath TEXT,
-      series TEXT
+      displayPicturePath TEXT
     );`;
 
   await db.execAsync(dropQuery);

@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TextInput } from 'react-native'
+import { View, Text, StyleSheet, TextInput, Pressable, ScrollView } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import type { Clay } from '../models'
 import { v4 as uuidv4 } from 'uuid'
@@ -8,7 +8,6 @@ import { useTheme } from '@react-navigation/native'
 import AnimatedPressable from './AnimatedPressable'
 import Modal from 'react-native-modal'
 import globalStyles from '../constants/stylesheet'
-import { ScrollView } from 'react-native-gesture-handler'
 
 type NewClayProps = {
   callBackFunction?: () => void
@@ -24,6 +23,8 @@ const NewClay = (props: NewClayProps) => {
   const [name, setName] = useState('')
   const [manufacturer, setManufacturer] = useState('')
   const [notes, setNotes] = useState('')
+  const [type, setType] = useState('Earthenware')
+  const [firingRange, setFiringRange] = useState<string>('Low');
   const buttonText = initialData ? 'Update Clay' :  'Add New Clay'
   const [isDropdownVisible, setIsDropdownVisible] = useState(false)
   
@@ -33,6 +34,8 @@ const NewClay = (props: NewClayProps) => {
       name: name,
       manufacturer: manufacturer,
       notes: notes,
+      type: type,
+      firingRange: firingRange
     }
     addClay(DB, newClay)
     callBackFunction?.()
@@ -45,6 +48,8 @@ const NewClay = (props: NewClayProps) => {
       name: name,
       manufacturer: manufacturer,
       notes: notes,
+      type: type,
+      firingRange: firingRange
     }
     updateClay(DB, clayToUpdate)
     callBackFunction?.()
@@ -57,6 +62,8 @@ const NewClay = (props: NewClayProps) => {
       setName(initialData.name)
       setManufacturer(initialData.manufacturer)
       setNotes(initialData.notes)
+      setFiringRange(initialData.firingRange || 'Low')
+      setType(initialData.type || 'Earthenware')
     }
   },[initialData])
   
@@ -66,7 +73,7 @@ const NewClay = (props: NewClayProps) => {
         style={[styles.content, { backgroundColor: colors.background, borderColor: colors.border, rowGap: 10 }]}
       >
         <Text style={[styles.title, { color: colors.text, fontFamily: 'title' }]}>New Clay</Text>
-        <View style={[styles.textInputGroup, { flex: 1 }]}>
+        <View style={[styles.group, { flex: 1 }]}>
           <Text style={[styles.label, { color: colors.text, fontFamily: 'headingBold' }]}>
             Name
           </Text>
@@ -90,7 +97,7 @@ const NewClay = (props: NewClayProps) => {
             selectTextOnFocus={true}
           />
         </View>
-        <View style={[styles.textInputGroup, { flex: 1 }]}>
+        <View style={[styles.group, { flex: 1.5 }]}>
           <Text style={[styles.label, { color: colors.text, fontFamily: 'headingBold' }]}>
             Manufacturer
           </Text>
@@ -123,7 +130,91 @@ const NewClay = (props: NewClayProps) => {
             </AnimatedPressable>
           }
         </View>
-        <View style={[styles.textInputGroup, { flex: 2 }]}>
+        <View style={[styles.group, { flex: .9 }]}>
+        <Text style={[styles.label, { color: colors.text, fontFamily: 'headingBold' }]}>Clay Type</Text>
+        <View style={[globalStyles.radio, { borderColor: colors.border, marginHorizontal: 0}]}>
+          <Pressable
+            onPress={() => setType('Earthenware')}
+            style={[
+              globalStyles.radioButton,
+              { borderColor: colors.border, flex: 1.2 },
+              type === 'Earthenware'
+                ? { backgroundColor: colors.primary }
+                : { backgroundColor: colors.card },
+            ]}
+            
+          >
+            <Text style={{ color: colors.text, fontFamily: 'text', fontSize: 12}}>Earthenware</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => setType('Stoneware')}
+            style={[
+              globalStyles.radioButton,
+              { borderColor: colors.border },
+              type === 'Stoneware'
+                ? { backgroundColor: colors.primary }
+                : { backgroundColor: colors.card },
+            ]}
+          >
+            <Text style={{ color: colors.text, fontFamily: 'text', fontSize: 12 }}>Stoneware</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => setType('Porcelain')}
+            style={[
+              globalStyles.radioButton,
+              { borderColor: colors.border },
+              type === 'Porcelain'
+                ? { backgroundColor: colors.primary }
+                : { backgroundColor: colors.card },
+            ]}
+          >
+            <Text style={{ color: colors.text, fontFamily: 'text', fontSize: 12 }}>Porcelain</Text>
+          </Pressable>
+        </View>
+      </View>
+      <View style={[styles.group, { flex: .9 }]}>
+        <Text style={[styles.label, { color: colors.text, fontFamily: 'headingBold' }]}>Firing Range</Text>
+        <View style={[globalStyles.radio, { borderColor: colors.border, marginHorizontal: 0}]}>
+          <Pressable
+            onPress={() => setFiringRange('Low')}
+            style={[
+              globalStyles.radioButton,
+              { borderColor: colors.border },
+              firingRange === 'Low'
+                ? { backgroundColor: colors.primary }
+                : { backgroundColor: colors.card },
+            ]}
+            
+          >
+            <Text style={{ color: colors.text, fontFamily: 'text', fontSize: 12}}>Low</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => setFiringRange('Medium')}
+            style={[
+              globalStyles.radioButton,
+              { borderColor: colors.border },
+              firingRange === 'Medium'
+                ? { backgroundColor: colors.primary }
+                : { backgroundColor: colors.card },
+            ]}
+          >
+            <Text style={{ color: colors.text, fontFamily: 'text', fontSize: 12 }}>Medium</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => setFiringRange('High')}
+            style={[
+              globalStyles.radioButton,
+              { borderColor: colors.border },
+              firingRange === 'High'
+                ? { backgroundColor: colors.primary }
+                : { backgroundColor: colors.card },
+            ]}
+          >
+            <Text style={{ color: colors.text, fontFamily: 'text', fontSize: 12 }}>High</Text>
+          </Pressable>
+        </View>
+      </View>
+        <View style={[styles.group, { flex: 2 }]}>
           <Text style={[styles.label, { color: colors.text, fontFamily: 'headingBold' }]}>
             Notes
           </Text>
@@ -143,9 +234,8 @@ const NewClay = (props: NewClayProps) => {
             ]}
             value={notes}
             onChangeText={setNotes}
-            maxLength={250}
             multiline={true}
-            blurOnSubmit={true}
+            keyboardType='ascii-capable'
           />
         </View>
         <AnimatedPressable
@@ -207,16 +297,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    marginHorizontal: 30,
+    marginHorizontal: 17
   },
   content: {
-    height: 400,
+    height: 575,
     borderWidth: 1,
     borderRadius: 10,
   },
   label: {
     paddingLeft: 4,
     fontSize: 15,
+    marginBottom: 2
   },
   title: {
     fontSize: 26,
@@ -224,7 +315,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     top: 5,
   },
-  textInputGroup: {
+  group: {
     marginHorizontal: 15,
     justifyContent: 'center',
     alignContent: 'center',
@@ -235,6 +326,7 @@ const styles = StyleSheet.create({
   },
   button: {
     position: 'relative',
+    marginTop: 10,
     bottom: 10,
     padding: 4,
     elevation: 3,
