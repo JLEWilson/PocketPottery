@@ -149,7 +149,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
     let targetHeight: number
 
     if (isContentExpanded) {
-      targetHeight = isKeyboardOpen ? maxHeight - 200 : maxHeight
+      targetHeight = isKeyboardOpen ? maxHeight - 250 : maxHeight
     } else {
       targetHeight = minHeight + clayViewHeight
     }

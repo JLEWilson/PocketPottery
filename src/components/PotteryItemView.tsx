@@ -73,7 +73,6 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
   const [selectedMeasurementId, setSelectedMeasurementId] = useState<string | null>(null)
   const [formVisible, setFormVisible] = useState(false)
   const [isDeleteModalVisible, setDeleteModalVisible] = useState(false)
-  const [isScrolling, setIsScrolling] = useState(false)
   const rectSizes = useRef<Record<string, Animated.ValueXY>>({})
   const minDimensions = useRef<Record<string, { width: number; height: number }>>({})
   const notesHeights = useRef<Record<string, number>>({})
@@ -168,7 +167,6 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
   const handleReload = () => setReload((prev) => !prev)
 
   const handlePress = (id: string, type: 'clay' | 'glaze' | 'firing' | 'measurement') => {
-    if (isScrolling) return
     const currentSize = rectSizes.current[id]
     const currentMinSize = minDimensions.current[id]
 
