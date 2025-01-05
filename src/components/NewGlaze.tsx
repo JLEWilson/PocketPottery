@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TextInput } from 'react-native'
+import { View, Text, StyleSheet, TextInput, Pressable, ScrollView } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import type { Glaze } from '../models'
 import { v4 as uuidv4 } from 'uuid'
@@ -8,7 +8,6 @@ import { useDatabase } from '../services/db-context'
 import AnimatedPressable from './AnimatedPressable'
 import globalStyles from '../constants/stylesheet'
 import Modal from 'react-native-modal'
-import { ScrollView } from 'react-native-gesture-handler'
 
 type NewGlazeProps = {
   callBackFunction?: () => void
@@ -24,7 +23,9 @@ const NewGlaze = (props: NewGlazeProps) => {
   const [name, setName] = useState('')
   const [manufacturer, setManufacturer] = useState('')
   const [notes, setNotes] = useState('')
-   const buttonText = initialData ? 'Update Glaze' :  'Add New Glaze'
+  const [type, setType] = useState<string>('Glaze');
+  const [idCode, setIdCode] = useState<string>('');
+  const buttonText = initialData ? 'Update Glaze' :  'Add New Glaze'
   const [isDropdownVisible, setIsDropdownVisible] = useState(false)
 
   const handleAddNewGlaze = () => {
@@ -60,6 +61,8 @@ const NewGlaze = (props: NewGlazeProps) => {
        setName(initialData.name)
        setManufacturer(initialData.manufacturer)
        setNotes(initialData.notes)
+       setType(initialData.type || 'Glaze')
+       setIdCode(initialData.idCode || '')
      }
    },[initialData])
 
@@ -69,7 +72,7 @@ const NewGlaze = (props: NewGlazeProps) => {
         style={[styles.content, { backgroundColor: colors.background, borderColor: colors.border }]}
       >
         <Text style={[styles.title, { color: colors.text, fontFamily: 'title' }]}>New Glaze</Text>
-        <View style={[styles.textInputGroup, { flex: 1 }]}>
+        <View style={[styles.group, { flex: 1 }]}>
           <Text style={[styles.label, { color: colors.text, fontFamily: 'headingBold' }]}>
             Name
           </Text>
@@ -93,7 +96,7 @@ const NewGlaze = (props: NewGlazeProps) => {
             selectTextOnFocus={true}
           />
         </View>
-        <View style={[styles.textInputGroup, { flex: 1 }]}>
+        <View style={[styles.group, { flex: 1 }]}>
           <Text style={[styles.label, { color: colors.text, fontFamily: 'headingBold' }]}>
             Manufacturer
           </Text>
@@ -126,7 +129,61 @@ const NewGlaze = (props: NewGlazeProps) => {
             </AnimatedPressable>
           }
         </View>
-        <View style={[styles.textInputGroup, { flex: 2 }]}>
+        <View style={[styles.group, { flex: .9 }]}>
+        <Text style={[styles.label, { color: colors.text, fontFamily: 'headingBold' }]}>Firing Range</Text>
+        <View style={[globalStyles.radio, { borderColor: colors.border, marginHorizontal: 0}]}>
+          <Pressable
+            onPress={() => setType('Glaze')}
+            style={[
+              globalStyles.radioButton,
+              { borderColor: colors.border },
+              type === 'Glaze'
+                ? { backgroundColor: colors.primary }
+                : { backgroundColor: colors.card },
+            ]}
+            
+          >
+            <Text style={{ color: colors.text, fontFamily: 'text', fontSize: 14}}>Glaze</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => setType('Under Glaze')}
+            style={[
+              globalStyles.radioButton,
+              { borderColor: colors.border },
+              type === 'Under Glaze'
+                ? { backgroundColor: colors.primary }
+                : { backgroundColor: colors.card },
+            ]}
+          >
+            <Text style={{ color: colors.text, fontFamily: 'text', fontSize: 14 }}>Under Glaze</Text>
+          </Pressable>
+        </View>
+      </View>
+        <View style={[styles.group, { flex: 1 }]}>
+          <Text style={[styles.label, { color: colors.text, fontFamily: 'headingBold' }]}>
+            ID
+          </Text>
+          <TextInput
+            style={[
+              styles.textInput,
+              {
+                fontSize: 22,
+                backgroundColor: colors.card,
+                color: colors.text,
+                borderColor: colors.border,
+                fontFamily: 'text',
+                textAlign: 'center',
+                textAlignVertical: 'center',
+              },
+            ]}
+            value={idCode}
+            onChangeText={setIdCode}
+            maxLength={20}
+            blurOnSubmit={true}
+            selectTextOnFocus={true}
+          />
+        </View>
+        <View style={[styles.group, { flex: 2.2 }]}>
           <Text style={[styles.label, { color: colors.text, fontFamily: 'headingBold' }]}>
             Notes
           </Text>
@@ -210,10 +267,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    marginHorizontal: 30,
+    marginHorizontal: 17,
   },
   content: {
-    height: 400,
+    height: 550,
     borderWidth: 1,
     borderRadius: 10,
   },
@@ -227,7 +284,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     top: 5,
   },
-  textInputGroup: {
+  group: {
     marginHorizontal: 15,
     justifyContent: 'center',
     alignContent: 'center',

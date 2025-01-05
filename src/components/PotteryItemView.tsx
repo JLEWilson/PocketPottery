@@ -212,8 +212,6 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
           duration: animationDuration,
           useNativeDriver: false,
         }).start(() => setter(id))
-
-        // setter(id);
       }
     }
 
@@ -494,6 +492,8 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
                   </Text>
                   <View style={[styles.listOutput, { borderColor: colors.border, rowGap: 5 }]}>
                     {glazes.map((glaze) => (
+                      <View key={'View' + glaze.glazeId} style={ selectedGlazeId === glaze.glazeId ? {width: scrollWidth} : {width: 'auto'}}>
+
                       <AnimatedTouchable
                         key={glaze.glazeId + 'button'}
                         onPress={() => handlePress(glaze.glazeId, 'glaze')}
@@ -517,7 +517,7 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
                             padding: 4,
                           },
                         ]}
-                      >
+                        >
                         <Text
                           key={glaze.glazeId + 'name'}
                           style={[
@@ -528,7 +528,7 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
                               fontFamily: 'heading',
                             },
                           ]}
-                        >
+                          >
                           {glaze.name}
                         </Text>
                         {selectedGlazeId === glaze.glazeId && (
@@ -549,42 +549,117 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
                                     borderStyle: 'dashed',
                                   },
                                 ]}
-                              >
+                                >
                                 {glaze.manufacturer.length >= 1 ? glaze.manufacturer : 'N/A'}
                               </Text>
                             </View>
-                            <Text style={[{ color: colors.text, fontFamily: 'heading' }]}>
-                              Notes
-                            </Text>
-                            <View>
+                            <View style={{ flexDirection: 'row' }}>
+                              <Text style={[{ color: colors.text, fontFamily: 'heading' }]}>
+                                Type:
+                              </Text>
                               <Text
                                 style={[
                                   {
                                     color: colors.text,
                                     borderColor: colors.border,
                                     fontFamily: 'text',
-                                    paddingHorizontal: 8,
+                                    flex: 1,
+                                    textAlign: 'center',
                                     borderBottomWidth: 1,
                                     borderStyle: 'dashed',
                                   },
                                 ]}
                               >
-                                {glaze.notes.length >= 2 ? glaze.notes : 'N/A'}
+                                {glaze.type && glaze.type.length >= 1 ? glaze.type : 'N/A'}
                               </Text>
                             </View>
+                            <View style={{ flexDirection: 'row' }}>
+                              <Text style={[{ color: colors.text, fontFamily: 'heading' }]}>
+                                ID:
+                              </Text>
+                              <Text
+                                style={[
+                                  {
+                                    color: colors.text,
+                                    borderColor: colors.border,
+                                    fontFamily: 'text',
+                                    flex: 1,
+                                    textAlign: 'center',
+                                    borderBottomWidth: 1,
+                                    borderStyle: 'dashed',
+                                  },
+                                ]}
+                              >
+                                {glaze.idCode && glaze.idCode.length >= 1 ? glaze.idCode : 'N/A'}
+                              </Text>
+                            </View>
+                            <Text style={[{ color: colors.text, fontFamily: 'heading' }]}>
+                              Notes
+                            </Text>
+                            {glaze.notes.length >= 1 ? (
+                              <ScrollView
+                              contentContainerStyle={{
+                                paddingHorizontal: 8,
+                              }}
+                              style={{
+                                height: 60,
+                                borderColor: colors.border,
+                                borderWidth: 1,
+                                borderTopWidth: 0,
+                                borderStyle: 'dashed',
+                              }}
+                              onStartShouldSetResponder={() => true}
+                              >
+                                <View onStartShouldSetResponder={() => true}>
+
+                                <Text
+                                  style={[
+                                    {
+                                      color: colors.text,
+                                      fontFamily: 'text',
+                                      
+                                      textAlign: 'center',
+                                      lineHeight: 20,
+                                    },
+                                  ]}
+                                  >
+                                  {glaze.notes}
+                                </Text>
+                                      </View>
+                              </ScrollView>
+                            ) : (
+                              <Text
+                              style={[
+                                {
+                                  color: colors.text,
+                                  borderColor: colors.border,
+                                  fontFamily: 'text',
+                                  paddingHorizontal: 8,
+                                  borderWidth: 1,
+                                  borderTopWidth: 0,
+                                  borderStyle: 'dashed',
+                                  textAlign: 'center',
+                                  lineHeight: 20,
+                                },
+                                ]}
+                              >
+                                N/A
+                              </Text>
+                            )}
                           </View>
                         )}
                       </AnimatedTouchable>
+                    </View>
                     ))}
                   </View>
                 </View>
               )}
               {firings.length > 0 && (
                 <View style={styles.group}>
-                  <Text style={[styles.label, { color: colors.text, fontFamily: 'heading' }]}>
-                    Firings
-                  </Text>
-                  <View
+                <Text style={[styles.label, { color: colors.text, fontFamily: 'heading' }]}>
+                Firings
+                </Text>
+                <View
                     style={[
                       styles.listOutputUnselectable,
                       { borderColor: colors.border, rowGap: 8 },

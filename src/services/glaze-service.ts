@@ -31,9 +31,9 @@ export const addGlaze = async (db: SQLiteDatabase, glaze: Glaze) => {
   const addQuery = `
 	INSERT INTO ${GLAZE_TABLE_NAME} (
 	glazeId, name, manufacturer, notes
-	) VALUES (?, ?, ?, ?);`
+	) VALUES (?, ?, ?, ?, ?, ?);`
 
-  await db.runAsync(addQuery, [glaze.glazeId, glaze.name, glaze.manufacturer, glaze.notes])
+  await db.runAsync(addQuery, [glaze.glazeId, glaze.name, glaze.manufacturer, glaze.notes, glaze.type || '', glaze.idCode || ''])
 }
 
 export const updateGlaze = async (db: SQLiteDatabase, glaze: Glaze): Promise<void> => {
@@ -42,12 +42,14 @@ export const updateGlaze = async (db: SQLiteDatabase, glaze: Glaze): Promise<voi
     SET 
       name = ?, 
       manufacturer = ?, 
-      notes = ?
+      notes = ?,
+      type = ?,
+      idCode = ?
     WHERE glazeId = ?;
   `;
 
   try {
-    await db.runAsync(updateQuery, [glaze.name, glaze.manufacturer, glaze.notes, glaze.glazeId]);
+    await db.runAsync(updateQuery, [glaze.name, glaze.manufacturer, glaze.notes, glaze.glazeId, glaze.type || '', glaze.idCode || '']);
     console.log('Glaze updated successfully!');
   } catch (error) {
     console.error('Error updating glaze:', error);

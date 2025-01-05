@@ -100,17 +100,10 @@ function ClaysList({
   }, [allClays])
 
   const calculateHeight = (c: Clay): number => {
-    /*
-    baseHeight: 70
-    height for rows 87
-    height for notes 145: 5 row max
-    row gaps 30
-    margin between name and rest 10
-    */
     const baseHeight = 70
     const rowHeight = 127 //includes rowGap and marginTop
-    const notesHeight = c.notes.length > 0 ? 145 : 29
-    const buttonHeight= 76
+    const notesHeight = c.notes.length > 0 ? 145 : 0
+    const buttonHeight= 38
 
     return baseHeight + rowHeight + notesHeight + buttonHeight
   }
@@ -302,7 +295,14 @@ function ClaysList({
                     </Text>
                     {c.notes.length > 0 ? 
                   (
-                    <ScrollView style={{height: 145}} 
+                    <ScrollView style={{height: 145,
+                      borderColor: colors.border,
+                     
+                      borderBottomWidth: 1,
+                      borderRightWidth: c.notes.length > 0 ? 1: 0,
+                      borderLeftWidth: c.notes.length > 0 ? 1: 0,
+                      borderStyle: 'dashed',
+                    }} 
                     nestedScrollEnabled={true}
                     onStartShouldSetResponder={() => true}>
                       <View onStartShouldSetResponder={() => true}>
@@ -311,14 +311,9 @@ function ClaysList({
                     style={{
                       color: colors.text,
                       lineHeight: 18,
-                      borderColor: colors.border,
                       fontSize: 18,
                       fontFamily: 'text',
                       textAlign: 'center',
-                      borderBottomWidth: 1,
-                      borderRightWidth: c.notes.length > 0 ? 1: 0,
-                      borderLeftWidth: c.notes.length > 0 ? 1: 0,
-                      borderStyle: 'dashed',
                       flex: 1
                     }}
                     >
@@ -336,8 +331,8 @@ function ClaysList({
                       fontFamily: 'text',
                       textAlign: 'center',
                       borderBottomWidth: 1,
-                      borderRightWidth: c.notes.length > 0 ? 1: 0,
-                      borderLeftWidth: c.notes.length > 0 ? 1: 0,
+                      borderRightWidth: 0,
+                      borderLeftWidth: 0,
                       borderStyle: 'dashed',
                           flex: 1
                         }}

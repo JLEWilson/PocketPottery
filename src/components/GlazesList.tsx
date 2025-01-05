@@ -99,17 +99,12 @@ function GlazesList({
   }, [allGlazes])
 
   const calculateHeight = (g: Glaze): number => {
-    const lineHeight = 18
-    const padding = 20
-    const baseHeight = 60
-    const rowGap = 40
+    const baseHeight = 70
+    const rowHeight = 127 //includes rowGap and marginTop
+    const notesHeight = g.notes.length > 0 ? 145 : 0
+    const buttonHeight= 38
 
-    const notesLines = Math.ceil(g.notes.length / 35)
-    const manufacturerLines = Math.ceil(g.manufacturer.length / 15)
-    const dynamicHeight = notesLines * lineHeight + manufacturerLines * lineHeight
-    const buffer = 40
-
-    return baseHeight + dynamicHeight + padding + buffer + rowGap
+    return baseHeight + rowHeight + notesHeight + buttonHeight
   }
 
   const animateHeight = (g: Glaze) => {
@@ -263,6 +258,44 @@ function GlazesList({
                       </Text>
                     )}
                   </View>
+                  <View style={{ flexDirection: 'row' }}>
+                    <Text style={{ color: colors.text, fontFamily: 'headingBold', fontSize: 18 }}>
+                      Type
+                    </Text>
+                      <Text
+                        style={{
+                          color: colors.text,
+                          fontFamily: 'text',
+                          fontSize: 18,
+                          borderColor: colors.border,
+                          textAlign: 'center',
+                          flex: 1,
+                          borderBottomWidth: 1,
+                          borderStyle: 'dashed',
+                        }}
+                      >
+                      {g.type ? g.type : 'N/A'}
+                      </Text>
+                  </View>
+                  <View style={{ flexDirection: 'row' }}>
+                    <Text style={{ color: colors.text, fontFamily: 'headingBold', fontSize: 18 }}>
+                      ID
+                    </Text>
+                      <Text
+                        style={{
+                          color: colors.text,
+                          fontFamily: 'text',
+                          fontSize: 18,
+                          borderColor: colors.border,
+                          textAlign: 'center',
+                          flex: 1,
+                          borderBottomWidth: 1,
+                          borderStyle: 'dashed',
+                        }}
+                      >
+                      {g.idCode ? g.idCode : 'N/A'}
+                      </Text>
+                  </View>
                   <View
                     style={[
                       g.notes.length > 0 ? { flexDirection: 'column' } : { flexDirection: 'row' },
@@ -272,20 +305,32 @@ function GlazesList({
                       Notes:
                     </Text>
                     {g.notes.length > 0 ? (
+                      <ScrollView style={{height: 145,
+                        borderColor: colors.border,
+                        
+                        borderBottomWidth: 1,
+                        borderRightWidth: g.notes.length > 0 ? 1: 0,
+                        borderLeftWidth: g.notes.length > 0 ? 1: 0,
+                        borderStyle: 'dashed',
+                      }} 
+                      nestedScrollEnabled={true}
+                      onStartShouldSetResponder={() => true}>
+                        <View onStartShouldSetResponder={() => true}>
+  
                       <Text
-                        style={{
-                          color: colors.text,
-                          lineHeight: 18,
-                          borderColor: colors.border,
-                          fontSize: 18,
-                          fontFamily: 'text',
-                          textAlign: 'center',
-                          borderBottomWidth: 1,
-                          borderStyle: 'dashed',
-                        }}
+                      style={{
+                        color: colors.text,
+                        lineHeight: 18,
+                        fontSize: 18,
+                        fontFamily: 'text',
+                        textAlign: 'center',
+                        flex: 1
+                      }}
                       >
                         {g.notes}
                       </Text>
+                      </View>
+                      </ScrollView>
                     ) : (
                       <Text
                         style={{

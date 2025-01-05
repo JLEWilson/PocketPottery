@@ -33,6 +33,8 @@ export type Glaze = {
   name: string
   manufacturer: string
   notes: string
+  type?: string
+  idCode?: string
 }
 
 export type PotteryItemGlazes = {
