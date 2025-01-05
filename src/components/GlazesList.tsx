@@ -20,6 +20,7 @@ import { Ionicons } from '@expo/vector-icons'
 import AnimatedPressable from './AnimatedPressable'
 import { PotteryItemsListNavigationProp } from './MyTabBar'
 import DeleteModal from './DeleteModal'
+import { sortObjectsByProperty } from '../constants/utils'
 
 export type GlazesListProps = {
   existingProjectGlazes?: Glaze[]
@@ -60,7 +61,7 @@ function GlazesList({
         ? storedGlazes.filter((glaze) => !existingProjectGlazes.some((g) => g.glazeId === glaze.glazeId))
         : storedGlazes
 
-      setAllGlazes(initiallyFilteredGlazes)
+      setAllGlazes(sortObjectsByProperty(initiallyFilteredGlazes, 'name'))
     } catch (error) {
       if (error instanceof Error) {
         console.error(`Error loading glazes: ${error.message}`)
