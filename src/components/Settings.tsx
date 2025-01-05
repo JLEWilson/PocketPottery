@@ -29,7 +29,6 @@ const SettingsModal = ({ isDarkMode, setDarkMode, isModalVisible, setModalVisibl
     //Will probably have to have a loading screen during this function because all other views will change
     try {
       // Reset all tables
-      await resetMetaTable(DB)
       await resetPotteryItemTable(DB)
       await resetClayTable(DB)
       await resetPotteryItemClaysTable(DB)
@@ -37,6 +36,7 @@ const SettingsModal = ({ isDarkMode, setDarkMode, isModalVisible, setModalVisibl
       await resetPotteryItemGlazesTable(DB)
       await resetFiringsTable(DB)
       await resetMeasurementsTable(DB)
+      await resetMetaTable(DB)
     } catch (error) {
       console.error(
         'Error resetting tables:',
@@ -80,7 +80,7 @@ const SettingsModal = ({ isDarkMode, setDarkMode, isModalVisible, setModalVisibl
                 : { backgroundColor: '#B8CABF' },
             ]}
           >
-            <Text>Dark Mode</Text>
+            <Text style={{fontFamily: 'text', color: '#3C413C'}}>Dark Mode</Text>
           </Pressable>
           <Pressable
             onPress={() => setDarkMode(false)}
@@ -92,14 +92,14 @@ const SettingsModal = ({ isDarkMode, setDarkMode, isModalVisible, setModalVisibl
                 : { backgroundColor: '#B8CABF' },
             ]}
           >
-            <Text>Light Mode</Text>
+            <Text style={{fontFamily: 'text', color: '#3C413C'}}>Light Mode</Text>
           </Pressable>
         </View>
           <AnimatedPressable
             style={[styles.button, { backgroundColor: colors.primary, borderColor: colors.border }]}
             onPress={resetAllData}
           >
-            <Text>Reset All Data</Text>
+            <Text style={{fontFamily: 'textBold', color: colors.text}}>Reset All Data</Text>
           </AnimatedPressable>
         </View>
       </Modal>
