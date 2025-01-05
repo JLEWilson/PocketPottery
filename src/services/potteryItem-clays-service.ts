@@ -13,7 +13,12 @@ export const createPotteryItemClaysTable = async (db: SQLiteDatabase): Promise<v
       FOREIGN KEY (clayId) REFERENCES Clays (clayId) ON DELETE CASCADE
     );
   `
-  await db.execAsync(createTableQuery)
+  try {
+    await db.execAsync(createTableQuery)
+    console.log('PotteryItemClays table created successfully.')
+  } catch (error) {
+    console.error('Error creating PotteryItemClays table:', error)
+  }
 }
 
 export const addPotteryItemClayLink = async (
@@ -24,10 +29,14 @@ export const addPotteryItemClayLink = async (
   const query = `
     INSERT INTO ${POTTERY_ITEM_CLAYS_TABLE_NAME} (potteryItemId, clayId)
     VALUES (?, ?);
-  `;
-
-  await db.runAsync(query, [potteryItemId, clayId]);
-};
+  `
+  try {
+    await db.runAsync(query, [potteryItemId, clayId])
+    console.log(`Link added between pottery item (${potteryItemId}) and clay (${clayId}).`)
+  } catch (error) {
+    console.error('Error adding pottery item-clay link:', error)
+  }
+}
 
 export const removePotteryItemClayLink = async (
   db: SQLiteDatabase,
@@ -37,10 +46,14 @@ export const removePotteryItemClayLink = async (
   const query = `
     DELETE FROM ${POTTERY_ITEM_CLAYS_TABLE_NAME}
     WHERE potteryItemId = ? AND clayId = ?;
-  `;
-
-  await db.runAsync(query, [potteryItemId, clayId]);
-};
+  `
+  try {
+    await db.runAsync(query, [potteryItemId, clayId])
+    console.log(`Link removed between pottery item (${potteryItemId}) and clay (${clayId}).`)
+  } catch (error) {
+    console.error('Error removing pottery item-clay link:', error)
+  }
+}
 
 export const getClaysByPotteryItemId = async (
   db: SQLiteDatabase,
@@ -52,8 +65,13 @@ export const getClaysByPotteryItemId = async (
     INNER JOIN ${POTTERY_ITEM_CLAYS_TABLE_NAME} pc ON c.clayId = pc.clayId
     WHERE pc.potteryItemId = ?;  
   `
-  const result = await db.getAllAsync(query, [potteryItemId]) 
-  return result ? (result as Clay[]) : null
+  try {
+    const result = await db.getAllAsync(query, [potteryItemId])
+    return result ? (result as Clay[]) : null
+  } catch (error) {
+    console.error(`Error fetching clays for pottery item (${potteryItemId}):`, error)
+    return null
+  }
 }
 
 export const getPotteryItemsByClayId = async (
@@ -66,8 +84,13 @@ export const getPotteryItemsByClayId = async (
     INNER JOIN ${POTTERY_ITEM_CLAYS_TABLE_NAME} pc ON p.potteryItemId = pc.potteryItemId
     WHERE pc.clayId = ?; 
   `
-  const result = await db.getAllAsync(query, [clayId])
-  return result ? (result as PotteryItem[]) : null
+  try {
+    const result = await db.getAllAsync(query, [clayId])
+    return result ? (result as PotteryItem[]) : null
+  } catch (error) {
+    console.error(`Error fetching pottery items for clay (${clayId}):`, error)
+    return null
+  }
 }
 
 export const getAllPotteryItemClayLinks = async (
@@ -76,24 +99,34 @@ export const getAllPotteryItemClayLinks = async (
   const query = `
     SELECT * FROM ${POTTERY_ITEM_CLAYS_TABLE_NAME};
   `
-  const result = await db.getAllAsync(query)
-  return result ? (result as PotteryItemClays[]) : null // Returns all links between PotteryItems and Clays
+  try {
+    const result = await db.getAllAsync(query)
+    return result ? (result as PotteryItemClays[]) : null
+  } catch (error) {
+    console.error('Error fetching all pottery item-clay links:', error)
+    return null
+  }
 }
 
 export const deletePotteryItemClaysTable = async (db: SQLiteDatabase): Promise<void> => {
   const deleteTableQuery = `
     DROP TABLE IF EXISTS ${POTTERY_ITEM_CLAYS_TABLE_NAME};
   `
-  await db.execAsync(deleteTableQuery)
+  try {
+    await db.execAsync(deleteTableQuery)
+    console.log('PotteryItemClays table deleted successfully.')
+  } catch (error) {
+    console.error('Error deleting PotteryItemClays table:', error)
+  }
 }
 
-export const resetPotteryItemClaysTable = async (db: SQLiteDatabase) => {
+export const resetPotteryItemClaysTable = async (db: SQLiteDatabase): Promise<void> => {
   try {
     await deletePotteryItemClaysTable(db)
     await createPotteryItemClaysTable(db)
-    console.log('potteryItemClays table reset successfully.')
+    console.log('PotteryItemClays table reset successfully.')
   } catch (error) {
-    console.error('Error resetting the potteryItemClays table:', error)
+    console.error('Error resetting PotteryItemClays table:', error)
     throw error
   }
 }

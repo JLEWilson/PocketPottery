@@ -14,7 +14,12 @@ export const createPotteryItemMeasurementsTable = async (db: SQLiteDatabase): Pr
       FOREIGN KEY (potteryItemId) REFERENCES PotteryItems (potteryItemId) ON DELETE CASCADE
     );
   `
-  await db.execAsync(createTableQuery)
+  try {
+    await db.execAsync(createTableQuery)
+    console.log('PotteryItemMeasurements table created successfully.')
+  } catch (error) {
+    console.error('Error creating PotteryItemMeasurements table:', error)
+  }
 }
 
 export const addPotteryItemMeasurement = async (
@@ -25,7 +30,12 @@ export const addPotteryItemMeasurement = async (
     INSERT INTO ${POTTERY_ITEM_MEASUREMENTS_TABLE_NAME} (measurementId, potteryItemId, name, system, scale)
     VALUES (?, ?, ?, ?, ?);
   `
-  await db.runAsync(query, [measurement.measurementId, measurement.potteryItemId, measurement.name, measurement.system, measurement.scale])
+  try {
+    await db.runAsync(query, [measurement.measurementId, measurement.potteryItemId, measurement.name, measurement.system, measurement.scale])
+    console.log(`Measurement ${measurement.measurementId} added for pottery item ${measurement.potteryItemId}.`)
+  } catch (error) {
+    console.error('Error adding pottery item measurement:', error)
+  }
 }
 
 export const getMeasurementsByPotteryItemId = async (
@@ -37,8 +47,13 @@ export const getMeasurementsByPotteryItemId = async (
     FROM ${POTTERY_ITEM_MEASUREMENTS_TABLE_NAME}
     WHERE potteryItemId = ?;
   `
-  const result = await db.getAllAsync(query, [potteryItemId])
-  return result ? (result as PotteryItemMeasurements[]) : null // Returns all measurements for the specified pottery item
+  try {
+    const result = await db.getAllAsync(query, [potteryItemId])
+    return result ? (result as PotteryItemMeasurements[]) : null
+  } catch (error) {
+    console.error(`Error fetching measurements for pottery item ${potteryItemId}:`, error)
+    return null
+  }
 }
 
 export const deleteMeasurement = async (
@@ -49,7 +64,12 @@ export const deleteMeasurement = async (
     DELETE FROM ${POTTERY_ITEM_MEASUREMENTS_TABLE_NAME}
     WHERE measurementId = ?;
   `
-  await db.runAsync(query, [measurementId])
+  try {
+    await db.runAsync(query, [measurementId])
+    console.log(`Measurement ${measurementId} deleted.`)
+  } catch (error) {
+    console.error('Error deleting pottery item measurement:', error)
+  }
 }
 
 export const deleteMeasurementsByPotteryItemId = async (
@@ -60,23 +80,33 @@ export const deleteMeasurementsByPotteryItemId = async (
     DELETE FROM ${POTTERY_ITEM_MEASUREMENTS_TABLE_NAME}
     WHERE potteryItemId = ?;
   `
-  await db.runAsync(query, [potteryItemId])
+  try {
+    await db.runAsync(query, [potteryItemId])
+    console.log(`All measurements for pottery item ${potteryItemId} deleted.`)
+  } catch (error) {
+    console.error(`Error deleting measurements for pottery item ${potteryItemId}:`, error)
+  }
 }
 
 export const deletePotteryItemMeasurementsTable = async (db: SQLiteDatabase): Promise<void> => {
   const deleteTableQuery = `
     DROP TABLE IF EXISTS ${POTTERY_ITEM_MEASUREMENTS_TABLE_NAME};
   `
-  await db.execAsync(deleteTableQuery)
+  try {
+    await db.execAsync(deleteTableQuery)
+    console.log('PotteryItemMeasurements table deleted successfully.')
+  } catch (error) {
+    console.error('Error deleting PotteryItemMeasurements table:', error)
+  }
 }
 
-export const resetMeasurementsTable = async (db: SQLiteDatabase) => {
+export const resetMeasurementsTable = async (db: SQLiteDatabase): Promise<void> => {
   try {
     await deletePotteryItemMeasurementsTable(db)
     await createPotteryItemMeasurementsTable(db)
-    console.log('Firings table reset successfully.')
+    console.log('PotteryItemMeasurements table reset successfully.')
   } catch (error) {
-    console.error('Error resetting the firings table:', error)
+    console.error('Error resetting PotteryItemMeasurements table:', error)
     throw error
   }
 }

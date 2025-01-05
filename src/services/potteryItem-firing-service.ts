@@ -14,7 +14,12 @@ export const createPotteryItemFiringsTable = async (db: SQLiteDatabase): Promise
       FOREIGN KEY (potteryItemId) REFERENCES PotteryItems (potteryItemId) ON DELETE CASCADE
     );
   `
-  await db.execAsync(createTableQuery)
+  try {
+    await db.execAsync(createTableQuery)
+    console.log('PotteryItemFirings table created successfully.')
+  } catch (error) {
+    console.error('Error creating PotteryItemFirings table:', error)
+  }
 }
 
 export const addPotteryItemFiring = async (
@@ -25,7 +30,12 @@ export const addPotteryItemFiring = async (
     INSERT INTO ${POTTERY_ITEM_FIRINGS_TABLE_NAME} (firingId, potteryItemId, fireStyle, fireType, cone)
     VALUES (?, ?, ?, ?, ?);
   `
-  await db.runAsync(query, [firing.firingId, firing.potteryItemId, firing.fireStyle, firing.fireType, firing.cone])
+  try {
+    await db.runAsync(query, [firing.firingId, firing.potteryItemId, firing.fireStyle, firing.fireType, firing.cone])
+    console.log(`Firing added successfully for pottery item (${firing.potteryItemId}).`)
+  } catch (error) {
+    console.error('Error adding pottery item firing:', error)
+  }
 }
 
 export const getFiringsByPotteryItemId = async (
@@ -37,8 +47,13 @@ export const getFiringsByPotteryItemId = async (
     FROM ${POTTERY_ITEM_FIRINGS_TABLE_NAME}
     WHERE potteryItemId = ?;
   `
-  const result = await db.getAllAsync(query, [potteryItemId])
-  return result ? (result as PotteryItemFirings[]) : null // Returns all firings for the specified pottery item
+  try {
+    const result = await db.getAllAsync(query, [potteryItemId])
+    return result ? (result as PotteryItemFirings[]) : null
+  } catch (error) {
+    console.error(`Error fetching firings for pottery item (${potteryItemId}):`, error)
+    return null
+  }
 }
 
 export const deleteFiring = async (db: SQLiteDatabase, firingId: string): Promise<void> => {
@@ -46,7 +61,12 @@ export const deleteFiring = async (db: SQLiteDatabase, firingId: string): Promis
     DELETE FROM ${POTTERY_ITEM_FIRINGS_TABLE_NAME}
     WHERE firingId = ?;
   `
-  await db.runAsync(query, [firingId])
+  try {
+    await db.runAsync(query, [firingId])
+    console.log(`Firing with ID (${firingId}) deleted successfully.`)
+  } catch (error) {
+    console.error('Error deleting firing:', error)
+  }
 }
 
 export const deleteFiringsByPotteryItemId = async (
@@ -57,17 +77,27 @@ export const deleteFiringsByPotteryItemId = async (
     DELETE FROM ${POTTERY_ITEM_FIRINGS_TABLE_NAME}
     WHERE potteryItemId = ?;
   `
-  await db.runAsync(query, [potteryItemId])
+  try {
+    await db.runAsync(query, [potteryItemId])
+    console.log(`All firings for pottery item (${potteryItemId}) deleted successfully.`)
+  } catch (error) {
+    console.error(`Error deleting firings for pottery item (${potteryItemId}):`, error)
+  }
 }
 
 export const deletePotteryItemFiringsTable = async (db: SQLiteDatabase): Promise<void> => {
   const deleteTableQuery = `
     DROP TABLE IF EXISTS ${POTTERY_ITEM_FIRINGS_TABLE_NAME};
   `
-  await db.execAsync(deleteTableQuery)
+  try {
+    await db.execAsync(deleteTableQuery)
+    console.log('PotteryItemFirings table deleted successfully.')
+  } catch (error) {
+    console.error('Error deleting PotteryItemFirings table:', error)
+  }
 }
 
-export const resetFiringsTable = async (db: SQLiteDatabase) => {
+export const resetFiringsTable = async (db: SQLiteDatabase): Promise<void> => {
   try {
     await deletePotteryItemFiringsTable(db)
     await createPotteryItemFiringsTable(db)

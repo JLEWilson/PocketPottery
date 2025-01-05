@@ -15,14 +15,24 @@ export const createPotteryItemTable = async (db: SQLiteDatabase) => {
       displayPicturePath TEXT
     );`;
 
-  await db.execAsync(query);
+  try {
+    await db.execAsync(query);
+  } catch (error) {
+    console.error('Error creating PotteryItem table:', error);
+  }
 };
 
 // Get All Items
 export const getPotteryItems = async (db: SQLiteDatabase): Promise<PotteryItem[]> => {
   const query = `SELECT * FROM ${POTTERY_ITEM_TABLE_NAME};`;
-  const result = await db.getAllAsync(query);
-  return result as PotteryItem[];
+
+  try {
+    const result = await db.getAllAsync(query);
+    return result as PotteryItem[];
+  } catch (error) {
+    console.error('Error fetching pottery items:', error);
+    return [];
+  }
 };
 
 // Get Item by ID
@@ -31,9 +41,14 @@ export const getPotteryItemById = async (
   id: string
 ): Promise<PotteryItem | null> => {
   const query = `SELECT * FROM ${POTTERY_ITEM_TABLE_NAME} WHERE potteryItemId = ?;`;
-  const result = await db.getFirstAsync(query, [id]);
 
-  return result ? (result as PotteryItem) : null;
+  try {
+    const result = await db.getFirstAsync(query, [id]);
+    return result ? (result as PotteryItem) : null;
+  } catch (error) {
+    console.error(`Error fetching pottery item with ID ${id}:`, error);
+    return null;
+  }
 };
 
 // Add Item
@@ -43,15 +58,19 @@ export const addPotteryItem = async (db: SQLiteDatabase, potteryItem: PotteryIte
       potteryItemId, dateCreated, dateEdited, projectTitle, projectNotes, displayPicturePath, series
     ) VALUES (?, ?, ?, ?, ?, ?, ?);`;
 
-  await db.runAsync(query, [
-    potteryItem.potteryItemId,
-    potteryItem.dateCreated,
-    potteryItem.dateEdited,
-    potteryItem.projectTitle,
-    potteryItem.projectNotes,
-    potteryItem.displayPicturePath,
-    potteryItem.series || ''
-  ]);
+  try {
+    await db.runAsync(query, [
+      potteryItem.potteryItemId,
+      potteryItem.dateCreated,
+      potteryItem.dateEdited,
+      potteryItem.projectTitle,
+      potteryItem.projectNotes,
+      potteryItem.displayPicturePath,
+      potteryItem.series || ''
+    ]);
+  } catch (error) {
+    console.error('Error adding pottery item:', error);
+  }
 };
 
 // Update Item
@@ -65,31 +84,42 @@ export const updatePotteryItem = async (db: SQLiteDatabase, potteryItem: Pottery
       displayPicturePath = ?,
       series = ?
     WHERE potteryItemId = ?;`;
-    try {
-      await db.runAsync(query, [
-        potteryItem.dateEdited,
-        potteryItem.projectTitle,
-        potteryItem.projectNotes,
-        potteryItem.displayPicturePath,
-        potteryItem.potteryItemId,
-        potteryItem.series || ''
-      ]);
-    } catch (error) {
-      console.error("Error updating pottery item:", error);
-    }
+
+  try {
+    await db.runAsync(query, [
+      potteryItem.dateEdited,
+      potteryItem.projectTitle,
+      potteryItem.projectNotes,
+      potteryItem.displayPicturePath,
+      potteryItem.series || '',
+      potteryItem.potteryItemId
+    ]);
+  } catch (error) {
+    console.error('Error updating pottery item:', error);
+  }
 };
 
 // Delete Item by ID
 export const deletePotteryItemById = async (db: SQLiteDatabase, id: string) => {
   const query = `DELETE FROM ${POTTERY_ITEM_TABLE_NAME} WHERE potteryItemId = ?;`;
-  await db.runAsync(query, [id]);
+
+  try {
+    await db.runAsync(query, [id]);
+  } catch (error) {
+    console.error(`Error deleting pottery item with ID ${id}:`, error);
+  }
 };
 
 // Drop Table
 export const deleteTable = async (db: SQLiteDatabase) => {
   const query = `DROP TABLE IF EXISTS ${POTTERY_ITEM_TABLE_NAME};`;
-  await db.execAsync(query);
-  console.log('PotteryItem table dropped.');
+
+  try {
+    await db.execAsync(query);
+    console.log('PotteryItem table dropped.');
+  } catch (error) {
+    console.error('Error dropping PotteryItem table:', error);
+  }
 };
 
 // Reset Table
@@ -105,7 +135,11 @@ export const resetPotteryItemTable = async (db: SQLiteDatabase) => {
       displayPicturePath TEXT
     );`;
 
-  await db.execAsync(dropQuery);
-  await db.execAsync(createQuery);
-  console.log('PotteryItem table reset.');
+  try {
+    await db.execAsync(dropQuery);
+    await db.execAsync(createQuery);
+    console.log('PotteryItem table reset.');
+  } catch (error) {
+    console.error('Error resetting PotteryItem table:', error);
+  }
 };

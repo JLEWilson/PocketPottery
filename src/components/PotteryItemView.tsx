@@ -26,7 +26,7 @@ import {
 import { RouteProp, useNavigation } from '@react-navigation/native'
 import { RootStackParamList, RootTabParamList } from './MyTabBar'
 import {
-  getGlazessByPotteryItemId,
+  getGlazesByPotteryItemId,
   removePotteryItemGlazeLink,
 } from '../services/potteryItem-glaze-service'
 import {
@@ -146,7 +146,7 @@ const PotteryItemView = ({ route }: PotteryItemViewProps) => {
       const storedClays = await getClaysByPotteryItemId(DB, id)
       if (storedClays) setClays(storedClays)
 
-      const storedGlazes = await getGlazessByPotteryItemId(DB, id)
+      const storedGlazes = await getGlazesByPotteryItemId(DB, id)
       if (storedGlazes) setGlazes(storedGlazes)
 
       const storedFirings = await getFiringsByPotteryItemId(DB, id)
