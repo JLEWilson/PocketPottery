@@ -1,3 +1,5 @@
+import { PotteryItem } from "../models";
+
 export const sortObjectsByProperty = <T extends object>(
     array: T[],
     property: keyof T
@@ -34,3 +36,47 @@ export const sortObjectsByProperty = <T extends object>(
       return strA.localeCompare(strB);
     });
   };
+
+  
+  const statusOrder = {
+    "Not Started": 0,
+    "Greenware In Progress": 1,
+    "Greenware Done": 2,
+    "Bisque Fired": 3,
+    "Completed": 4,
+  };
+
+  export const getStatus = (item: Pick<PotteryItem, "startDate" | "greenwareDate" | "bisqueDate" | "glazeDate">) => {
+    return item.glazeDate
+      ? "Completed"
+      : item.bisqueDate
+      ? "Bisque Fired"
+      : item.greenwareDate
+      ? "Greenware Done"
+      : item.startDate
+      ? "Greenware In Progress"
+      : "Not Started";
+  };
+
+  export const sortPotteryItemsByStatus = (items: PotteryItem[]) => {
+    const statusSortedItems = items.sort((a, b) => {
+      const statusA = getStatus(a);
+      const statusB = getStatus(b);
+      
+      return statusOrder[statusA] - statusOrder[statusB];
+    })
+    return statusSortedItems
+}
+export const groupBy = <T, K extends string>(
+  items: T[],
+  keyFn: (item: T) => K
+): Record<K, T[]> => {
+  return items.reduce((groups, item) => {
+    const key = keyFn(item);
+    if (!groups[key]) {
+      groups[key] = [];
+    }
+    groups[key].push(item);
+    return groups;
+  }, {} as Record<K, T[]>);
+};
