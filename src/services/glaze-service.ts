@@ -9,9 +9,7 @@ export const createGlazeTable = async (db: SQLiteDatabase) => {
       glazeId TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       manufacturer TEXT,
-      notes TEXT,
-      type TEXT,
-      idCode TEXT
+      notes TEXT
     );`
   try {
     await db.execAsync(query)

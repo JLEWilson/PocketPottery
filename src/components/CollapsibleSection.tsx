@@ -6,8 +6,9 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 type CollapsibleSectionProps = {
   showText: string
   hideText: string
-  onExpand: () => void
-  onCollapse: () => void
+  onExpand?: () => void
+  onCollapse?: () => void
+  startOpen?: boolean
   children: React.ReactNode
 }
 
@@ -15,15 +16,16 @@ const CollapsibleSection = ({
   showText,
   hideText,
   onExpand,
+  startOpen,
   onCollapse,
   children,
 }: CollapsibleSectionProps) => {
   const { colors } = useTheme()
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [isExpanded, setIsExpanded] = useState( startOpen ? startOpen : false)
 
   const toggleDetails = () => {
     setIsExpanded(!isExpanded)
-    isExpanded ? onCollapse() : onExpand()
+    isExpanded ? onCollapse?.() : onExpand?.()
   }
 
   return (

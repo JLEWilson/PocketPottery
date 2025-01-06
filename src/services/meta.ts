@@ -22,6 +22,11 @@ export const createMetaTable = async (db: SQLiteDatabase) => {
       await migrateToVersion2(db);
       await db.execAsync('INSERT OR REPLACE INTO meta (id, dbVersion) VALUES (1, 2);');
     }
+
+    if (currentVersion < 3) {
+      await migrateToVersion3(db);
+      await db.execAsync('INSERT OR REPLACE INTO meta (id, dbVersion) VALUES (1, 2);');
+    }
   } catch (error) {
     console.error('Error creating meta table or migrating database:', error);
   }
@@ -38,6 +43,19 @@ async function migrateToVersion2(db: SQLiteDatabase) {
     `);
   } catch (error) {
     console.error('Error migrating to version 2:', error);
+  }
+}
+
+async function migrateToVersion3(db: SQLiteDatabase) {
+  try {
+    await db.execAsync(`
+      ALTER TABLE ${POTTERY_ITEM_TABLE_NAME} ADD COLUMN startDate TEXT;
+      ALTER TABLE ${POTTERY_ITEM_TABLE_NAME} ADD COLUMN greenwareDate TEXT;
+      ALTER TABLE ${POTTERY_ITEM_TABLE_NAME} ADD COLUMN bisqueDate TEXT;
+      ALTER TABLE ${POTTERY_ITEM_TABLE_NAME} ADD COLUMN glazeDate TEXT;
+    `);
+  } catch (error) {
+    console.error('Error migrating to version 3:', error);
   }
 }
 

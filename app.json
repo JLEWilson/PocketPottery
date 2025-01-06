@@ -19,7 +19,57 @@
         }
       ],
       "expo-sqlite",
-      "expo-font"
+      "expo-font",
+      [
+        "@react-native-community/datetimepicker",
+        {
+          "android": {
+            "datePicker": {
+              "windowBackground": {
+                "light": "#ADC2A8",
+                "dark": "#2e2e2e"
+              },
+              "colorAccent": {
+                "light": "#78967A",
+                "dark": "#78967A"
+              },
+              "colorControlActivated": {
+                "light": "#B8CABF",
+                "dark": "#464745"
+              },
+              "colorControlHighlight": {
+                "light": "#B8CABF",
+                "dark": "#464745"
+              },
+              "textColorPrimary": {
+                "light": "#3C413C",
+                "dark": "#B8CABF"
+              },
+              "textColorPrimaryInverse": {
+                "light": "#B8CABF",
+                "dark": "#3C413C"
+              },
+              "textColorSecondary": {
+                "light": "#3C413C",
+                "dark": "#3C413C"
+              },
+              "textColorSecondaryInverse": {
+                "light": "#B8CABF",
+                "dark": "#FF5722"
+              },
+              "selectableItemBackgroundBorderless": {
+                "light": "#B8CABF",
+                "dark": "#464745"
+              }
+
+            },
+            "timePicker": {
+              "background": { "light": "#FF5722", "dark": "#383838" },
+              "numbersBackgroundColor": { "light": "#FF5722", "dark": "#383838" }
+            }
+          }
+        }
+      ]
     ],
     "assetBundlePatterns": [
       "**/*"

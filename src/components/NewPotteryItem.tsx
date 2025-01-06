@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react'
 import 'react-native-get-random-values'
 import {
   View,
-  Button,
   Text,
   TextInput,
   StyleSheet,
@@ -12,13 +11,11 @@ import {
   Animated,
   Keyboard,
   Alert,
-  AlertOptions,
 } from 'react-native'
 import Modal from 'react-native-modal'
 import ClaysList from './ClaysList'
 import GlazesList from './GlazesList'
 import * as ImagePicker from 'expo-image-picker'
-import * as NavigationBar from 'expo-navigation-bar';
 import {
   type PotteryItem,
   type Glaze,
@@ -37,37 +34,48 @@ import NewFiring from './NewFiring'
 import CollapsibleSection from './CollapsibleSection'
 import { useTheme } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
-import { addPotteryItemClayLink, getAllPotteryItemClayLinks, removePotteryItemClayLink } from '../services/potteryItem-clays-service'
-import { addPotteryItemGlazeLink, removePotteryItemGlazeLink } from '../services/potteryItem-glaze-service'
+import {
+  addPotteryItemClayLink,
+  getAllPotteryItemClayLinks,
+  removePotteryItemClayLink,
+} from '../services/potteryItem-clays-service'
+import {
+  addPotteryItemGlazeLink,
+  removePotteryItemGlazeLink,
+} from '../services/potteryItem-glaze-service'
 import AnimatedPressable from './AnimatedPressable'
 import { addPotteryItemFiring } from '../services/potteryItem-firing-service'
-import { addPotteryItemMeasurement, deleteMeasurement } from '../services/potteryItem-measurements-service'
+import {
+  addPotteryItemMeasurement,
+  deleteMeasurement,
+} from '../services/potteryItem-measurements-service'
 import TextStroke from './TextStroke'
+import { DateTimePickerAndroid, DateTimePickerEvent } from '@react-native-community/datetimepicker'
+import { getStatus } from '../constants/utils'
 
 type NewPotteryItemProps = {
-  callBackFunction?: () => void,
-  formVisible: boolean,
-  setFormVisible: (v: boolean) => void,
+  callBackFunction?: () => void
+  formVisible: boolean
+  setFormVisible: (v: boolean) => void
   initialData?: {
-    potteryItem: PotteryItem,
-    clays: Clay[];
-    glazes: Glaze[];
+    potteryItem: PotteryItem
+    clays: Clay[]
+    glazes: Glaze[]
     measurements: MeasurementState[]
     firings: FiringState[]
-    series?: string
-  };
+  }
   existingSeries: string[]
 }
 
 type MeasurementState = Omit<PotteryItemMeasurements, 'measurementId'> & {
-  measurementId?: string; 
-  potteryItemId?: string; 
-};
+  measurementId?: string
+  potteryItemId?: string
+}
 
 type FiringState = Omit<PotteryItemFirings, 'firingId'> & {
-  firingId?: string; 
-  potteryItemId?: string;
-};
+  firingId?: string
+  potteryItemId?: string
+}
 
 const NewPotteryItem = (props: NewPotteryItemProps) => {
   const DB = useDatabase()
@@ -97,6 +105,48 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
   const [alertText, setAlertText] = useState('')
   const [series, setSeries] = useState('')
   const [isDropdownVisible, setIsDropdownVisible] = useState(false)
+  const [dates, setDates] = useState<{
+    startDate: Date | undefined
+    greenwareDate: Date | undefined
+    bisqueDate: Date | undefined
+    glazeDate: Date | undefined
+  }>({
+    startDate: undefined,
+    greenwareDate: undefined,
+    bisqueDate: undefined,
+    glazeDate: undefined,
+  })
+
+  const statusText = getStatus(dates as Pick<PotteryItem, "startDate" | "greenwareDate" | "bisqueDate" | "glazeDate">)
+  
+  dates.glazeDate ? 'Completed' : dates.bisqueDate ? 'Bisque Fired' : dates.greenwareDate ? 'Greenware Done' : dates.startDate ? 'Greenware In Progress' : 'Not Started'
+  const onChange =
+    (key: keyof typeof dates) => (event: DateTimePickerEvent, selectedDate?: Date) => {
+      if (!selectedDate) return
+      if (event.type === 'set') {
+        setDates((prevDates) => ({
+          ...prevDates,
+          [key]: selectedDate,
+        }))
+      }
+      if (event.type === 'neutralButtonPressed') {
+        setDates((prevDates) => ({
+          ...prevDates,
+          [key]: null,
+        }))
+      }
+    }
+  const showMode = (key: keyof typeof dates) => {
+    const dateToShow = dates[key] ?? new Date()
+    DateTimePickerAndroid.open({
+      value: dateToShow,
+      onChange: onChange(key),
+      mode: 'date',
+      minimumDate: new Date('2020-01-01'),
+      neutralButton: {label: 'Remove'}
+    })
+    
+  }
 
   const animateHeight = (toValue: number, speed: number) => {
     Animated.timing(animatedHeight, {
@@ -107,26 +157,32 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
   }
   useEffect(() => {
     if (initialData) {
-      setPieceName(initialData.potteryItem.projectTitle || '');
-      setImage(initialData.potteryItem.displayPicturePath || null);
-      setClays(initialData.clays || []);
-      setGlazes(initialData.glazes || []);
+      setPieceName(initialData.potteryItem.projectTitle || '')
+      setImage(initialData.potteryItem.displayPicturePath || null)
+      setClays(initialData.clays || [])
+      setGlazes(initialData.glazes || [])
       setMeasurements(
         initialData.measurements.map((measurement) => ({
-          ...measurement,  // Spread existing properties
-          potteryItemId: initialData.potteryItem.potteryItemId,  // Add potteryItemId from initialData
-        })) || []
-      );
+          ...measurement, // Spread existing properties
+          potteryItemId: initialData.potteryItem.potteryItemId, // Add potteryItemId from initialData
+        })) || [],
+      )
       setFirings(
         initialData.firings.map((firing) => ({
           ...firing,
-          potteryItemId: initialData.potteryItem.potteryItemId
-        })) || []
+          potteryItemId: initialData.potteryItem.potteryItemId,
+        })) || [],
       )
-      setNotes(initialData.potteryItem.projectNotes || '');
-      setSeries(initialData.series || '')
+      setNotes(initialData.potteryItem.projectNotes || '')
+      setSeries(initialData.potteryItem.series || '')
+      setDates({
+        startDate: initialData.potteryItem.startDate ? new Date(initialData.potteryItem.startDate) : undefined,
+        greenwareDate: initialData.potteryItem.greenwareDate ? new Date(initialData.potteryItem.greenwareDate) : undefined,
+        bisqueDate: initialData.potteryItem.bisqueDate ? new Date(initialData.potteryItem.bisqueDate) : undefined,
+        glazeDate: initialData.potteryItem.glazeDate ? new Date(initialData.potteryItem.glazeDate) : undefined,
+      })
     }
-  }, [initialData]);
+  }, [initialData])
 
   useEffect(() => {
     // Add keyboard listeners to track keyboard open/close state
@@ -190,9 +246,9 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
   const addClays = (c: Clay[]) => {
     setClayFormVisible(false)
     setClays((prevClays) => {
-      const newClays = c.filter((clay) => !prevClays.includes(clay));
-      return [...prevClays, ...newClays];
-    });
+      const newClays = c.filter((clay) => !prevClays.includes(clay))
+      return [...prevClays, ...newClays]
+    })
   }
   const removeClay = (c: Clay) => {
     setClays((prevClays) => prevClays.filter((clay) => clay !== c))
@@ -215,7 +271,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
     const newMeasurement: MeasurementState = {
       ...measurement,
       potteryItemId: '', // Use an empty string or null if potteryItemId is not yet available
-    };
+    }
     if (measurements.includes(newMeasurement)) return
     setMeasurements((prev) => [...prev, newMeasurement])
   }
@@ -226,7 +282,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
     setFiringFormVisible(false)
     const newFiring = {
       ...firing,
-      potteryItemId: ''
+      potteryItemId: '',
     }
     if (firings.includes(newFiring)) return
     setFirings((prev) => [...prev, newFiring])
@@ -246,6 +302,10 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
       projectNotes: notes,
       displayPicturePath: image ? image : '',
       series: series,
+      startDate: dates.startDate?.toISOString().split('T')[0],
+      greenwareDate: dates.greenwareDate?.toISOString().split('T')[0],
+      bisqueDate: dates.bisqueDate?.toISOString().split('T')[0],
+      glazeDate: dates.glazeDate?.toISOString().split('T')[0],
     }
     await addPotteryItem(db, potteryItemToAdd)
   }
@@ -258,16 +318,14 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
     //Use Service to Submit
   }
   const createPotteryItemClays = async (db: SQLiteDatabase, newPotteryItemId: string) => {
-    const promises = clays.map((clay) => 
-      addPotteryItemClayLink(db, newPotteryItemId, clay.clayId)
-    )
+    const promises = clays.map((clay) => addPotteryItemClayLink(db, newPotteryItemId, clay.clayId))
     await Promise.all(promises)
   }
   const createPotteryItemGlazes = async (db: SQLiteDatabase, newPotteryItemId: string) => {
     const promises = glazes.map((glaze) =>
-      addPotteryItemGlazeLink(db, newPotteryItemId, glaze.glazeId)
-    );
-    await Promise.all(promises);
+      addPotteryItemGlazeLink(db, newPotteryItemId, glaze.glazeId),
+    )
+    await Promise.all(promises)
   }
   const createPotteryItemMeasurements = async (db: SQLiteDatabase, newPotteryItemId: string) => {
     const promises = measurements.map((m) => {
@@ -277,11 +335,11 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
         name: m.name,
         system: m.system,
         scale: m.scale,
-      };
-      return addPotteryItemMeasurement(db, temp);
-    });
-    
-    await Promise.all(promises); 
+      }
+      return addPotteryItemMeasurement(db, temp)
+    })
+
+    await Promise.all(promises)
   }
   const createPotteryItemFirings = async (db: SQLiteDatabase, newPotteryItemId: string) => {
     const promises = firings.map((f) => {
@@ -303,43 +361,48 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
       projectNotes: notes,
       displayPicturePath: image || '',
       series: series,
-      dateCreated: initialData?.potteryItem.dateCreated ||  new Date().toISOString(),
-      dateEdited: new Date().toISOString()
+      dateCreated: initialData?.potteryItem.dateCreated || new Date().toISOString(),
+      dateEdited: new Date().toISOString(),
+      startDate: dates.startDate?.toISOString().split('T')[0],
+      greenwareDate: dates.greenwareDate?.toISOString().split('T')[0],
+      bisqueDate: dates.bisqueDate?.toISOString().split('T')[0],
+      glazeDate: dates.glazeDate?.toISOString().split('T')[0],
     }
     await updatePotteryItem(db, temp)
   }
 
-  const updateExistingPotteryItemClays = async (db: SQLiteDatabase, itemId: string)=> {
+  const updateExistingPotteryItemClays = async (db: SQLiteDatabase, itemId: string) => {
     // Extract IDs from current and initial clays
-    const newClayIds = clays.map(clay => clay.clayId); 
-    const existingClayIds = (initialData?.clays || []).map(clay => clay.clayId); 
+    const newClayIds = clays.map((clay) => clay.clayId)
+    const existingClayIds = (initialData?.clays || []).map((clay) => clay.clayId)
 
     // Find clays to add and clays to remove
-    const claysToAdd = newClayIds.filter(id => !existingClayIds.includes(id)); 
-    const claysToRemove = existingClayIds.filter(id => !newClayIds.includes(id)); 
+    const claysToAdd = newClayIds.filter((id) => !existingClayIds.includes(id))
+    const claysToRemove = existingClayIds.filter((id) => !newClayIds.includes(id))
     // Add new clays
-    await Promise.all(claysToAdd.map(clayId => addPotteryItemClayLink(db, itemId, clayId)));
+    await Promise.all(claysToAdd.map((clayId) => addPotteryItemClayLink(db, itemId, clayId)))
     // Remove unlinked clays
-    await Promise.all(claysToRemove.map(clayId => removePotteryItemClayLink(db, itemId, clayId)));
+    await Promise.all(claysToRemove.map((clayId) => removePotteryItemClayLink(db, itemId, clayId)))
   }
   //PotteryItemGlazes
-  const updateExistingPotteryItemGlazes = async (db: SQLiteDatabase, itemId: string)=> {
+  const updateExistingPotteryItemGlazes = async (db: SQLiteDatabase, itemId: string) => {
     // Extract IDs from current and initial glazes
-    const newGlazeIds = glazes.map(glaze => glaze.glazeId); 
-    const existingGlazeIds = (initialData?.glazes || []).map(glaze => glaze.glazeId); 
+    const newGlazeIds = glazes.map((glaze) => glaze.glazeId)
+    const existingGlazeIds = (initialData?.glazes || []).map((glaze) => glaze.glazeId)
 
     // Find glazes to add and glazes to remove
-    const glazesToAdd = newGlazeIds.filter(id => !existingGlazeIds.includes(id)); 
-    const claysToRemove = existingGlazeIds.filter(id => !newGlazeIds.includes(id)); 
+    const glazesToAdd = newGlazeIds.filter((id) => !existingGlazeIds.includes(id))
+    const claysToRemove = existingGlazeIds.filter((id) => !newGlazeIds.includes(id))
 
     // Add new glazes
-    await Promise.all(glazesToAdd.map(glazeId => addPotteryItemGlazeLink(db, itemId, glazeId)));
+    await Promise.all(glazesToAdd.map((glazeId) => addPotteryItemGlazeLink(db, itemId, glazeId)))
     // Remove unlinked glaze
-    await Promise.all(claysToRemove.map(glazeId => removePotteryItemGlazeLink(db, itemId, glazeId)));
-
+    await Promise.all(
+      claysToRemove.map((glazeId) => removePotteryItemGlazeLink(db, itemId, glazeId)),
+    )
   }
   //Pictures
-  const updateExistingPotteryItemPicture = (db: SQLiteDatabase, itemId: string)=> {
+  const updateExistingPotteryItemPicture = (db: SQLiteDatabase, itemId: string) => {
     const potteryItemPictureToAdd: PotteryItemPictures = {
       pictureId: uuidv4(),
       potteryItemId: itemId,
@@ -348,64 +411,65 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
     //Use Service to update
   }
   //PotteryItemMeasurements
-  const updateExistingPotteryItemMeasurements = async (db: SQLiteDatabase, itemId: string)=> {
+  const updateExistingPotteryItemMeasurements = async (db: SQLiteDatabase, itemId: string) => {
     // Extract IDs from current and initial measurements
-    const newMeasurementIds = measurements.map(m => m.measurementId);  // Measurement IDs in state
-    const existingMeasurementIds = (initialData?.measurements || []).map(m => m.measurementId);  // Measurement IDs in initialData
+    const newMeasurementIds = measurements.map((m) => m.measurementId) // Measurement IDs in state
+    const existingMeasurementIds = (initialData?.measurements || []).map((m) => m.measurementId) // Measurement IDs in initialData
 
     // Find measurements to add and measurements to remove
-    const measurementsToAdd = measurements.filter(m => !m.measurementId);  // New measurements without IDs
-    const measurementsToRemove = existingMeasurementIds.filter(id => !newMeasurementIds.includes(id));  // Removed measurements
+    const measurementsToAdd = measurements.filter((m) => !m.measurementId) // New measurements without IDs
+    const measurementsToRemove = existingMeasurementIds.filter(
+      (id) => !newMeasurementIds.includes(id),
+    ) // Removed measurements
 
     // Add new measurements
     for (const measurement of measurementsToAdd) {
       const newMeasurement: PotteryItemMeasurements = {
-        measurementId: uuidv4(),  // Generate a new unique ID
+        measurementId: uuidv4(), // Generate a new unique ID
         potteryItemId: itemId,
         name: measurement.name,
         scale: measurement.scale,
         system: measurement.system,
-      };
-      await addPotteryItemMeasurement(db, newMeasurement);  // Add the new measurement
+      }
+      await addPotteryItemMeasurement(db, newMeasurement) // Add the new measurement
     }
 
     // Remove unlinked measurements
     for (const measurementId of measurementsToRemove) {
-      if(measurementId){
-        await deleteMeasurement(db, measurementId);  // Delete removed measurement from the database
+      if (measurementId) {
+        await deleteMeasurement(db, measurementId) // Delete removed measurement from the database
       }
     }
   }
   //PotteryItemFiring
-  const updateExistingPotteryItemFirings = async (db: SQLiteDatabase, itemId: string)=> {
+  const updateExistingPotteryItemFirings = async (db: SQLiteDatabase, itemId: string) => {
     // Extract IDs from current and initial firings
-    const newFiringsIds = firings.map(f => f.firingId);  // Measurement IDs in state
-    const existingFirings = (initialData?.firings || []).map(f => f.firingId);  // Measurement IDs in initialData
+    const newFiringsIds = firings.map((f) => f.firingId) // Measurement IDs in state
+    const existingFirings = (initialData?.firings || []).map((f) => f.firingId) // Measurement IDs in initialData
 
     // Find measurements to add and measurements to remove
-    const firingsToAdd = firings.filter(f => !f.firingId);  // New measurements without IDs
-    const firingsToRemove = existingFirings.filter(id => !newFiringsIds.includes(id));  // Removed measurements
+    const firingsToAdd = firings.filter((f) => !f.firingId) // New measurements without IDs
+    const firingsToRemove = existingFirings.filter((id) => !newFiringsIds.includes(id)) // Removed measurements
 
     // Add new measurements
     for (const firing of firingsToAdd) {
       const newFiring: PotteryItemFirings = {
-        firingId: uuidv4(),  // Generate a new unique ID
+        firingId: uuidv4(), // Generate a new unique ID
         potteryItemId: itemId,
         fireStyle: firing.fireStyle,
         fireType: firing.fireType,
         cone: firing.cone,
-      };
-      await addPotteryItemFiring(db, newFiring);  // Add the new measurement
+      }
+      await addPotteryItemFiring(db, newFiring) // Add the new measurement
     }
 
     // Remove unlinked measurements
     for (const firingId of firingsToRemove) {
-      if(firingId){
-        await deleteMeasurement(db, firingId);  // Delete removed measurement from the database
+      if (firingId) {
+        await deleteMeasurement(db, firingId) // Delete removed measurement from the database
       }
     }
   }
-
 
   const handleNewPotteryItem = async () => {
     if (pieceName.length < 1) {
@@ -438,33 +502,35 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
   }
   const handleUpdatePotteryItem = async (updateId: string) => {
     if (pieceName.length < 1) {
-      Alert.alert('Missing Name', 'Please add a name for your project');
-      return;
+      Alert.alert('Missing Name', 'Please add a name for your project')
+      return
     }
     if (clays.length < 1) {
-      Alert.alert('Missing Clay', 'Please add at least one clay to your project.');
-      return;
+      Alert.alert('Missing Clay', 'Please add at least one clay to your project.')
+      return
     }
-  
+
     // Perform update actions in sequence
     try {
-      await updateExistingPotteryItem(DB, updateId);
-      await updateExistingPotteryItemClays(DB, updateId);
-      await updateExistingPotteryItemPicture(DB, updateId);
-      await updateExistingPotteryItemGlazes(DB, updateId);
-      await updateExistingPotteryItemMeasurements(DB, updateId);
-      await updateExistingPotteryItemFirings(DB, updateId);
-  
+      await updateExistingPotteryItem(DB, updateId)
+      await updateExistingPotteryItemClays(DB, updateId)
+      await updateExistingPotteryItemPicture(DB, updateId)
+      await updateExistingPotteryItemGlazes(DB, updateId)
+      await updateExistingPotteryItemMeasurements(DB, updateId)
+      await updateExistingPotteryItemFirings(DB, updateId)
+
       // Close modal after all updates complete
-      handleFormClosure();
-      callBackFunction?.();
+      handleFormClosure()
+      callBackFunction?.()
     } catch (error) {
-      console.error('Error updating pottery item:', error);
+      console.error('Error updating pottery item:', error)
     }
   }
-  
-  const handleSubmitForm = async () => {  
-    initialData ? handleUpdatePotteryItem(initialData.potteryItem.potteryItemId) : handleNewPotteryItem()
+
+  const handleSubmitForm = async () => {
+    initialData
+      ? handleUpdatePotteryItem(initialData.potteryItem.potteryItemId)
+      : handleNewPotteryItem()
   }
 
   const handleFormClosure = () => {
@@ -519,8 +585,8 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
               Piece Title
             </Text>
             <Text style={[styles.reminderText, { color: colors.text, fontFamily: 'text' }]}>
-                Required
-              </Text>
+              Required
+            </Text>
             <TextInput
               maxLength={20}
               style={[
@@ -602,27 +668,27 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
             {/*image*/}
             <View style={styles.imageContainer}>
               {image ? (
-              <AnimatedPressable onPress={() => setImageModalVisible(true)}>
+                <AnimatedPressable onPress={() => setImageModalVisible(true)}>
                   <ImageBackground
-                    style={[styles.addImage, {borderColor: colors.border}]}
+                    style={[styles.addImage, { borderColor: colors.border }]}
                     imageStyle={[styles.addImage]}
                     resizeMode="cover"
                     source={{ uri: image }}
                   >
-                      <TextStroke color={colors.background} stroke={1}>
-                        <Text
-                          style={{
-                            fontSize: 14,
-                            textAlign: 'center',
-                            color: colors.text,
-                            fontFamily: 'text',
-                          }}
-                        >
-                          Change Image
-                        </Text>
-                      </TextStroke>
+                    <TextStroke color={colors.background} stroke={1}>
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          textAlign: 'center',
+                          color: colors.text,
+                          fontFamily: 'text',
+                        }}
+                      >
+                        Change Image
+                      </Text>
+                    </TextStroke>
                   </ImageBackground>
-                    </AnimatedPressable>
+                </AnimatedPressable>
               ) : (
                 <AnimatedPressable
                   style={[
@@ -645,36 +711,45 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
               )}
             </View>
             <View style={[styles.group]}>
-            <Text style={[globalStyles.label, { color: colors.text, fontFamily: 'heading' }]}>
-              Series
-            </Text>
-            <TextInput
-              maxLength={20}
-              style={[
-                styles.nameInput,
-                {
-                  backgroundColor: colors.card,
-                  borderColor: colors.border,
-                  color: colors.text,
-                  fontFamily: 'text',
-                  fontSize: 22
-                },
-              ]}
-              textAlign="center"
-              onChangeText={setSeries}
-              cursorColor={colors.border}
-              value={series}
-            />
-            {
-            existingSeries && existingSeries.length > 0 && 
-            <AnimatedPressable
-            onPress={() => setIsDropdownVisible(true)} 
-            style={[globalStyles.button, {backgroundColor: colors.primary, borderColor: colors.border, marginTop: 5, alignSelf: 'center'}]}
-            >
-            <Text style={[{ color: colors.text, fontFamily: 'textBold', fontSize: 14 }]}>Choose From Existing</Text>
-            </AnimatedPressable>
-          }
-          </View>
+              <Text style={[globalStyles.label, { color: colors.text, fontFamily: 'heading' }]}>
+                Series
+              </Text>
+              <TextInput
+                maxLength={20}
+                style={[
+                  styles.nameInput,
+                  {
+                    backgroundColor: colors.card,
+                    borderColor: colors.border,
+                    color: colors.text,
+                    fontFamily: 'text',
+                    fontSize: 22,
+                  },
+                ]}
+                textAlign="center"
+                onChangeText={setSeries}
+                cursorColor={colors.border}
+                value={series}
+              />
+              {existingSeries && existingSeries.length > 0 && (
+                <AnimatedPressable
+                  onPress={() => setIsDropdownVisible(true)}
+                  style={[
+                    globalStyles.button,
+                    {
+                      backgroundColor: colors.primary,
+                      borderColor: colors.border,
+                      marginTop: 5,
+                      alignSelf: 'center',
+                    },
+                  ]}
+                >
+                  <Text style={[{ color: colors.text, fontFamily: 'textBold', fontSize: 14 }]}>
+                    Choose From Existing
+                  </Text>
+                </AnimatedPressable>
+              )}
+            </View>
             {/* Notes*/}
             <View style={[styles.group, { height: 120, width: 'auto' }]}>
               <Text style={[globalStyles.label, { color: colors.text, fontFamily: 'heading' }]}>
@@ -856,6 +931,121 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
                   </Text>
                 </AnimatedPressable>
               </View>
+              <View style={styles.group}>
+                <Text style={[globalStyles.label, { color: colors.text, fontFamily: 'heading' }]}>
+                  Progress
+                </Text>
+                <View style={{flexDirection: 'row', marginVertical: 5}}>
+                <Text style={[globalStyles.label, { color: colors.text, fontFamily: 'text', textAlignVertical: 'center', textAlign: 'right', flex: 1 }]}>Status:</Text>
+                <View
+                style={[
+                  {
+                    borderWidth: 1,
+                    padding: 5,
+                    marginRight: 20,
+                    marginLeft: 5,
+                    flex: 3
+                  },
+                  { backgroundColor: colors.card, borderColor: colors.border },
+                ]}
+                ><Text style={{ color: colors.text, fontFamily: 'text', textAlign: 'center', fontSize: 12 }}>{statusText}</Text></View>
+                </View>
+                <View style={[{ flexDirection: 'row', columnGap: 3, marginTop: 4 }]}>
+                  <View style={{ flexDirection: 'column', flex: 1 }}>
+                    <Text
+                      style={{ color: colors.text, fontFamily: 'text', textAlign: 'center', fontSize: 12 }}
+                    >
+                      Date{'\n'}Started
+                    </Text>
+                    <AnimatedPressable
+                      onPress={() => showMode('startDate')}
+                      style={{ backgroundColor: colors.card }}
+                    >
+                      <Text
+                        style={{
+                          color: colors.text,
+                          fontFamily: 'text',
+                          textAlign: 'center',
+                          fontSize: 12,
+                          paddingVertical: 2
+                        }}
+                      >
+                        {dates.startDate?.toLocaleDateString('en-US') || ''}
+                      </Text>
+                    </AnimatedPressable>
+                  </View>
+                  <View style={{ flexDirection: 'column', flex: 1 }}>
+                    <Text
+                      style={{ color: colors.text, fontFamily: 'text', textAlign: 'center', fontSize: 12 }}
+                    >
+                      Greenware{'\n'}Done
+                    </Text>
+                    <AnimatedPressable
+                      onPress={() => showMode('greenwareDate')}
+                      style={{ backgroundColor: colors.card }}
+                    >
+                      <Text
+                        style={{
+                          color: colors.text,
+                          fontFamily: 'text',
+                          textAlign: 'center',
+                          fontSize: 12,
+                          paddingVertical: 2
+                        }}
+                        
+                      >
+                        {dates.greenwareDate?.toLocaleDateString('en-US')}
+                      </Text>
+                    </AnimatedPressable>
+                  </View>
+                  <View style={{ flexDirection: 'column', flex: 1 }}>
+                    <Text
+                      style={{ color: colors.text, fontFamily: 'text', textAlign: 'center', fontSize: 12 }}
+                    >
+                      Bisque{'\n'}Fired
+                    </Text>
+                    <AnimatedPressable
+                      onPress={() => showMode('bisqueDate')}
+                      style={{ backgroundColor: colors.card }}
+                    >
+                      <Text
+                        style={{
+                          color: colors.text,
+                          fontFamily: 'text',
+                          textAlign: 'center',
+                          fontSize: 12,
+                          paddingVertical: 2
+                        }}
+                      >
+                        {dates.bisqueDate?.toLocaleDateString('en-US')}
+                      </Text>
+                    </AnimatedPressable>
+                  </View>
+                  <View style={{ flexDirection: 'column', flex: 1 }}>
+                    <Text
+                      style={{ color: colors.text, fontFamily: 'text', textAlign: 'center', fontSize: 12 }}
+                    >
+                      Glaze{'\n'}Fired
+                    </Text>
+                    <AnimatedPressable
+                      onPress={() => showMode('glazeDate')}
+                      style={{ backgroundColor: colors.card }}
+                    >
+                      <Text
+                        style={{
+                          color: colors.text,
+                          fontFamily: 'text',
+                          textAlign: 'center',
+                          fontSize: 12,
+                          paddingVertical: 2
+                        }}
+                      >
+                        {dates.glazeDate?.toLocaleDateString('en-US')}
+                      </Text>
+                    </AnimatedPressable>
+                  </View>
+                </View>
+              </View>
             </View>
           </CollapsibleSection>
           {/*Submit Button*/}
@@ -878,16 +1068,15 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
               ]}
               onPress={handleSubmitForm}
             >
-              {
-              initialData ? 
-              <Text style={{ fontSize: 18, color: colors.text, fontFamily: 'textBold' }}>
-                Update Piece
-              </Text> 
-              : 
-              <Text style={{ fontSize: 18, color: colors.text, fontFamily: 'textBold' }}>
-                Add New Piece
-              </Text>
-              }
+              {initialData ? (
+                <Text style={{ fontSize: 18, color: colors.text, fontFamily: 'textBold' }}>
+                  Update Piece
+                </Text>
+              ) : (
+                <Text style={{ fontSize: 18, color: colors.text, fontFamily: 'textBold' }}>
+                  Add New Piece
+                </Text>
+              )}
             </AnimatedPressable>
           </View>
         </Animated.View>
@@ -919,7 +1108,9 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
             ]}
             onPress={openCamera}
           >
-            <Text style={[styles.buttonText, { color: colors.text, fontFamily: 'textBold' }]}>New Image</Text>
+            <Text style={[styles.buttonText, { color: colors.text, fontFamily: 'textBold' }]}>
+              New Image
+            </Text>
           </AnimatedPressable>
           <AnimatedPressable
             style={[
@@ -929,7 +1120,9 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
             ]}
             onPress={pickImage}
           >
-            <Text style={[styles.buttonText, { color: colors.text, fontFamily: 'textBold' }]}>Camera Roll</Text>
+            <Text style={[styles.buttonText, { color: colors.text, fontFamily: 'textBold' }]}>
+              Camera Roll
+            </Text>
           </AnimatedPressable>
         </View>
       </Modal>
@@ -976,7 +1169,11 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
           >
             <Ionicons name="close-circle-outline" size={30} color={colors.text} />
           </Pressable>
-          <ClaysList selectedClays={currentClays} existingProjectClays={clays} setSelectedClays={setCurrentClays}>
+          <ClaysList
+            selectedClays={currentClays}
+            existingProjectClays={clays}
+            setSelectedClays={setCurrentClays}
+          >
             <AnimatedPressable
               onPress={() => {
                 addClays(currentClays)
@@ -1022,7 +1219,11 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
           >
             <Ionicons name="close-circle-outline" size={30} color={colors.text} />
           </Pressable>
-          <GlazesList selectedGlazes={currentGlazes} existingProjectGlazes={glazes} setSelectedGlazes={setCurrentGlazes}>
+          <GlazesList
+            selectedGlazes={currentGlazes}
+            existingProjectGlazes={glazes}
+            setSelectedGlazes={setCurrentGlazes}
+          >
             <AnimatedPressable
               onPress={() => {
                 addGlaze(currentGlazes)
@@ -1056,7 +1257,7 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
         <NewFiring callbackFunction={addFiring} />
       </Modal>
       {/*Alert Modal*/}
-      <Modal 
+      <Modal
         isVisible={isAlertVisible}
         animationIn={'zoomIn'}
         animationInTiming={400}
@@ -1069,30 +1270,52 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
         backdropTransitionOutTiming={0}
       >
         <View
-         style={{
-          height: 130,
-          borderWidth: 1,
-          borderColor: colors.border,
-          backgroundColor: colors.background,
-          borderRadius: 10,
-          padding: 8,
-          rowGap: 8
-        }}>
-          <Text style={{color: colors.text, fontFamily: 'title', fontSize: 20, flex: 1}}>Missing {alertText}</Text>
-          <Text style={{color: colors.text, fontFamily: 'heading', fontSize: 18, textAlign: 'center', flex: 1}}>Please add a {alertText} to your piece</Text>
-          <AnimatedPressable onPress={() => setAlertVisible(false)}
+          style={{
+            height: 130,
+            borderWidth: 1,
+            borderColor: colors.border,
+            backgroundColor: colors.background,
+            borderRadius: 10,
+            padding: 8,
+            rowGap: 8,
+          }}
+        >
+          <Text style={{ color: colors.text, fontFamily: 'title', fontSize: 20, flex: 1 }}>
+            Missing {alertText}
+          </Text>
+          <Text
+            style={{
+              color: colors.text,
+              fontFamily: 'heading',
+              fontSize: 18,
+              textAlign: 'center',
+              flex: 1,
+            }}
+          >
+            Please add a {alertText} to your piece
+          </Text>
+          <AnimatedPressable
+            onPress={() => setAlertVisible(false)}
             style={[
-              { backgroundColor: colors.primary, borderColor: colors.border, paddingVertical: 4, paddingHorizontal: 10, alignSelf: 'flex-end', borderWidth: 1, borderRadius: 10, },
+              {
+                backgroundColor: colors.primary,
+                borderColor: colors.border,
+                paddingVertical: 4,
+                paddingHorizontal: 10,
+                alignSelf: 'flex-end',
+                borderWidth: 1,
+                borderRadius: 10,
+              },
             ]}
-            >
-              <Text style={{color: colors.text, fontFamily: 'textBold', textAlign: 'center',}}>
-                Okay
-              </Text>
-            </AnimatedPressable>
+          >
+            <Text style={{ color: colors.text, fontFamily: 'textBold', textAlign: 'center' }}>
+              Okay
+            </Text>
+          </AnimatedPressable>
         </View>
       </Modal>
       {/*Series Dropdown*/}
-      <Modal 
+      <Modal
         isVisible={isDropdownVisible}
         animationIn={'zoomIn'}
         animationInTiming={750}
@@ -1104,37 +1327,38 @@ const NewPotteryItem = (props: NewPotteryItemProps) => {
         onBackButtonPress={() => setIsDropdownVisible(false)}
         backdropTransitionOutTiming={0}
       >
-        <View  
-        style={[
-          styles.modalContainer,
-          { backgroundColor: colors.background, borderColor: colors.border },
-        ]}
+        <View
+          style={[
+            styles.modalContainer,
+            { backgroundColor: colors.background, borderColor: colors.border },
+          ]}
         >
-
           <ScrollView>
             {existingSeries.map((s, i) => (
-              <AnimatedPressable key={'manu:' + i}
-              onPress={() => {
-                setSeries(s)
-                setIsDropdownVisible(false)
-              }}
-              style={[
-                styles.selection,
-                { backgroundColor: colors.card, borderColor: colors.border },
-              ]}
+              <AnimatedPressable
+                key={'manu:' + i}
+                onPress={() => {
+                  setSeries(s)
+                  setIsDropdownVisible(false)
+                }}
+                style={[
+                  styles.selection,
+                  { backgroundColor: colors.card, borderColor: colors.border },
+                ]}
               >
-                <Text style={[{color: colors.text, fontFamily: 'textBold', textAlign: 'center'}]}>{s}</Text>
+                <Text style={[{ color: colors.text, fontFamily: 'textBold', textAlign: 'center' }]}>
+                  {s}
+                </Text>
               </AnimatedPressable>
             ))}
           </ScrollView>
-                </View>
+        </View>
       </Modal>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
- 
   innerContainer: {
     borderWidth: 1,
     borderRadius: 10,
@@ -1231,15 +1455,14 @@ const styles = StyleSheet.create({
     marginVertical: 150,
     borderWidth: 1,
     borderRadius: 10,
-    maxHeight: 300
+    maxHeight: 300,
   },
   selection: {
-  marginHorizontal: 5,
+    marginHorizontal: 5,
     justifyContent: 'center',
     padding: 8,
     borderWidth: 1,
-  }
-  
+  },
 })
 
 export default NewPotteryItem
