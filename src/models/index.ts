@@ -6,6 +6,10 @@ export type PotteryItem = {
   projectNotes: string
   displayPicturePath: string
   series?: string
+  startDate?: string
+  greenwareDate?: string
+  bisqueDate?: string
+  glazeDate?: string
 }
 
 export type PotteryItemPictures = {
