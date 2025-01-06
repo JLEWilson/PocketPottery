@@ -18,7 +18,13 @@ import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
 import { createMetaTable } from '../services/meta'
 import { Ionicons } from '@expo/vector-icons'
 import Modal from 'react-native-modal'
-import { sortObjectsByProperty } from '../constants/utils'
+import {
+  getStatus,
+  groupBy,
+  sortObjectsByProperty,
+  sortPotteryItemsByStatus,
+} from '../constants/utils'
+import CollapsibleSection from './CollapsibleSection'
 
 type PotteryItemsStackNavigationProp = StackNavigationProp<RootStackParamList, 'PotteryItemView'>
 type PotteryItemsBottomNavigationProp = BottomTabNavigationProp<
@@ -29,11 +35,11 @@ type PotteryItemsBottomNavigationProp = BottomTabNavigationProp<
 const SortOptions = {
   ALPHABETICAL: 'Alphabetical',
   COMPLETION_STATUS: 'Completion Status',
-  DATE_CREATED: 'Date Created',
-  DATE_EDITED: 'Date Edited',
+  DATE_STARTED: 'Start Date',
+  DATE_COMPLETED: 'Completion Date',
   SERIES: 'Series',
   TAG: 'Tag',
-} as const; 
+} as const
 
 const PotteryItemList = () => {
   const DB = useDatabase()
@@ -42,13 +48,13 @@ const PotteryItemList = () => {
   const nav = useNavigation<PotteryItemsStackNavigationProp>()
   const navigation = useNavigation<PotteryItemsBottomNavigationProp>()
   const [potteryItems, setPotteryItems] = useState<PotteryItem[]>([])
-  const [sortedPotteryItems, setSortedPotteryItems] = useState<PotteryItem[]>([]);
+  const [sortedPotteryItems, setSortedPotteryItems] = useState<PotteryItem[]>([])
   const [reload, setReload] = useState(false)
-  const [isSortModalVisible, setIsSortModalVisible] = useState<boolean>(false );
-  const [modalPosition, setModalPosition] = useState({ x: 0, y: 0, width: 0, height: 0});
+  const [isSortModalVisible, setIsSortModalVisible] = useState<boolean>(false)
+  const [modalPosition, setModalPosition] = useState({ x: 0, y: 0, width: 0, height: 0 })
   const [formVisible, setFormVisible] = useState(false)
-  const [sortMode, setSortMode] = useState<string>(SortOptions.ALPHABETICAL);
-  const buttonRef = useRef<View>(null);
+  const [sortMode, setSortMode] = useState<string>(SortOptions.ALPHABETICAL)
+  const buttonRef = useRef<View>(null)
 
   const loadDataCallback = useCallback(async () => {
     try {
@@ -61,7 +67,6 @@ const PotteryItemList = () => {
       const storedPotteryItems = await getPotteryItems(DB)
       if (storedPotteryItems.length) {
         setPotteryItems(storedPotteryItems)
-        
       } else {
         setPotteryItems([])
       }
@@ -96,21 +101,29 @@ const PotteryItemList = () => {
   }, [isFocused, reload, loadDataCallback])
 
   useEffect(() => {
-    if (potteryItems.length === 0) return;
-  
+    if (potteryItems.length === 0) return
+
     switch (sortMode) {
       case SortOptions.ALPHABETICAL:
-        setSortedPotteryItems(sortObjectsByProperty([...potteryItems], 'projectTitle'));
-        break;
+        setSortedPotteryItems(sortObjectsByProperty([...potteryItems], 'projectTitle'))
+        break
+      case SortOptions.COMPLETION_STATUS:
+        setSortedPotteryItems(sortPotteryItemsByStatus([...potteryItems]))
+        break
+      case SortOptions.DATE_STARTED:
+        setSortedPotteryItems(sortObjectsByProperty([...potteryItems], 'startDate'))
+        break
+      case SortOptions.DATE_COMPLETED:
+        setSortedPotteryItems(sortObjectsByProperty([...potteryItems], 'glazeDate'))
+        break
       case SortOptions.SERIES:
-        setSortedPotteryItems(sortObjectsByProperty([...potteryItems], 'series'));
-        break;
+        setSortedPotteryItems(sortObjectsByProperty([...potteryItems], 'series'))
+        break
       default:
-        break;
+        break
     }
-  }, [sortMode, potteryItems]); 
+  }, [sortMode, potteryItems])
 
-  
   const handleReload = () => {
     setReload((prev) => !prev)
   }
@@ -122,24 +135,77 @@ const PotteryItemList = () => {
   const openModal = () => {
     // Measure button position
     buttonRef.current?.measureInWindow((x, y, width, height) => {
-      setModalPosition({ x: x + width, y: y, width, height });
-      setIsSortModalVisible(true);
-    });
-  };
+      setModalPosition({ x: x + width, y: y, width, height })
+      setIsSortModalVisible(true)
+    })
+  }
 
   return (
     <View style={{ backgroundColor: colors.background, flex: 1 }}>
-      <View style={{position: 'absolute', right: 12, top: 0, zIndex: 3}}>
-        <View  ref={buttonRef}>
-          <AnimatedPressable onPress={() => openModal()} style={{padding: 4}}>
-            <Ionicons name='filter' color={colors.text} size={25}/>
+      <View style={{ position: 'absolute', right: 12, top: 0, zIndex: 3 }}>
+        <View ref={buttonRef}>
+          <AnimatedPressable onPress={() => openModal()} style={{ padding: 4 }}>
+            <Ionicons name="filter" color={colors.text} size={25} />
           </AnimatedPressable>
         </View>
       </View>
-      <ScrollView contentContainerStyle={styles.scrollView}>
-        {sortedPotteryItems.map((p) => (
-          <PotteryItemComponent key={p.potteryItemId} potteryItem={p} handlePress={handlePress} />
-        ))}
+      <ScrollView contentContainerStyle={[styles.scrollView]}>
+        {sortMode === SortOptions.SERIES
+          ? Object.entries(groupBy(sortedPotteryItems, (item) => item.series || 'No Series')).map(
+              ([series, items]) => (
+                <View key={series + ' wrapper'} style={{ width: '100%' }}>
+                  <CollapsibleSection
+                    showText={series}
+                    hideText={series}
+                    startOpen={true}
+                    key={series || 'No Series'}
+                  >
+                    <View style={[styles.scrollView, { padding: 0 }]}>
+                      {/* Pottery Items in the Series */}
+                      {items.map((p) => (
+                        <PotteryItemComponent
+                          key={p.potteryItemId}
+                          potteryItem={p}
+                          handlePress={handlePress}
+                        />
+                      ))}
+                    </View>
+                  </CollapsibleSection>
+                </View>
+              ),
+            )
+          : sortMode === SortOptions.COMPLETION_STATUS
+            ? Object.entries(groupBy(sortedPotteryItems, (item) => getStatus(item))).map(
+                ([status, items]) => (
+                  <View key={status + ' wrapper'} style={{ width: '100%' }}>
+                    <CollapsibleSection
+                      showText={status}
+                      hideText={status}
+                      startOpen={true}
+                      key={status || 'No Series'}
+                    >
+                      <View style={[styles.scrollView, { padding: 0 }]}>
+                        {/* Pottery Items in the Completion Status Group */}
+                        {items.map((p) => (
+                          <PotteryItemComponent
+                            key={p.potteryItemId}
+                            potteryItem={p}
+                            handlePress={handlePress}
+                          />
+                        ))}
+                      </View>
+                    </CollapsibleSection>
+                  </View>
+                ),
+              )
+            : /* Default rendering for other sort modes */
+              sortedPotteryItems.map((p) => (
+                <PotteryItemComponent
+                  key={p.potteryItemId}
+                  potteryItem={p}
+                  handlePress={handlePress}
+                />
+              ))}
       </ScrollView>
       <View style={styles.modalOpenButton}>
         <AnimatedPressable
@@ -169,9 +235,9 @@ const PotteryItemList = () => {
         callBackFunction={handleReload}
         formVisible={formVisible}
         setFormVisible={setFormVisible}
-        existingSeries={
-          Array.from(new Set(potteryItems.map(p => p.series))).filter((s): s is string => s != null && s.length > 0)
-        }
+        existingSeries={Array.from(new Set(potteryItems.map((p) => p.series))).filter(
+          (s): s is string => s != null && s.length > 0,
+        )}
       />
       <Modal
         isVisible={isSortModalVisible}
@@ -192,26 +258,44 @@ const PotteryItemList = () => {
               backgroundColor: colors.background,
               width: 175,
               padding: 8,
-              top: modalPosition.y + (modalPosition.height/2),
+              top: modalPosition.y + modalPosition.height / 2,
               left: modalPosition.x - 190,
-              rowGap: 8
+              rowGap: 8,
             },
-          ]}>
-            <Text 
-            style={{color: colors.text, fontFamily: 'title', textAlign: 'center', fontSize: 20}}
-            
-            >
-              Sort Style
-            </Text>
-            {(Object.keys(SortOptions) as Array<keyof typeof SortOptions>).map((key) => (
-              <AnimatedPressable 
+          ]}
+        >
+          <Text
+            style={{ color: colors.text, fontFamily: 'title', textAlign: 'center', fontSize: 20 }}
+          >
+            Sort Style
+          </Text>
+          {(Object.keys(SortOptions) as Array<keyof typeof SortOptions>).map((key) => (
+            <AnimatedPressable
               key={key}
-              onPress={() => setSortMode(SortOptions[key])}
-              style={{backgroundColor: colors.primary, borderColor: colors.border, borderWidth: 1}}>
-                <Text key={key + 'text'} style={{color: colors.text, fontFamily: 'text', textAlign: 'center', paddingVertical: 3}}>{SortOptions[key]}</Text>
-              </AnimatedPressable>
-            ))}
-          </View>
+              onPress={() => {
+                setIsSortModalVisible(false)
+                setSortMode(SortOptions[key])
+              }}
+              style={{
+                backgroundColor: colors.primary,
+                borderColor: colors.border,
+                borderWidth: 1,
+              }}
+            >
+              <Text
+                key={key + 'text'}
+                style={{
+                  color: colors.text,
+                  fontFamily: 'text',
+                  textAlign: 'center',
+                  paddingVertical: 3,
+                }}
+              >
+                {SortOptions[key]}
+              </Text>
+            </AnimatedPressable>
+          ))}
+        </View>
       </Modal>
     </View>
   )
