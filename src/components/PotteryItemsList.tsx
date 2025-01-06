@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { ScrollView, StyleSheet, Text, View, BackHandler } from 'react-native'
+import { ScrollView, StyleSheet, Text, View, BackHandler, Pressable } from 'react-native'
 import { PotteryItemComponent } from './PotteryItem'
 import { PotteryItem } from '../models'
 import { useDatabase } from '../services/db-context'
@@ -19,7 +19,9 @@ import { createMetaTable } from '../services/meta'
 import { Ionicons } from '@expo/vector-icons'
 import Modal from 'react-native-modal'
 import {
+  CompletionStatus,
   getStatus,
+  getStatusKey,
   groupBy,
   sortObjectsByProperty,
   sortPotteryItemsByStatus,
@@ -41,6 +43,12 @@ const SortOptions = {
   TAG: 'Tag',
 } as const
 
+type SortOptionKeys = keyof typeof SortOptions;
+
+const FilterOptions = {
+  ...CompletionStatus,
+}
+
 const PotteryItemList = () => {
   const DB = useDatabase()
   const { colors } = useTheme()
@@ -53,8 +61,14 @@ const PotteryItemList = () => {
   const [isSortModalVisible, setIsSortModalVisible] = useState<boolean>(false)
   const [modalPosition, setModalPosition] = useState({ x: 0, y: 0, width: 0, height: 0 })
   const [formVisible, setFormVisible] = useState(false)
-  const [sortMode, setSortMode] = useState<string>(SortOptions.ALPHABETICAL)
   const buttonRef = useRef<View>(null)
+  const [sortMode, setSortMode] = useState<SortOptionKeys>('ALPHABETICAL')
+  const [selectedSortButton, setselectedSortButton] = useState<SortOptionKeys>('ALPHABETICAL')
+  const [selectedFilters, setSelectedFilters] = useState<string[]>([])
+  const checkboxIcons = {
+    checked: <Ionicons name="square" size={20} color={colors.primary} />,
+    unchecked: <Ionicons name="square-outline" size={20} color={colors.primary} />,
+  }
 
   const loadDataCallback = useCallback(async () => {
     try {
@@ -67,6 +81,7 @@ const PotteryItemList = () => {
       const storedPotteryItems = await getPotteryItems(DB)
       if (storedPotteryItems.length) {
         setPotteryItems(storedPotteryItems)
+        handleSubmitSorting()
       } else {
         setPotteryItems([])
       }
@@ -78,6 +93,12 @@ const PotteryItemList = () => {
       }
     }
   }, [DB, reload])
+
+  useEffect(() => {
+    if (potteryItems.length > 0) {
+      handleSubmitSorting(); 
+    }
+  }, [potteryItems])
 
   useFocusEffect(
     useCallback(() => {
@@ -100,29 +121,59 @@ const PotteryItemList = () => {
     }
   }, [isFocused, reload, loadDataCallback])
 
-  useEffect(() => {
-    if (potteryItems.length === 0) return
-
+  const sortPotteryItems = (items: PotteryItem[]) => {
     switch (sortMode) {
-      case SortOptions.ALPHABETICAL:
-        setSortedPotteryItems(sortObjectsByProperty([...potteryItems], 'projectTitle'))
-        break
-      case SortOptions.COMPLETION_STATUS:
-        setSortedPotteryItems(sortPotteryItemsByStatus([...potteryItems]))
-        break
-      case SortOptions.DATE_STARTED:
-        setSortedPotteryItems(sortObjectsByProperty([...potteryItems], 'startDate'))
-        break
-      case SortOptions.DATE_COMPLETED:
-        setSortedPotteryItems(sortObjectsByProperty([...potteryItems], 'glazeDate'))
-        break
-      case SortOptions.SERIES:
-        setSortedPotteryItems(sortObjectsByProperty([...potteryItems], 'series'))
-        break
+      case "ALPHABETICAL":
+        return sortObjectsByProperty(items, "projectTitle");
+      case "COMPLETION_STATUS":
+        return sortPotteryItemsByStatus(items);
+      case "DATE_STARTED":
+        return sortObjectsByProperty(items, "startDate");
+      case "DATE_COMPLETED":
+        return sortObjectsByProperty(items, "glazeDate");
+      case "SERIES":
+        return sortObjectsByProperty(items, "series");
       default:
-        break
+        return items;
     }
-  }, [sortMode, potteryItems])
+  };
+  
+  const filterPotteryItems = () => {
+    
+    const filteredItems = potteryItems.filter((item) => {
+      const status = getStatus(item);
+      const key = getStatusKey(status)
+      console.log(`Item: ${item.projectTitle}, Status: ${status}`);
+      return selectedFilters.length === 0 || selectedFilters.includes(key);
+    });
+  
+    console.log('Filtered Items:', filteredItems); // Check the filtered items
+    return filteredItems;
+  };
+  
+  const handleSubmitSorting = () => {
+    // Set the sort mode based on the selected option
+    setSortMode(selectedSortButton);
+    setIsSortModalVisible(false);
+  
+    // First, filter the items based on selected filters
+    const filteredItems = filterPotteryItems();
+  
+    // Then, apply sorting to the filtered items
+    const sortedItems = sortPotteryItems(filteredItems);
+  
+    // Finally, update the sorted items state
+    setSortedPotteryItems(sortedItems);
+  };
+
+  const toggleOption = (option: string) => {
+    setSelectedFilters(
+      (prevSelected) =>
+        prevSelected.includes(option)
+          ? prevSelected.filter((o) => o !== option) // Remove if already selected
+          : [...prevSelected, option], // Add if not selected
+    )
+  }
 
   const handleReload = () => {
     setReload((prev) => !prev)
@@ -150,7 +201,7 @@ const PotteryItemList = () => {
         </View>
       </View>
       <ScrollView contentContainerStyle={[styles.scrollView]}>
-        {sortMode === SortOptions.SERIES
+        {sortMode === 'SERIES'
           ? Object.entries(groupBy(sortedPotteryItems, (item) => item.series || 'No Series')).map(
               ([series, items]) => (
                 <View key={series + ' wrapper'} style={{ width: '100%' }}>
@@ -174,7 +225,7 @@ const PotteryItemList = () => {
                 </View>
               ),
             )
-          : sortMode === SortOptions.COMPLETION_STATUS
+          : sortMode === 'COMPLETION_STATUS'
             ? Object.entries(groupBy(sortedPotteryItems, (item) => getStatus(item))).map(
                 ([status, items]) => (
                   <View key={status + ' wrapper'} style={{ width: '100%' }}>
@@ -256,10 +307,10 @@ const PotteryItemList = () => {
             {
               position: 'absolute',
               backgroundColor: colors.background,
-              width: 175,
+              width: 200,
               padding: 8,
               top: modalPosition.y + modalPosition.height / 2,
-              left: modalPosition.x - 190,
+              left: modalPosition.x - 215,
               rowGap: 8,
             },
           ]}
@@ -273,11 +324,10 @@ const PotteryItemList = () => {
             <AnimatedPressable
               key={key}
               onPress={() => {
-                setIsSortModalVisible(false)
-                setSortMode(SortOptions[key])
+                setselectedSortButton(key)
               }}
               style={{
-                backgroundColor: colors.primary,
+                backgroundColor: key === selectedSortButton ? colors.primary : colors.card,
                 borderColor: colors.border,
                 borderWidth: 1,
               }}
@@ -295,11 +345,48 @@ const PotteryItemList = () => {
               </Text>
             </AnimatedPressable>
           ))}
+          <View style={{ borderTopWidth: 1, borderStyle: 'dashed', borderColor: colors.border }} />
+          <Text
+            style={{ color: colors.text, fontFamily: 'title', textAlign: 'center', fontSize: 20 }}
+          >
+            Filters
+          </Text>
+          <View style={{ rowGap: 5 }}>
+            {(Object.keys(FilterOptions) as Array<keyof typeof FilterOptions>).map((optionKey) => (
+              <Pressable
+                key={optionKey}
+                style={{ flexDirection: 'row' }}
+                onPress={() => toggleOption(optionKey)} // Toggle option on press
+              >
+                <Text style={{ marginRight: 5 }}>
+                  {selectedFilters.includes(optionKey)
+                    ? checkboxIcons.checked
+                    : checkboxIcons.unchecked}
+                </Text>
+                <Text style={{ color: colors.text, fontFamily: 'title', fontSize: 16 }}>
+                  {FilterOptions[optionKey]}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+          <AnimatedPressable
+            onPress={handleSubmitSorting}
+            style={[
+              globalStyles.button,
+              { backgroundColor: colors.primary, borderColor: colors.border, marginTop: 4 },
+            ]}
+          >
+            <Text style={{ color: colors.text, fontFamily: 'textBold', fontSize: 18 }}>Apply</Text>
+          </AnimatedPressable>
         </View>
       </Modal>
     </View>
   )
 }
+
+/**
+  
+ */
 
 const styles = StyleSheet.create({
   scrollView: {

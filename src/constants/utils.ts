@@ -37,15 +37,22 @@ export const sortObjectsByProperty = <T extends object>(
     });
   };
 
-  
-  const statusOrder = {
-    "Not Started": 0,
-    "Greenware In Progress": 1,
-    "Greenware Done": 2,
-    "Bisque Fired": 3,
-    "Completed": 4,
-  };
+  export const CompletionStatus = {
+    NOT_STARTED: "Not Started",
+    GREENWARE_IN_PROGRESS: "Greenware In Progress",
+    GREENWARE_DONE: "Greenware Done",
+    BISQUE_FIRED: "Bisque Fired",
+    COMPLETED: "Completed",
+  } as const;
 
+  export const StatusOrder = {
+  [CompletionStatus.NOT_STARTED]: 0,
+  [CompletionStatus.GREENWARE_IN_PROGRESS]: 1,
+  [CompletionStatus.GREENWARE_DONE]: 2,
+  [CompletionStatus.BISQUE_FIRED]: 3,
+  [CompletionStatus.COMPLETED]: 4,
+} as const;
+  
   export const getStatus = (item: Pick<PotteryItem, "startDate" | "greenwareDate" | "bisqueDate" | "glazeDate">) => {
     return item.glazeDate
       ? "Completed"
@@ -58,12 +65,15 @@ export const sortObjectsByProperty = <T extends object>(
       : "Not Started";
   };
 
+  export const getStatusKey = (status: string) => {
+    return Object.keys(CompletionStatus).find(key => CompletionStatus[key as keyof typeof CompletionStatus] === status) ?? '';
+  };
   export const sortPotteryItemsByStatus = (items: PotteryItem[]) => {
     const statusSortedItems = items.sort((a, b) => {
       const statusA = getStatus(a);
       const statusB = getStatus(b);
       
-      return statusOrder[statusA] - statusOrder[statusB];
+      return StatusOrder[statusA] - StatusOrder[statusB];
     })
     return statusSortedItems
 }
