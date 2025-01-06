@@ -55,8 +55,18 @@ export const getPotteryItemById = async (
 export const addPotteryItem = async (db: SQLiteDatabase, potteryItem: PotteryItem) => {
   const query = `
     INSERT INTO ${POTTERY_ITEM_TABLE_NAME} (
-      potteryItemId, dateCreated, dateEdited, projectTitle, projectNotes, displayPicturePath, series
-    ) VALUES (?, ?, ?, ?, ?, ?, ?);`;
+      potteryItemId,
+      dateCreated,
+      dateEdited,
+      projectTitle,
+      projectNotes,
+      displayPicturePath,
+      series,
+      startDate,
+      greenwareDate,
+      bisqueDate,
+      glazeDate
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`;
 
   try {
     await db.runAsync(query, [
@@ -66,7 +76,11 @@ export const addPotteryItem = async (db: SQLiteDatabase, potteryItem: PotteryIte
       potteryItem.projectTitle,
       potteryItem.projectNotes,
       potteryItem.displayPicturePath,
-      potteryItem.series || ''
+      potteryItem.series || null,
+      potteryItem.startDate || null,
+      potteryItem.greenwareDate || null,
+      potteryItem.bisqueDate || null,
+      potteryItem.glazeDate || null,
     ]);
   } catch (error) {
     console.error('Error adding pottery item:', error);
@@ -82,7 +96,11 @@ export const updatePotteryItem = async (db: SQLiteDatabase, potteryItem: Pottery
       projectTitle = ?,
       projectNotes = ?,
       displayPicturePath = ?,
-      series = ?
+      series = ?,
+      startDate = ?,
+      greenwareDate = ?,
+      bisqueDate  = ?,
+      glazeDate  = ?
     WHERE potteryItemId = ?;`;
 
   try {
@@ -91,7 +109,11 @@ export const updatePotteryItem = async (db: SQLiteDatabase, potteryItem: Pottery
       potteryItem.projectTitle,
       potteryItem.projectNotes,
       potteryItem.displayPicturePath,
-      potteryItem.series || '',
+      potteryItem.series || null,
+      potteryItem.startDate || null,
+      potteryItem.greenwareDate || null,
+      potteryItem.bisqueDate || null,
+      potteryItem.glazeDate || null,
       potteryItem.potteryItemId
     ]);
   } catch (error) {
